@@ -1,8 +1,8 @@
-/** @type {import('./$types').PageLoad} */
+import type { PageLoad } from './$types';
 
-export async function load({ fetch }) {
+export const load = (async ({ fetch }) => {
 	const res = await fetch(`http://localhost:7100/newsgroups`);
-	const embeddings = await res.json();
+	const embeddings: object = await res.json();
 
 	return { embeddings };
-}
+}) satisfies PageLoad;
