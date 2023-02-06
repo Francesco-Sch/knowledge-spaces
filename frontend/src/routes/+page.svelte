@@ -8,4 +8,13 @@
     export let data: PageData;
 </script>
 
-<Plot />
+<main>
+    <Plot data={data.embeddings} />
+</main>
+
+<style>
+    main {
+        width: 100vw;
+        height: 100vh;
+    }
+</style>

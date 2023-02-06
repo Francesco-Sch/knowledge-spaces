@@ -1,27 +1,41 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { CanvasSpace, Rectangle } from "pts";
 
-    let container, space, form;
+    export let data;
+
+    let sketchContainer: any;
+
+    const s = ( sketch ) => {
+
+        sketch.setup = () => {
+            sketch.createCanvas(sketch.windowWidth, sketch.windowHeight);
+
+            sketch.background(139);
+            sketch.fill(255);
+
+            for(const circle in data) {
+                let mappedX: number = sketch.map(circle[0], -0.5, 0.5, 0, sketch.windowWidth);
+                let mappedY: number = sketch.map(circle[1], -0.5, 0.5, 0, sketch.windowHeight);
+                sketch.circle(mappedX/10, mappedY/10, 10)
+            }
+        }
+        sketch.draw = () => {
+            
+        };
+
+        //  sketch.windowResized = () => {
+        //     sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+        //  }
+    };
 
     onMount(() => {
-      space = new CanvasSpace(container).setup({bgcolor: "#52f"});
-      form = space.getForm();
-          
-      space.add( time => {
-              form.fillOnly("#f06").point(space.pointer, 200, "circle");
-              form.strokeOnly("#fff", 5).lines( 
-                  Rectangle.corners(space.innerBound).map(r => [r, space.pointer])
-              );
-              form.fillOnly("#0c9").point(space.pointer, 100, "circle");
-          });
-          
-      space.bindMouse().bindTouch().play();
+        let p5sketch = new p5(s, sketchContainer);
+        p5sketch
     });
 </script>
 
-<canvas id="pts" bind:this={container} /> 
+<div id="p5" bind:this={sketchContainer} /> 
   
 <style>
-    #pts { width: 100vw; height: 100vh; }
+    #p5 { width: 100%; height: 100%; }
 </style>

@@ -7,3 +7,4 @@ Based on:
 - https://medium.com/@jwdobken/vue-with-docker-initialize-develop-and-build-51fad21ad5e6
 
 - https://www.okupter.com/blog/build-a-sveltekit-application-with-docker
+- https://gist.github.com/williamngan/d18e4a6d9fc2fbd19e6907561b908a88
