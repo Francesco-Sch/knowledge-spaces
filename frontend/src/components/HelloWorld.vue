@@ -1,25 +1,11 @@
-<script setup>
-import { onBeforeMount } from 'vue'
+<script lang="ts" setup>
+import { useFetch } from '../composables/fetch'
 
-let msg = ''
-const getMessage = () => {
-  fetch('http://localhost:7100/')
-    .then((res) => {
-      msg = res.data;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-}
-
-onBeforeMount(() => {
-  getMessage()
-  console.log(msg)
-})
+const { data, error } = useFetch('http://localhost:7100/')
 </script>
 
 <template>
   <div>
-    <p>{{ msg }}</p>
+    <p>{{ data }}</p>
   </div>
 </template>
