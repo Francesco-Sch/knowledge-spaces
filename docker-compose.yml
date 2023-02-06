@@ -9,13 +9,12 @@ services:
       - ./backend:/app
     command: uvicorn src.main:app --reload --host 0.0.0.0 --port 7100
 
-  frontend:
-    build:
-      context: ./frontend
-      target: "develop-stage"
-    ports:
-      - 8080:8080
-    volumes:
-      - "./frontend:/app"
-      - "/app/node_modules"
-    command: yarn dev
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 5173:5173
+  #   volumes:
+  #     - ./frontend/:/app/
+  #     # - /usr/src/app/node_modules
