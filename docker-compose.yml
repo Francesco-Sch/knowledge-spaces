@@ -9,12 +9,12 @@ services:
       - ./backend:/app
     command: uvicorn src.main:app --reload --host 0.0.0.0 --port 7100
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 5173:5173
-  #   volumes:
-  #     - ./frontend/:/app/
-  #     # - /usr/src/app/node_modules
+  frontend:
+    build: ./frontend
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend/:/app/
+      # Hack to prevent copying the node_modules folder into the project
+      - /app/node_modules
+    command: yarn dev --host 0.0.0.0
