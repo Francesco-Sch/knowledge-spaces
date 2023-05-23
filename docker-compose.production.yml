@@ -1,5 +1,5 @@
 services:
-  # Qdrant as the database for embeddings
+  # Qdrant as the database
   qdrant:
     image: qdrant/qdrant
     ports:
@@ -7,23 +7,21 @@ services:
     volumes:
       - ./qdrant/storage:/qdrant/storage
 
-  # FastAPI as the backend
+  # FastAPI as the backend/middleware
   backend:
-    build: ./backend
-    ports:
-      - 7100:7100
-    volumes:
-      - ./backend:/app
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     depends_on:
       - qdrant
 
   # SvelteKit as the frontend
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 5173:5173
-  #   volumes:
-  #     - ./frontend/:/app/
-  #     # - /usr/src/app/node_modules
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - 80:80
+    depends_on:
+      - backend
