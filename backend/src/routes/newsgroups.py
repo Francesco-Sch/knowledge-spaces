@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
 
-import src.crud.newsgroups as crud
+import crud.newsgroups as crud
 
 router = APIRouter()
 

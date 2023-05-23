@@ -1,4 +1,4 @@
-FROM python:3.9.16
+FROM python:3.9.16 AS base
 ENV PYTHONUNBUFFERED 1
 
 RUN mkdir app
@@ -13,4 +13,8 @@ RUN pip install -r requirements.txt
 
 COPY src/ .
 
-CMD ["uvicorn", "src.main:app", "--reload", "--host", "0.0.0.0", "--port", "7100"]
+FROM base AS development
+CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "7100"]
+
+FROM base AS production
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7100"]
