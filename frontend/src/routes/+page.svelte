@@ -4,5 +4,11 @@
 	export let data: PageData;
 </script>
 
-<p>{data.embeddings}</p>
+<!-- if data is loaded display it else display a simple loading state -->
+{#if data}
+	<h1>{data["0"]}</h1>
+{:else}
+	<p>Loading...</p>
+{/if}
+
 <p>Test</p>
