@@ -5,6 +5,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
+    image: francescosch/backend_knowledge-spaces
     ports:
       - 7100:7100
 
@@ -14,6 +15,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
+    image: francescosch/frontend_knowledge-spaces
     ports:
       - 80:80
     depends_on:

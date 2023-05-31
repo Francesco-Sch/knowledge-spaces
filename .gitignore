@@ -174,3 +174,5 @@ cython_debug/
 !**/.env.example
 **/vite.config.js.timestamp-*
 **/vite.config.ts.timestamp-*
+
+event.json
