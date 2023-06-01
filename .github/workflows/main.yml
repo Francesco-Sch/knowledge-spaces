@@ -32,6 +32,17 @@ jobs:
       - name: 📝 Checkout code
         uses: actions/checkout@v3
 
+      # - name: Set up SSH
+      #   uses: appleboy/scp-action@v0.1.4
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     port: 22
+      #     passphrase: ${{ secrets.SSH_PASSPHRASE }}
+      #     source: docker-compose.production.yml
+      #     target: /docker-compose.yml
+
       - name: Set up SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -41,9 +52,9 @@ jobs:
           port: 22
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            # Copying the docker compose file
-            scp /docker-compose.production.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/docker-compose.yml
-
             # Starting the app
             ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'docker-compose down'
             ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'docker-compose up -d'
+
+# # Copying the docker compose file
+# scp /docker-compose.production.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/docker-compose.yml
