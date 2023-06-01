@@ -5,6 +5,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     image: francescosch/backend_knowledge-spaces
     ports:
       - 7100:7100
@@ -15,6 +18,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     image: francescosch/frontend_knowledge-spaces
     ports:
       - 80:80
