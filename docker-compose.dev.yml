@@ -1,0 +1,20 @@
+services:
+  # FastAPI as the backend/middleware
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - 7100:7100
+
+  # SvelteKit as the frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - 8080:8080
+    depends_on:
+      - backend
