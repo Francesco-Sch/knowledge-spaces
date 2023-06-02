@@ -1,0 +1,26 @@
+services:
+  # FastAPI as the backend/middleware
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+      x-bake:
+        platforms: ["linux/amd64", "linux/arm64"]
+    image: francescosch/backend_knowledge-spaces
+    ports:
+      - 7100:7100
+
+  # SvelteKit as the frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      x-bake:
+        platforms: ["linux/amd64", "linux/arm64"]
+    image: francescosch/frontend_knowledge-spaces
+    ports:
+      - 80:80
+    depends_on:
+      - backend
