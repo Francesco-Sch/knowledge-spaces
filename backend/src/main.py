@@ -18,4 +18,4 @@ app.include_router(newsgroups.router)
 
 @app.get("/")
 def home():
-    return "Hello, World!"
+    return "Hello, Scaleway!"
