@@ -1,3 +1,14 @@
+FROM node:lts-slim AS development
+
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn
+
+COPY . .
+
+EXPOSE 8080
+CMD ["yarn", "dev"]
+
 FROM node:lts-slim AS build
 
 WORKDIR /app
