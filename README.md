@@ -7,3 +7,23 @@ Based on:
 - https://medium.com/@jwdobken/vue-with-docker-initialize-develop-and-build-51fad21ad5e6
 
 - https://www.okupter.com/blog/build-a-sveltekit-application-with-docker
+
+## Important commands
+
+Start production build
+
+```bash
+docker compose -f docker-compose.production.yml up -d
+```
+
+Rebuild production build
+
+```bash
+docker compose -f docker-compose.production.yml up -d --build
+```
+
+Rebuild specific containers of production build
+
+```bash
+docker compose -f docker-compose.production.yml up -d --build frontend
+```
