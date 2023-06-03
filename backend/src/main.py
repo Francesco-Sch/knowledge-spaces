@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import newsgroups
+from routes import embeddings
 
 app = FastAPI()
 
@@ -14,8 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(newsgroups.router)
+app.include_router(embeddings.router)
 
 @app.get("/")
 def home():
-    return "Hello World!"
+    return "This is the API for the knowledge spaces project by Francesco Scheffczyk."
