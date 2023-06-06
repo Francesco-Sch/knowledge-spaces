@@ -1,10 +1,13 @@
 services:
   # FastAPI as the backend/middleware
   backend:
+    container_name: backend_knowledge-spaces
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: development
+    volumes:
+      - ./backend/src:/app
     ports:
       - 7100:7100
 

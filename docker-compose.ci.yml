@@ -1,6 +1,7 @@
 services:
   # FastAPI as the backend/middleware
   backend:
+    container_name: backend_knowledge-spaces
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -13,6 +14,7 @@ services:
 
   # SvelteKit as the frontend
   frontend:
+    container_name: frontend_knowledge-spaces
     build:
       context: ./frontend
       dockerfile: Dockerfile
