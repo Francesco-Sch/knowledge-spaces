@@ -11,3 +11,4 @@ async def get_embeddings(dataset_name: str):
         return get_2D_20newsgroup_embeddings()
     else:
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_name}")
+    

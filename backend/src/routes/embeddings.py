@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-import crud.embeddings as crud
+import crud.embeddings as embed
 
 router = APIRouter()
 
@@ -8,4 +8,4 @@ router = APIRouter()
     "/embeddings/{dataset_name}",
 )
 async def get_embeddings(dataset_name: str):
-    return await crud.get_embeddings(dataset_name)
+    return await embed.get_embeddings(dataset_name)

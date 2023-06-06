@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import embeddings
+from routes import embeddings, search
 
 app = FastAPI()
 
@@ -15,6 +15,7 @@ app.add_middleware(
 )
 
 app.include_router(embeddings.router)
+app.include_router(search.router)
 
 @app.get("/")
 def home():
