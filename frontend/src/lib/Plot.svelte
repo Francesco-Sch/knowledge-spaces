@@ -21,7 +21,8 @@
         let pts: Array<Pt> = [];
 
         const space = new CanvasSpace(canvas).setup({ bgcolor: '#EBEAEB', resize: true, retina: true });
-        const form = space.getForm();
+        const crosses = space.getForm();
+        const grid = space.getForm();
 
         // zoom
         // const grid = new Grid(bound.width, bound.height, 20, 20, form.center(), 0.5, "#ddd");
@@ -31,8 +32,17 @@
 
             },
             animate: (time, ftime, space) => { 
-                form.fillOnly("#123").points( pts, 2, "circle" );
-                // form.point( space.pointer, 10 )
+                // --- BACKGROUND GRID ---
+                
+
+                // --- CROSSES ---
+                crosses.strokeOnly("#000", 1.5);
+
+                // Iterate through each point and draw a cross
+                for (const pt of pts) {
+                    crosses.line([pt.$subtract(4), pt.$add(4)]); // Draw a horizontal line
+                    crosses.line([pt.$subtract([4, -4]), pt.$add([4, -4])]); // Draw a diagonal line
+                }
             },
         });
 
