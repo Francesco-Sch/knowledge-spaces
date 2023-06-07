@@ -7,7 +7,7 @@ import loader
 app = FastAPI()
 
 # --- CORS --- 
-origins = ["http://localhost:5173"]
+origins = ["http://localhost:8080"]
 
 app.add_middleware(
     CORSMiddleware,
