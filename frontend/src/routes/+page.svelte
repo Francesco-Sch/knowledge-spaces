@@ -9,7 +9,7 @@
 </script>
 
 <main>
-	<Plot data={data.embeddings} />
+	<Plot embeddings={data.embeddings} />
 </main>
 
 <style>
