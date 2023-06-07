@@ -1,2 +1,2 @@
 // This option is needed to prerender the page
-export const prerender = false;
+export const ssr = false;

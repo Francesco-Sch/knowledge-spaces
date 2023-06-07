@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { CanvasSpace, Pt } from 'pts';
 
-    let canvas, windowWidth, windowHeight;
+    let canvas: Element, windowWidth: number, windowHeight: number;
     let mapped = [];
     export let data;
 
