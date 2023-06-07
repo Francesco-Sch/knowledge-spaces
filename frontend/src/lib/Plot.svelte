@@ -12,8 +12,8 @@
 
 	const mappedEmbeddings = (): Array<Array<number>> => {
 		return embeddings.map(([x, y]) => [
-			map_range(x, -0.1, 0.5, 0, windowWidth),
-			map_range(y, -0.1, 0.5, 0, windowHeight)
+			map_range(x, -0.1, 0.5, -1000, windowWidth + 1000),
+			map_range(y, -0.1, 0.5, -1000, windowHeight + 1000)
 		]);
 	};
 
@@ -86,7 +86,7 @@
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
-<Stage config={{ width: windowWidth, height: windowHeight }} on:wheel={scaleShape}>
+<Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
 	<Layer>
 		{#each mappedEmbeddings() as cross}
 			<Shape
