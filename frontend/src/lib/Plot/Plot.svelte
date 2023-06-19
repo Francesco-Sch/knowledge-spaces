@@ -58,10 +58,6 @@
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 <Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
-	<!-- Background -->
-	<Layer>
-		<Rect config={{ width: windowWidth, height: windowHeight, fill: '#EBEAEB' }} />
-	</Layer>
 	<!-- Embeddings -->
 	<Layer>
 		{#each mappedEmbeddings() as cross}
