@@ -6,7 +6,7 @@
 	export let embeddings: Array<Array<number>>;
 
 	// Map embeddings to the window size
-	function map_range(value, low1, high1, low2, high2) {
+	function map_range(value: number, low1: number, high1: number, low2: number, high2: number) {
 		return low2 + ((high2 - low2) * (value - low1)) / (high1 - low1);
 	}
 
@@ -19,8 +19,13 @@
 
 	// Zooming
 	let scaleBy = 1.15;
+	let maxScale = 5;
+	let minScale = 0.2;
 
-	function scaleShape(e) {
+	function scaleShape(e: {
+		detail: { target: { getStage: () => any }; evt: { deltaY: number; ctrlKey: any } };
+		preventDefault: () => void;
+	}) {
 		let stage = e.detail.target.getStage();
 
 		// stop default scrolling
@@ -35,7 +40,7 @@
 		};
 
 		// how to scale? Zoom in? Or zoom out?
-		let direction = e.detail.evt.deltaY > 0 ? 1 : -1;
+		let direction = e.detail.evt.deltaY > 0 ? -1 : 1;
 
 		// when we zoom on trackpad, e.evt.ctrlKey is true
 		// in that case lets revert direction
@@ -44,6 +49,13 @@
 		}
 
 		var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+		// limit the scale to maxScale and minScale
+		if (newScale > maxScale) {
+			newScale = maxScale;
+		} else if (newScale < minScale) {
+			newScale = minScale;
+		}
 
 		stage.scale({ x: newScale, y: newScale });
 
