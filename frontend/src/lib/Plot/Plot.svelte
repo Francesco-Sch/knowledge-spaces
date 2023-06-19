@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Stage, Layer, Rect } from 'svelte-konva';
+	import { Stage, Layer } from 'svelte-konva';
+	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 
 	let windowWidth: number, windowHeight: number;
@@ -70,6 +71,9 @@
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 <Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
+	<!-- Grid -->
+	<Grid />
+
 	<!-- Embeddings -->
 	<Layer>
 		{#each mappedEmbeddings() as cross}
