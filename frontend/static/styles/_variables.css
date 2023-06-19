@@ -1,4 +1,5 @@
 :root {
-    /* ----- COLOURS ----- */
-    --bg: #EBEAEB;
+	/* ----- COLOURS ----- */
+	--bg: #ebeaeb;
+	--grid-strokes: #dbdbdb;
 }

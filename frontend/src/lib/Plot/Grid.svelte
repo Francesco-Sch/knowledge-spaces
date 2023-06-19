@@ -1,25 +1,45 @@
 <script lang="ts">
-	import { Layer, Rect } from 'svelte-konva';
+	import { Layer, Line } from 'svelte-konva';
 
 	export let width: number;
 	export let height: number;
 	export let strokes: number;
+
+	let color: string = '#dbdbdb';
+	let dash: Array<number> = [5, 5];
+
+	let grid: Layer;
+
+	function handleLayerCreate(event) {
+		grid = event.target as Layer;
+
+		// Set z-index
+		grid.zIndex(0);
+	}
 </script>
 
-<Layer>
-	{#each Array.from({ length: strokes }, (_, i) => i) as i}
-		{#each Array.from({ length: strokes }, (_, j) => j) as j}
-			<Rect
-				config={{
-					x: (i * width) / strokes,
-					y: (j * height) / strokes,
-					width: width / strokes,
-					height: height / strokes,
-					fill: 'transparent',
-					stroke: 'white',
-					strokeWidth: 1
-				}}
-			/>
-		{/each}
+<Layer on:created={handleLayerCreate}>
+	<!-- Vertical lines -->
+	{#each Array.from({ length: strokes + 1 }, (_, i) => i) as i}
+		<Line
+			config={{
+				points: [i * (width / strokes), 0, i * (width / strokes), height],
+				stroke: color,
+				strokeWidth: 1,
+				dash: dash
+			}}
+		/>
+	{/each}
+
+	<!-- Horizontal lines -->
+	{#each Array.from({ length: strokes + 1 }, (_, i) => i) as i}
+		<Line
+			config={{
+				points: [0, i * (height / strokes), width, i * (height / strokes)],
+				stroke: color,
+				strokeWidth: 1,
+				dash: dash
+			}}
+		/>
 	{/each}
 </Layer>
