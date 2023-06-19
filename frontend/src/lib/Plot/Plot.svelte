@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { Context } from 'konva/lib/Context';
-	import type { ShapeConfig } from 'konva/lib/Shape';
-	import { Stage, Layer, Rect, Shape } from 'svelte-konva';
+	import { Stage, Layer, Rect } from 'svelte-konva';
+	import Cross from './Cross.svelte';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
+	// Map embeddings to the window size
 	function map_range(value, low1, high1, low2, high2) {
 		return low2 + ((high2 - low2) * (value - low1)) / (high1 - low1);
 	}
@@ -16,35 +16,6 @@
 			map_range(y, -0.1, 0.5, -1000, windowHeight + 1000)
 		]);
 	};
-
-	// Function to draw a cross
-	function renderCross(context: Context, shape: Shape<ShapeConfig>): void {
-		let width = shape.getAttr('width');
-		let height = shape.getAttr('height');
-
-		// Begin drawing the cross
-		context.beginPath();
-
-		// Move to the top-left corner of the cross
-		context.moveTo(-width, -height);
-
-		// Draw the horizontal line
-		context.lineTo(width, height);
-
-		// Move to the center of the cross
-		context.moveTo(width, -height);
-
-		// Draw the vertical line
-		context.lineTo(-width, height);
-
-		// Close the path
-		context.closePath();
-
-		// Stroke the path to render the cross
-		context.stroke();
-
-		context.fillStrokeShape(shape);
-	}
 
 	// Zooming
 	let scaleBy = 1.15;
@@ -87,19 +58,14 @@
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 <Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
+	<!-- Background -->
+	<Layer>
+		<Rect config={{ width: windowWidth, height: windowHeight, fill: '#EBEAEB' }} />
+	</Layer>
+	<!-- Embeddings -->
 	<Layer>
 		{#each mappedEmbeddings() as cross}
-			<Shape
-				config={{
-					sceneFunc: renderCross,
-					x: cross[0],
-					y: cross[1],
-					width: 5,
-					height: 5,
-					stroke: 'black',
-					strokeWidth: 2
-				}}
-			/>
+			<Cross x={cross[0]} y={cross[1]} />
 		{/each}
 	</Layer>
 </Stage>

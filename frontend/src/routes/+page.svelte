@@ -1,6 +1,6 @@
 <script lang="ts">
 	// ----- Components -----
-	import Plot from '$lib/Plot.svelte';
+	import Plot from '$lib/Plot/Plot.svelte';
 
 	// ----- Data -----
 	import type { PageData } from './$types';
