@@ -1,14 +1,23 @@
 <script lang="ts">
-	// import type { PageData } from './$types';
+	// ----- Components -----
+	import Plot from '$lib/plot/Plot.svelte';
 
-	// export let data: PageData;
+	// ----- Data -----
+	import type { PageData } from './$types';
+
+	export let data: PageData;
+	let embeddings: Array<Array<number>> = Object.values(data.embeddings);
 </script>
 
-<!-- if data is loaded display it else display a simple loading state -->
-<!-- {#if data}
-	<h1>{data['0']}</h1>
-{:else}
-	<p>Loading...</p>
-{/if} -->
+<main>
+	<Plot {embeddings} />
+</main>
 
-<p>Hello World!</p>
+<style>
+	main {
+		width: 100vw;
+		height: 100vh;
+
+		background-color: var(--bg);
+	}
+</style>
