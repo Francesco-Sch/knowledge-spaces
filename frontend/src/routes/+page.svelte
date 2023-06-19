@@ -10,11 +10,14 @@
 	let embeddings: Array<Array<number>> = Object.values(data.embeddings);
 </script>
 
-<main>
-	<aside class="grid">
+<main class="grid">
+	<div class="settings">
 		<Dataset />
-	</aside>
-	<Plot {embeddings} />
+	</div>
+
+	<div class="plot">
+		<Plot {embeddings} />
+	</div>
 </main>
 
 <style>
@@ -25,10 +28,17 @@
 		background-color: var(--bg);
 		z-index: 0;
 	}
-	aside {
-		position: absolute;
-		width: 100vw;
-		height: 100vh;
+	.settings {
+		grid-column: 1 / 3;
+		grid-row: 1 / end;
+		height: max-content;
+		padding: 1rem;
 		z-index: 1;
+		pointer-events: none;
+		box-sizing: border-box;
+	}
+	.plot {
+		grid-column: 1 / end;
+		grid-row: 1 / end;
 	}
 </style>
