@@ -2,11 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes import embeddings, search
-import loader
 
 app = FastAPI()
 
-# --- CORS --- 
+# --- CORS ---
 origins = ["http://localhost:5173", "http://localhost:8080"]
 
 app.add_middleware(
@@ -20,6 +19,7 @@ app.add_middleware(
 # --- ROUTER ---
 app.include_router(embeddings.router)
 app.include_router(search.router)
+
 
 # --- STARTUP ---
 @app.get("/")
