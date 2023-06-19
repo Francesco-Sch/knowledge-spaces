@@ -1,17 +1,18 @@
 <script lang="ts">
 	import { Layer, Line } from 'svelte-konva';
 
-	export let width: number;
-	export let height: number;
+	export let scale: number;
 	export let strokes: number;
+	export let windowWidth: number;
 
 	let color: string = '#dbdbdb';
 	let dash: Array<number> = [5, 5];
-
 	let grid: Layer;
 
-	function handleLayerCreate(event) {
-		grid = event.target as Layer;
+	$: size = scale * windowWidth;
+
+	function handleLayerCreate(event: CustomEvent<Layer>) {
+		grid = event.detail;
 
 		// Set z-index
 		grid.zIndex(0);
@@ -23,10 +24,12 @@
 	{#each Array.from({ length: strokes + 1 }, (_, i) => i) as i}
 		<Line
 			config={{
-				points: [i * (width / strokes), 0, i * (width / strokes), height],
+				points: [i * (size / strokes), 0, i * (size / strokes), size],
 				stroke: color,
 				strokeWidth: 1,
-				dash: dash
+				dash: dash,
+				width: size / strokes,
+				height: size / strokes
 			}}
 		/>
 	{/each}
@@ -35,10 +38,12 @@
 	{#each Array.from({ length: strokes + 1 }, (_, i) => i) as i}
 		<Line
 			config={{
-				points: [0, i * (height / strokes), width, i * (height / strokes)],
+				points: [0, i * (size / strokes), size, i * (size / strokes)],
 				stroke: color,
 				strokeWidth: 1,
-				dash: dash
+				dash: dash,
+				width: size / strokes,
+				height: size / strokes
 			}}
 		/>
 	{/each}

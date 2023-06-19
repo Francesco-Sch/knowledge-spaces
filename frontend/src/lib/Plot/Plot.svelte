@@ -19,6 +19,7 @@
 	};
 
 	// Zooming
+	let scale = 1;
 	let scaleBy = 1.15;
 	let maxScale = 5;
 	let minScale = 0.2;
@@ -50,6 +51,7 @@
 		}
 
 		var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+		scale = newScale;
 
 		// limit the scale to maxScale and minScale
 		if (newScale > maxScale) {
@@ -72,7 +74,7 @@
 
 <Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
 	<!-- Grid -->
-	<Grid width={windowWidth} height={windowHeight} strokes={20} />
+	<Grid {scale} strokes={20} {windowWidth} />
 
 	<!-- Embeddings -->
 	<Layer>
