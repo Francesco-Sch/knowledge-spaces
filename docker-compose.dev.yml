@@ -22,6 +22,7 @@ services:
       - 8080:8080
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     tty: true
     depends_on:
       - backend
