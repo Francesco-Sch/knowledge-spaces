@@ -2,6 +2,7 @@
 	// ----- Components -----
 	import Plot from '$lib/plot/Plot.svelte';
 	import Dataset from '$lib/settings/Dataset.svelte';
+	import NearestNeighbors from '$lib/settings/NearestNeighbors.svelte';
 
 	// ----- Data -----
 	import type { PageData } from './$types';
@@ -13,6 +14,7 @@
 <main class="grid">
 	<div class="settings">
 		<Dataset />
+		<NearestNeighbors />
 	</div>
 
 	<div class="plot">
