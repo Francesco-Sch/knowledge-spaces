@@ -34,7 +34,7 @@
 		grid-column: 1 / 3;
 		grid-row: 1 / end;
 		height: max-content;
-		padding: 1rem;
+		padding: 1rem 0 0 1rem;
 		z-index: 1;
 		pointer-events: none;
 		box-sizing: border-box;

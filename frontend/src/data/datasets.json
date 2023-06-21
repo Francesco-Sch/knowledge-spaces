@@ -1,0 +1,10 @@
+[
+	{
+		"label": "20News<wbr>groups",
+		"name": "20Newsgroups"
+	},
+	{
+		"label": "Reuters\nnewswire",
+		"name": "Reuters"
+	}
+]

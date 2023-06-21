@@ -1,14 +1,16 @@
 <script lang="ts">
-	let datasets = ['20Newsgroups', 'AP'];
+	import datasets from '../../data/datasets.json';
+	let selected = datasets[0].label;
 </script>
 
 <div class="datasets">
-	<select name="datasets" id="select-datasets">
-		{#each datasets as dataset}
-			<option value={dataset}>{dataset}</option>
-		{/each}
-	</select>
-	<label for="datasets">Dataset</label>
+	<div class="select">
+		<button>
+			{@html selected}
+			<span>▼</span>
+		</button>
+	</div>
+	<p class="label">Dataset</p>
 </div>
 
 <style>
@@ -20,16 +22,29 @@
 		pointer-events: all;
 	}
 
-	select {
+	.select {
 		width: 100%;
+	}
+	.select button {
+		width: 100%;
+		padding: 0;
 		background: none;
 		border: none;
+		text-align: left;
 		font-size: 4rem;
+		line-height: 85%;
+		white-space: nowrap;
 	}
 
-	label {
+	.select button span {
+		float: right;
+		margin-top: 1rem;
+		font-size: 2rem;
+	}
+
+	.label {
 		display: block;
-		margin-top: 2rem;
+		margin: 2rem 0 0 0;
 		font-size: 1.4rem;
 	}
 </style>
