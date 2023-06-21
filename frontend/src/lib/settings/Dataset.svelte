@@ -34,12 +34,17 @@
 		font-size: 4rem;
 		line-height: 85%;
 		white-space: nowrap;
-	}
 
+		transition: text-shadow 0.2s ease-in-out;
+	}
+	.select button:hover {
+		cursor: pointer;
+		text-shadow: var(--hover-text-shadow);
+	}
 	.select button span {
 		float: right;
 		margin-top: 1rem;
-		font-size: 2rem;
+		font-size: 1.75rem;
 	}
 
 	.label {

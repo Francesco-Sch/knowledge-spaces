@@ -30,6 +30,7 @@
 		background-color: var(--bg);
 		z-index: 0;
 	}
+
 	.settings {
 		grid-column: 1 / 3;
 		grid-row: 1 / end;
@@ -39,6 +40,7 @@
 		pointer-events: none;
 		box-sizing: border-box;
 	}
+
 	.plot {
 		grid-column: 1 / end;
 		grid-row: 1 / end;
