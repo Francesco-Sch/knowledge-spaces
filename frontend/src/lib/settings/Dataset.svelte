@@ -12,21 +12,27 @@
 			}}
 		>
 			{@html selected}
-			<span>▼</span>
+
+			<span class={open ? 'rotated' : ''}>▼</span>
 		</button>
 	</div>
 
 	<div class="select_selection">
 		{#if open}
 			{#each datasets as dataset}
-				<button
-					on:click={() => {
-						selected = dataset.label;
-						open = false;
-					}}
-				>
-					{@html dataset.label}
-				</button>
+				<div>
+					<input
+						type="checkbox"
+						id={dataset.label}
+						name={dataset.label}
+						checked={dataset.label === selected}
+						on:click={() => {
+							selected = dataset.label;
+							open = false;
+						}}
+					/>
+					<label for={dataset.label}>{@html dataset.label}</label>
+				</div>
 			{/each}
 		{/if}
 	</div>
@@ -65,11 +71,27 @@
 		float: right;
 		margin-top: 1rem;
 		font-size: 1.75rem;
+
+		transition: transform 0.2s ease-in-out;
+	}
+	.select_toggle button span.rotated {
+		transform: rotate(180deg);
 	}
 
 	.select_selection {
+		display: flex;
+		flex-direction: column;
 		width: 100%;
 		margin: 1rem 0 1rem 0;
+	}
+	.select_selection input {
+		/* font-size: 1.5rem; */
+	}
+	.select_selection input:hover {
+		cursor: pointer;
+	}
+	.select_selection label {
+		font-size: 1.5rem;
 	}
 
 	.label {
