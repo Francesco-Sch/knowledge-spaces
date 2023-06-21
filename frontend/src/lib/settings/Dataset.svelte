@@ -70,7 +70,7 @@
 	.select_toggle button span {
 		float: right;
 		margin-top: 1rem;
-		font-size: 1.75rem;
+		font-size: 1.5rem;
 
 		transition: transform 0.2s ease-in-out;
 	}
