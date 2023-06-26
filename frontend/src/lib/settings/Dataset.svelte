@@ -21,19 +21,12 @@
 	<div class="select_selection">
 		{#if open}
 			{#each datasets as dataset}
-				<div>
-					<input
-						type="checkbox"
-						id={dataset.label}
-						name={dataset.label}
-						checked={dataset.label === selected}
-						on:click={() => {
-							selected = dataset.label;
-							open = false;
-						}}
-					/>
-					<label for={dataset.label}>{@html dataset.label}</label>
-				</div>
+				<button
+					on:click={() => {
+						selected = dataset.label;
+						open = false;
+					}}>{@html dataset.label}</button
+				>
 			{/each}
 		{/if}
 	</div>
@@ -60,8 +53,8 @@
 		background: none;
 		border: none;
 		text-align: left;
-		font-size: 6rem;
-		line-height: 85%;
+		font-size: 5.5rem;
+		line-height: 90%;
 
 		transition: text-shadow 0.2s ease-in-out;
 	}
@@ -71,7 +64,7 @@
 	}
 	.select_toggle button span {
 		float: right;
-		margin-top: 1rem;
+		margin-top: 1.5rem;
 		font-size: 1.5rem;
 
 		transition: transform 0.2s ease-in-out;

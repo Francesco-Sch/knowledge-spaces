@@ -1,10 +1,10 @@
 [
 	{
-		"label": "20News<wbr>groups",
-		"name": "20Newsgroups"
+		"label": "Red<wbr>Pajama Data 1T",
+		"name": "redpajama"
 	},
 	{
-		"label": "Reuters newswire",
-		"name": "Reuters"
+		"label": "20News<wbr>groups",
+		"name": "20Newsgroups"
 	}
 ]
