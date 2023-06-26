@@ -4,14 +4,16 @@
 
 <div class="nearest-neighbors">
 	<div class="counter">
-		<p>{neighbors}</p>
+		<p class="counter_number editorial-new-400">{neighbors}</p>
 		<div class="counter_buttons">
 			<button
+				class="editorial-new-400"
 				on:click={() => {
 					neighbors++;
 				}}>▲</button
 			>
 			<button
+				class="editorial-new-400"
 				on:click={() => {
 					neighbors--;
 				}}>▼</button
@@ -35,11 +37,11 @@
 	.counter {
 		display: flex;
 		flex-direction: row;
-		font-size: 4rem;
+		font-size: 6rem;
 		line-height: 85%;
 	}
-	.counter p {
-		margin: 0;
+	.counter .counter_number {
+		margin: 0.5rem 0 0;
 	}
 
 	.counter .counter_buttons {

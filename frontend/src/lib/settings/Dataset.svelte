@@ -55,6 +55,7 @@
 	}
 	.select_toggle button {
 		width: 100%;
+		margin-top: 0.5rem;
 		padding: 0;
 		background: none;
 		border: none;
