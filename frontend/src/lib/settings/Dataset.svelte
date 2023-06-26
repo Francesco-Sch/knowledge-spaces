@@ -22,6 +22,7 @@
 		{#if open}
 			{#each datasets as dataset}
 				<button
+					class="editorial-new-400 {selected === dataset.label ? 'selected' : ''}"
 					on:click={() => {
 						selected = dataset.label;
 						open = false;
@@ -56,11 +57,11 @@
 		font-size: 5.5rem;
 		line-height: 90%;
 
-		transition: text-shadow 0.2s ease-in-out;
+		transition: all 0.2s ease-in-out;
 	}
 	.select_toggle button:hover {
 		cursor: pointer;
-		text-shadow: var(--hover-text-shadow);
+		text-shadow: var(--hover-text-shadow_black);
 	}
 	.select_toggle button span {
 		float: right;
@@ -77,16 +78,27 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		margin: 1rem 0 1rem 0;
+		margin: 2rem 0 1rem 0;
 	}
-	.select_selection input {
-		/* font-size: 1.5rem; */
+	.select_selection button {
+		width: 100%;
+		padding: 0.5rem 0;
+		background: none;
+		border: none;
+		text-align: left;
+		font-size: 2rem;
+
+		transition: all 0.2s ease-in-out;
 	}
-	.select_selection input:hover {
+	.select_selection button:hover {
 		cursor: pointer;
+		background: black;
+		color: white;
+		text-shadow: var(--hover-text-shadow_white);
 	}
-	.select_selection label {
-		font-size: 1.5rem;
+	.select_selection button.selected::before {
+		content: '»';
+		margin-right: 1rem;
 	}
 
 	.label {

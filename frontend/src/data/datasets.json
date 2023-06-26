@@ -1,10 +1,12 @@
 [
 	{
 		"label": "Red<wbr>Pajama Data 1T",
-		"name": "redpajama"
+		"name": "redpajama",
+		"about": "A collection of 1 trillion words from the web."
 	},
 	{
 		"label": "20News<wbr>groups",
-		"name": "20Newsgroups"
+		"name": "20Newsgroups",
+		"about": "A collection of 20,000 newsgroup documents."
 	}
 ]
