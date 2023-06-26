@@ -7,6 +7,7 @@
 <div class="datasets">
 	<div class="select_toggle">
 		<button
+			class="editorial-new-400"
 			on:click={() => {
 				open = !open;
 			}}
@@ -58,7 +59,7 @@
 		background: none;
 		border: none;
 		text-align: left;
-		font-size: 4rem;
+		font-size: 6rem;
 		line-height: 85%;
 
 		transition: text-shadow 0.2s ease-in-out;
