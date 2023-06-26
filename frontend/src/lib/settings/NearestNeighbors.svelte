@@ -1,39 +1,39 @@
 <script lang="ts">
-	let neighbors = 5;
+	import { neighbors } from '../../stores/store';
 
 	// Handle mouse wheel scroll
 	const handleScroll = (event: { preventDefault: () => void; deltaY: number }) => {
 		event.preventDefault();
 		if (event.deltaY > 0) {
-			neighbors--;
+			$neighbors--;
 		} else {
-			neighbors++;
+			$neighbors++;
 		}
 	};
 
 	// Keep neighbors between 1 and 20
-	$: if (neighbors > 20) {
-		neighbors = 20;
+	$: if ($neighbors > 20) {
+		$neighbors = 20;
 	}
-	$: if (neighbors < 1) {
-		neighbors = 1;
+	$: if ($neighbors < 1) {
+		$neighbors = 1;
 	}
 </script>
 
 <div class="nearest-neighbors">
 	<div class="counter" on:wheel={handleScroll}>
-		<p class="counter_number editorial-new-400">{neighbors}</p>
+		<p class="counter_number editorial-new-400">{$neighbors}</p>
 		<div class="counter_buttons">
 			<button
 				class="editorial-new-400"
 				on:click={() => {
-					neighbors++;
+					$neighbors++;
 				}}>▲</button
 			>
 			<button
 				class="editorial-new-400"
 				on:click={() => {
-					neighbors--;
+					$neighbors--;
 				}}>▼</button
 			>
 		</div>

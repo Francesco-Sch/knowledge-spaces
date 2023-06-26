@@ -1,7 +1,12 @@
 <script lang="ts">
+	import { selectedDataset } from '../../stores/store';
 	import datasets from '../../data/datasets.json';
-	let selected = datasets[0].label;
 	let open = false;
+
+	// Filter dataset for the dataset that name is the same as selecetedDataset
+	$: selected = datasets.filter((dataset) => dataset.name === $selectedDataset)[0].label;
+
+	console.log(selected);
 </script>
 
 <div class="datasets">
@@ -22,9 +27,9 @@
 		{#if open}
 			{#each datasets as dataset}
 				<button
-					class="editorial-new-400 {selected === dataset.label ? 'selected' : ''}"
+					class="editorial-new-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
 					on:click={() => {
-						selected = dataset.label;
+						$selectedDataset = dataset.name;
 						open = false;
 					}}>{@html dataset.label}</button
 				>
