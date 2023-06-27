@@ -1,5 +1,19 @@
 :root {
+	/* ----- BREAKPOINTS ----- */
+	--bp-xs: 576px;
+	--bp-sm: 768px;
+	--bg-md: 1024px;
+	--bg-lg: 1200px;
+	--bg-xl: 1440px;
+	--bg-2xl: 1920px;
+
 	/* ----- COLOURS ----- */
 	--bg: #ebeaeb;
 	--grid-strokes: #dbdbdb;
+
+	/* ----- FONTS ----- */
+
+	/* ----- HOVER EFFECTS ----- */
+	--hover-text-shadow_black: 0px 0px 4px black, 0px 0px 12px black;
+	--hover-text-shadow_white: 0px 0px 4px white, 0px 0px 12px white;
 }
