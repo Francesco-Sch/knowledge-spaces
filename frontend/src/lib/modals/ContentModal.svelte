@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SearchBar from './search/SearchBar.svelte';
+	import SearchBar from '../search/SearchBar.svelte';
 	// provided by <Modals />
 	export let isOpen;
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { openModal } from 'svelte-modals';
-	import Modal from '../Modal.svelte';
+	import Modal from '../modals/SearchModal.svelte';
 
 	function handleClick() {
 		openModal(Modal, { type: 'search' });
@@ -11,13 +11,20 @@
 
 <style>
 	button {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: max-content;
+		height: auto;
+		padding: 1rem 1rem 1.5rem 1rem;
+		aspect-ratio: 1 / 1;
 		background-color: black;
 		color: white;
 		border: none;
-		width: 4rem;
-		height: 4rem;
-		font-size: 2rem;
+		font-size: 4rem;
 		pointer-events: all;
+
+		transition: all 0.2s ease-in-out;
 	}
 	button:hover {
 		cursor: pointer;
