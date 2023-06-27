@@ -3,7 +3,8 @@ from loader import model, _20Newsgroups
 import torch
 from sentence_transformers import util
 
-async def search(dataset_name: str, query: str, num_samples: int = 1):
+
+async def search(dataset_name: str, query: str, k: int = 1):
     # Load the dataset
     if dataset_name == "20newsgroups":
         dataset = _20Newsgroups
@@ -15,6 +16,8 @@ async def search(dataset_name: str, query: str, num_samples: int = 1):
 
     query_embedding = model.encode(query, convert_to_tensor=True)
 
-    top_similar_results = util.semantic_search(query_embedding, embeddings_tensor, top_k=num_samples)
+    top_similar_results = util.semantic_search(
+        query_embedding, embeddings_tensor, top_k=k
+    )
 
     return top_similar_results

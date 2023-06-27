@@ -1,21 +1,41 @@
 <script lang="ts">
+	import { selectedDataset, neighbors } from '../../stores/store';
+
 	// provided by <Modals />
 	export let isOpen;
 
-	export let type: string;
+	let query: string = '';
+	const fetchNN = async () => {
+		console.log('The query is: ' + query);
+
+		const res = await fetch(
+			`http://localhost:7100/search/${$selectedDataset}?query=${query}&k=${$neighbors}`
+		);
+
+		const data = await res.json();
+
+		console.log(data);
+	};
 </script>
 
 {#if isOpen}
 	<div role="dialog" class="modal">
-		<div class="contents" class:text={type !== 'search'}>
+		<div class="contents">
 			<div class="search-wrapper">
+				<!-- svelte-ignore a11y-autofocus -->
 				<input
+					bind:value={query}
 					type="text"
 					placeholder="Enter your search term"
 					class="editorial-new-400"
 					autofocus
+					on:keydown={(e) => {
+						if (e.key === 'Enter') {
+							fetchNN();
+						}
+					}}
 				/>
-				<button class="editorial-new-400">→</button>
+				<button class="editorial-new-400" on:click={fetchNN}>→</button>
 			</div>
 		</div>
 	</div>

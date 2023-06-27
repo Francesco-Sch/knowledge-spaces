@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { openModal } from 'svelte-modals';
-	import Modal from '../modals/SearchModal.svelte';
+	import SearchModal from '../modals/SearchModal.svelte';
 
 	function handleClick() {
-		openModal(Modal, { type: 'search' });
+		openModal(SearchModal);
 	}
 </script>
 
