@@ -1353,6 +1353,11 @@ svelte-konva@^0.2.0:
   resolved "https://registry.yarnpkg.com/svelte-konva/-/svelte-konva-0.2.0.tgz#8fa6aacfb6c84f767f95234535e080839f104162"
   integrity sha512-G4Xvctx7M7o1+5pUCBk/jQNKrJf5gJZiPxbY8zaMBcnLgnE9o9cHPL6gCrym6RCkBRK+BnWecXhRJO7RUnKnQw==
 
+svelte-modals@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/svelte-modals/-/svelte-modals-1.2.1.tgz#433aa1b6b530161081260881387dc243c10d045f"
+  integrity sha512-7MEKUx5wb5YppkXWFGeRlYM5FMGEnpix39u9Y6GtCNTMXRDZ7DB2Z50IYLMRTMW5lOsCdtJgFbB0E3iZMKmsAA==
+
 svelte-preprocess@^5.0.3:
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/svelte-preprocess/-/svelte-preprocess-5.0.4.tgz#2123898e079a074f7f4ef1799e10e037f5bcc55b"

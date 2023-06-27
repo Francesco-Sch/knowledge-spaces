@@ -13,7 +13,8 @@
 	},
 	"dependencies": {
 		"konva": "^9.2.0",
-		"svelte-konva": "^0.2.0"
+		"svelte-konva": "^0.2.0",
+		"svelte-modals": "^1.2.1"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.1.0",

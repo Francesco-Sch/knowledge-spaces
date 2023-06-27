@@ -3,6 +3,7 @@
 	import Plot from '$lib/plot/Plot.svelte';
 	import Dataset from '$lib/settings/Dataset.svelte';
 	import NearestNeighbors from '$lib/settings/NearestNeighbors.svelte';
+	import StartSearch from '$lib/search/StartSearch.svelte';
 
 	// ----- Data -----
 	import type { PageData } from './$types';
@@ -15,6 +16,10 @@
 	<div class="settings">
 		<Dataset />
 		<NearestNeighbors />
+	</div>
+
+	<div class="actions">
+		<StartSearch />
 	</div>
 
 	<div class="plot">
@@ -31,14 +36,24 @@
 		z-index: 0;
 	}
 
-	.settings {
-		grid-column: 1 / 3;
-		grid-row: 1 / end;
+	.settings,
+	.actions {
 		height: max-content;
-		padding: 1rem 0 0 1rem;
 		z-index: 1;
 		pointer-events: none;
 		box-sizing: border-box;
+	}
+
+	.settings {
+		grid-column: 1 / 3;
+		grid-row: 1 / end;
+		padding: 1rem 0 0 1rem;
+	}
+
+	.actions {
+		grid-column: -1 / -3;
+		grid-row: 1 / end;
+		padding: 1rem 1rem 0 0;
 	}
 
 	.plot {
