@@ -7,7 +7,7 @@
 	}
 </script>
 
-<button on:click={handleClick}>+</button>
+<button class="editorial-new-400" on:click={handleClick}>+</button>
 
 <style>
 	button {
@@ -16,12 +16,12 @@
 		align-items: center;
 		width: max-content;
 		height: auto;
-		padding: 1rem 1rem 1.5rem 1rem;
+		padding: 1rem;
 		aspect-ratio: 1 / 1;
 		background-color: black;
 		color: white;
 		border: none;
-		font-size: 4rem;
+		font-size: 5rem;
 		pointer-events: all;
 
 		transition: all 0.2s ease-in-out;
