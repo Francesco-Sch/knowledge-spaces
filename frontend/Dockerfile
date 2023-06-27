@@ -1,7 +1,7 @@
 FROM node:lts-slim AS development
 
 WORKDIR /app
-COPY package.json yarn.lock ./
+COPY package.json ./
 RUN yarn
 
 COPY . .
