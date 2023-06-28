@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { selectedDataset, neighbors } from '../../stores/store';
+	import LoadingBar from '$lib/LoadingBar.svelte';
 
 	// provided by <Modals />
 	export let isOpen;
 
 	let query: string = '';
+	let loading: boolean = false;
+
 	const fetchNN = async () => {
+		loading = true;
+
 		console.log('The query is: ' + query);
 
 		const res = await fetch(
@@ -15,28 +20,39 @@
 		const data = await res.json();
 
 		console.log(data);
+
+		isOpen = false;
+		loading = false;
 	};
 </script>
 
 {#if isOpen}
 	<div role="dialog" class="modal">
 		<div class="contents">
-			<div class="search-wrapper">
-				<!-- svelte-ignore a11y-autofocus -->
-				<input
-					bind:value={query}
-					type="text"
-					placeholder="Enter your search term"
-					class="editorial-new-400"
-					autofocus
-					on:keydown={(e) => {
-						if (e.key === 'Enter') {
-							fetchNN();
-						}
-					}}
-				/>
-				<button class="editorial-new-400" on:click={fetchNN}>→</button>
-			</div>
+			{#if loading}
+				<!-- Loading state -->
+				<div class="loading">
+					<LoadingBar />
+				</div>
+			{:else}
+				<!-- Search input -->
+				<div class="search-wrapper">
+					<!-- svelte-ignore a11y-autofocus -->
+					<input
+						bind:value={query}
+						type="text"
+						placeholder="Enter your search term"
+						class="editorial-new-400"
+						autofocus
+						on:keydown={(e) => {
+							if (e.key === 'Enter') {
+								fetchNN();
+							}
+						}}
+					/>
+					<button class="editorial-new-400" on:click={fetchNN}>→</button>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -59,24 +75,28 @@
 
 	.contents {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		justify-content: space-between;
+		padding: 1rem;
 
-		width: max-content;
-		height: max-content;
+		background-color: white;
+		box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 1);
 
 		pointer-events: auto;
 	}
 
+	/* Loading state */
+	.loading {
+		display: flex;
+		width: 30vw;
+		height: 100%;
+	}
+
+	/* Search input */
 	.search-wrapper {
 		display: flex;
-		flex-direction: row;
-		align-items: center;
 		width: 100%;
 		height: 100%;
-		padding: 1rem;
-		background-color: white;
-		box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 1);
 	}
 
 	.search-wrapper input {

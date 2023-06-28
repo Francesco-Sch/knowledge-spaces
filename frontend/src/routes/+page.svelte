@@ -12,6 +12,7 @@
 	let embeddings: Array<Array<number>> = Object.values(data.embeddings);
 </script>
 
+<!-- Page content -->
 <main class="grid">
 	<div class="settings">
 		<Dataset />
