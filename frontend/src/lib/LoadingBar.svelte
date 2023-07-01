@@ -1,29 +1,72 @@
 <script lang="ts">
 	export let loading: boolean = false;
-	let progress = 1;
 
-	const interval = setInterval(() => {
-		// Let loop stop at 8 until loading is false and keep progress at 8
-		if (progress === 8 && !loading) return;
+	const spinner = {
+		interval: 80,
+		frames: ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
+	};
 
-		progress += 1;
+	// Select the grid element
+	let grid: HTMLDivElement;
 
-		if (progress === 10) clearInterval(interval);
-	}, 1000);
+	// Function to start spinner animation
+	function startSpinner(spinnerAmount: number) {
+		// Set the initial frame index
+		let frameIndex = 0;
+
+		const animation = setInterval(() => {
+			// Update the grid element with the current frame
+			grid.textContent = Array.from(
+				{ length: spinnerAmount },
+				() => spinner.frames[frameIndex]
+			).join('');
+			frameIndex = (frameIndex + 1) % spinner.frames.length;
+		}, spinner.interval);
+
+		// Increase the spinner amount every second
+		setInterval(() => {
+			spinnerAmount = spinnerAmount < 20 ? spinnerAmount + 1 : 20;
+		}, 1000);
+
+		// Store the animation interval ID to stop it later if needed
+		return animation;
+	}
+
+	// Function to stop spinner animation
+	function stopSpinner(animation: number | undefined) {
+		clearInterval(animation);
+	}
+
+	// Start the spinner animation when loading is changing to true
+	$: if (loading) {
+		startSpinner(1);
+	} else if (!loading) {
+		// Fill loading bar with spinners
+		startSpinner(20);
+
+		// Stop the spinner animation after 1 second
+		setTimeout(() => {
+			stopSpinner(undefined);
+		}, 1000);
+	}
 </script>
 
-<div class="loading-bar editorial-new-400">
-	<p>
-		[
-		{#each { length: progress } as _}
-			<span>*</span>
-		{/each}
-		]
-	</p>
+<div class="loading-bar">
+	<div id="spinners-wrapper" bind:this={grid} />
 </div>
 
 <style>
+	/* Style the grid element */
+	#spinners-wrapper {
+		display: inline-flex;
+		justify-content: flex-start;
+		align-items: center;
+
+		font-size: 2rem;
+		line-height: 1;
+	}
+
 	.loading-bar {
-		font-size: 5rem;
+		width: 100%;
 	}
 </style>

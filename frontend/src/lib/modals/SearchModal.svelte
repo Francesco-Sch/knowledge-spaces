@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
 	import { selectedDataset, neighbors } from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
 
@@ -27,12 +28,12 @@
 </script>
 
 {#if isOpen}
-	<div role="dialog" class="modal">
+	<div role="dialog" class="modal" transition:fly={{ y: -10, duration: 500 }}>
 		<div class="contents">
 			{#if loading}
 				<!-- Loading state -->
 				<div class="loading">
-					<LoadingBar />
+					<LoadingBar {loading} />
 				</div>
 			{:else}
 				<!-- Search input -->
