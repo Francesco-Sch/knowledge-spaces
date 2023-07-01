@@ -10,6 +10,7 @@ Based on:
 - https://gist.github.com/williamngan/d18e4a6d9fc2fbd19e6907561b908a88
 
 - https://svelte-modals.mattjennings.io/
+- https://dev.to/danawoodman/svelte-quick-tip-connect-a-store-to-local-storage-4idi
 
 ## Important commands
 
