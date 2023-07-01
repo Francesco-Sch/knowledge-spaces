@@ -14,12 +14,12 @@
 		// Set the initial frame index
 		let frameIndex = 0;
 
+		if (!grid) return;
 		const animation = setInterval(() => {
 			// Update the grid element with the current frame
-			grid.textContent = Array.from(
-				{ length: spinnerAmount },
-				() => spinner.frames[frameIndex]
-			).join('');
+			grid.innerText = Array.from({ length: spinnerAmount }, () => spinner.frames[frameIndex]).join(
+				''
+			);
 			frameIndex = (frameIndex + 1) % spinner.frames.length;
 		}, spinner.interval);
 
@@ -37,16 +37,18 @@
 		clearInterval(animation);
 	}
 
+	let spinnerAnimation: number | undefined;
+
 	// Start the spinner animation when loading is changing to true
 	$: if (loading) {
-		startSpinner(1);
+		spinnerAnimation = startSpinner(1);
 	} else if (!loading) {
 		// Fill loading bar with spinners
 		startSpinner(20);
 
 		// Stop the spinner animation after 1 second
 		setTimeout(() => {
-			stopSpinner(undefined);
+			stopSpinner(spinnerAnimation);
 		}, 1000);
 	}
 </script>

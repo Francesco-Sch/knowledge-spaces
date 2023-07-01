@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { selectedDataset, neighbors } from '../../stores/store';
+	import { selectedDataset, neighbors, searchResults } from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
 
 	// provided by <Modals />
@@ -20,10 +20,27 @@
 
 		const data = await res.json();
 
-		console.log(data);
+		// Check if there are any results
+		if (data.length === 0) {
+			console.log('No results found');
+			loading = false;
+			return;
+		}
 
-		isOpen = false;
+		// Add the search result to the search results store
+		let searchResult = {
+			query: query,
+			neighbors: data[0]
+		};
+
+		if ($searchResults === null) {
+			searchResults.update(() => [searchResult]);
+		} else {
+			searchResults.update((results) => [...results, searchResult]);
+		}
+
 		loading = false;
+		isOpen = false;
 	};
 </script>
 
