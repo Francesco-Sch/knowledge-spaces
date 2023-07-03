@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Stage, Layer } from 'svelte-konva';
+	import { searchResults } from '../../stores/store';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 
@@ -17,6 +18,29 @@
 			map_range(y, -0.1, 0.5, -1000, windowHeight + 1000)
 		]);
 	};
+
+	console.log(mappedEmbeddings());
+
+	// Map neighbors from every entry in searchResults array from localStorage to embeddings
+	// const mappedNeighbors = (): Array<{ x: number; y: number; color: string }> => {
+	// 	let neighbors: { x: number; y: number; color: string }[] = [];
+
+	// 	$searchResults.forEach((result: number, index: number) => {
+	// 		neighbors.push({
+	// 			x: embeddings[result][0],
+	// 			y: embeddings[result][1],
+	// 			color: `#${Math.floor(Math.random() * 16777215).toString(16)}`
+	// 		});
+	// 	});
+
+	// 	return neighbors.map(({ x, y, color }) => ({
+	// 		x: map_range(x, -0.1, 0.5, -1000, windowWidth + 1000),
+	// 		y: map_range(y, -0.1, 0.5, -1000, windowHeight + 1000),
+	// 		color
+	// 	}));
+	// };
+
+	// console.log(mappedNeighbors());
 
 	// Zooming
 	let scale = 1;
@@ -76,11 +100,16 @@
 	<!-- Grid -->
 	<Grid {scale} strokes={20} {windowWidth} />
 
-	<!-- Embeddings -->
 	<Layer>
+		<!-- Embeddings -->
 		{#each mappedEmbeddings() as cross}
-			<Cross x={cross[0]} y={cross[1]} />
+			<Cross x={cross[0]} y={cross[1]} color={'black'} />
 		{/each}
+
+		<!-- Neighbors -->
+		<!-- {#each mappedNeighbors() as cross}
+			<Cross x={cross.x} y={cross.y} color={cross.color} />
+		{/each} -->
 	</Layer>
 </Stage>
 

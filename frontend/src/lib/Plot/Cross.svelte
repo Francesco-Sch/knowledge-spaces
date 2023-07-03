@@ -6,6 +6,7 @@
 	// ----- Data -----
 	export let x: number;
 	export let y: number;
+	export let color: string;
 
 	// Function to draw a cross
 	function renderCross(context: Context, shape: Shape<ShapeConfig>): void {
@@ -44,7 +45,7 @@
 		y: y,
 		width: 5,
 		height: 5,
-		stroke: 'black',
+		stroke: color,
 		strokeWidth: 1.5
 	}}
 />

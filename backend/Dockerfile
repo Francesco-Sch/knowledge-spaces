@@ -1,4 +1,4 @@
-FROM python:3.9.16 AS base
+FROM python:3.10.12 AS base
 ENV PYTHONUNBUFFERED 1
 
 RUN mkdir app
