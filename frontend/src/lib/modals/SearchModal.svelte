@@ -18,19 +18,35 @@
 			`http://localhost:7100/search/${$selectedDataset}?query=${query}&k=${$neighbors}`
 		);
 
-		const data = await res.json();
+		const results = await res.json();
+
+		console.log(results);
 
 		// Check if there are any results
-		if (data.length === 0) {
+		if (results.length === 0) {
 			console.log('No results found');
 			loading = false;
 			return;
 		}
 
+		// Prepare id query string
+		let ids = results[0].map((id: { corpus_id: any }) => `ids=${id.corpus_id}`).join('&');
+
+		// Fetch the embeddings for the ids
+		fetch(`http://localhost:7100/embeddings/${$selectedDataset}?${ids}`)
+			.then((res) => res.json())
+			.then((data) => {
+				// Add the entries of data as x and y keys to data[0]
+				data.forEach((entry: any[], index: string | number) => {
+					results[0][index].x = entry[0];
+					results[0][index].y = entry[1];
+				});
+			});
+
 		// Add the search result to the search results store
 		let searchResult = {
 			query: query,
-			neighbors: data[0]
+			neighbors: results[0]
 		};
 
 		if ($searchResults === null) {

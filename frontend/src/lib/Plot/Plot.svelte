@@ -19,26 +19,25 @@
 		]);
 	};
 
-	console.log(mappedEmbeddings());
+	console.log($searchResults);
 
-	// Map neighbors from every entry in searchResults array from localStorage to embeddings
-	// const mappedNeighbors = (): Array<{ x: number; y: number; color: string }> => {
-	// 	let neighbors: { x: number; y: number; color: string }[] = [];
+	const mappedNeighbors = (): Array<{ x: number; y: number; color: string }> => {
+		if ($searchResults === null) return [];
+		const mappedResults = $searchResults.map((result, index: number) => {
+			console.log(result);
 
-	// 	$searchResults.forEach((result: number, index: number) => {
-	// 		neighbors.push({
-	// 			x: embeddings[result][0],
-	// 			y: embeddings[result][1],
-	// 			color: `#${Math.floor(Math.random() * 16777215).toString(16)}`
-	// 		});
-	// 	});
+			// Add x,y and color to each neighbor per result
+			return result.neighbors.map((neighbor: any) => {
+				return {
+					x: map_range(neighbor.x, -0.1, 0.5, -1000, windowWidth + 1000),
+					y: map_range(neighbor.y, -0.1, 0.5, -1000, windowHeight + 1000),
+					color: `hsl(${index * 50}, 100%, 50%)`
+				};
+			});
+		});
 
-	// 	return neighbors.map(({ x, y, color }) => ({
-	// 		x: map_range(x, -0.1, 0.5, -1000, windowWidth + 1000),
-	// 		y: map_range(y, -0.1, 0.5, -1000, windowHeight + 1000),
-	// 		color
-	// 	}));
-	// };
+		return mappedResults;
+	};
 
 	// console.log(mappedNeighbors());
 
@@ -107,9 +106,11 @@
 		{/each}
 
 		<!-- Neighbors -->
-		<!-- {#each mappedNeighbors() as cross}
-			<Cross x={cross.x} y={cross.y} color={cross.color} />
-		{/each} -->
+		{#if $searchResults !== null}
+			{#each mappedNeighbors() as cross}
+				<Cross x={cross.x} y={cross.y} color={cross.color} />
+			{/each}
+		{/if}
 	</Layer>
 </Stage>
 
