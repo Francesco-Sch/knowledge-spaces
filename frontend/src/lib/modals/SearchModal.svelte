@@ -20,8 +20,6 @@
 
 		const results = await res.json();
 
-		console.log(results);
-
 		// Check if there are any results
 		if (results.length === 0) {
 			console.log('No results found');
@@ -33,15 +31,16 @@
 		let ids = results[0].map((id: { corpus_id: any }) => `ids=${id.corpus_id}`).join('&');
 
 		// Fetch the embeddings for the ids
-		fetch(`http://localhost:7100/embeddings/${$selectedDataset}?${ids}`)
-			.then((res) => res.json())
-			.then((data) => {
-				// Add the entries of data as x and y keys to data[0]
-				data.forEach((entry: any[], index: string | number) => {
-					results[0][index].x = entry[0];
-					results[0][index].y = entry[1];
-				});
-			});
+		const embeddings_res = await fetch(
+			`http://localhost:7100/embeddings/${$selectedDataset}?${ids}`
+		);
+
+		const embeddings = await embeddings_res.json();
+
+		embeddings.forEach((embedding: any[], index: string | number) => {
+			results[0][index].x = embedding[0];
+			results[0][index].y = embedding[1];
+		});
 
 		// Add the search result to the search results store
 		let searchResult = {
@@ -54,6 +53,8 @@
 		} else {
 			searchResults.update((results) => [...results, searchResult]);
 		}
+
+		console.log($searchResults);
 
 		loading = false;
 		isOpen = false;
