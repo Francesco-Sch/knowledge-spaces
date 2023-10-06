@@ -1,40 +1,17 @@
 <script lang="ts">
 	import { Stage, Layer } from 'svelte-konva';
-	import { searches } from '../../stores/store';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
+
+	import { searches } from '../../stores/store';
+	import { getMappedSearchEmbeddings } from '../../utils/getMappedSearchEmbeddings';
+	import { mapEmbeddingsToWindowSize } from '../../utils/mapEmbeddingsToWindowSize';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
-	// Map embeddings to the window size
-	function map_range(value: number, low1: number, high1: number, low2: number, high2: number) {
-		return low2 + ((high2 - low2) * (value - low1)) / (high1 - low1);
-	}
-
-	const mappedEmbeddings = (): Array<Array<number>> => {
-		return embeddings.map(([x, y]) => [
-			map_range(x, -0.1, 0.5, -1000, windowWidth + 1000),
-			map_range(y, -0.1, 0.5, -1000, windowHeight + 1000)
-		]);
-	};
-
-	const mappedNeighbors = (): Array<{ x: number; y: number; color: string }> => {
-		if ($searches === null) return [];
-
-		const mappedResults = $searches.map((search, index: number) => {
-			// Add x,y and color to each neighbor per result
-			return search.neighbors.map((neighbor: any) => {
-				return {
-					x: map_range(neighbor.x, -0.1, 0.5, -1000, windowWidth + 1000),
-					y: map_range(neighbor.y, -0.1, 0.5, -1000, windowHeight + 1000),
-					color: `green`
-				};
-			});
-		});
-
-		return mappedResults;
-	};
+	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
+	$: mappedSearchEmbeddings = getMappedSearchEmbeddings(windowWidth, windowHeight);
 
 	// Zooming
 	let scale = 1;
@@ -96,9 +73,16 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		{#each mappedEmbeddings() as cross}
-			<Cross x={cross[0]} y={cross[1]} color={'red'} />
+		{#each mappedEmbeddings as cross}
+			<Cross x={cross[0]} y={cross[1]} color={'black'} />
 		{/each}
+
+		<!-- Active searches -->
+		{#if $searches}
+			{#each mappedSearchEmbeddings.coordinates as cross}
+				<Cross x={cross[0]} y={cross[1]} color={'blue'} />
+			{/each}
+		{/if}
 	</Layer>
 </Stage>
 
