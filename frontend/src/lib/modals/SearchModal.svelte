@@ -2,6 +2,7 @@
 	import { fly } from 'svelte/transition';
 	import { selectedDataset, amountOfNeighbors, searches } from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
+	import { getRandomColor } from '../../utils/getRandomColor';
 
 	// provided by <Modals />
 	export let isOpen: boolean = false;
@@ -46,7 +47,8 @@
 		let searchResult = {
 			dataset: $selectedDataset,
 			query: query,
-			neighbors: results[0]
+			neighbors: results[0],
+			color: getRandomColor()
 		};
 
 		if ($searches === null) {

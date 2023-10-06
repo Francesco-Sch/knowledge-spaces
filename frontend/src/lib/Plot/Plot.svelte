@@ -4,14 +4,14 @@
 	import Cross from './Cross.svelte';
 
 	import { searches } from '../../stores/store';
-	import { getMappedSearchEmbeddings } from '../../utils/getMappedSearchEmbeddings';
+	import { getSearchesWithMappedEmbeddings } from '../../utils/getSearchesWithMappedEmbedding';
 	import { mapEmbeddingsToWindowSize } from '../../utils/mapEmbeddingsToWindowSize';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
-	$: mappedSearchEmbeddings = getMappedSearchEmbeddings(windowWidth, windowHeight);
+	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 
 	// Zooming
 	let scale = 1;
@@ -79,8 +79,10 @@
 
 		<!-- Searches -->
 		{#if $searches}
-			{#each mappedSearchEmbeddings.coordinates as cross}
-				<Cross x={cross[0]} y={cross[1]} color={'blue'} />
+			{#each mappedSearches as search}
+				{#each search.neighbors as cross}
+					<Cross x={cross[0]} y={cross[1]} color={search.color} />
+				{/each}
 			{/each}
 		{/if}
 	</Layer>
