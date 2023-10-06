@@ -19,27 +19,22 @@
 		]);
 	};
 
-	console.log($searchResults);
-
 	const mappedNeighbors = (): Array<{ x: number; y: number; color: string }> => {
 		if ($searchResults === null) return [];
-		const mappedResults = $searchResults.map((result, index: number) => {
-			console.log(result);
 
+		const mappedResults = $searchResults.map((search, index: number) => {
 			// Add x,y and color to each neighbor per result
-			return result.neighbors.map((neighbor: any) => {
+			return search.neighbors.map((neighbor: any) => {
 				return {
 					x: map_range(neighbor.x, -0.1, 0.5, -1000, windowWidth + 1000),
 					y: map_range(neighbor.y, -0.1, 0.5, -1000, windowHeight + 1000),
-					color: `hsl(${index * 50}, 100%, 50%)`
+					color: `green`
 				};
 			});
 		});
 
 		return mappedResults;
 	};
-
-	// console.log(mappedNeighbors());
 
 	// Zooming
 	let scale = 1;
@@ -100,17 +95,17 @@
 	<Grid {scale} strokes={20} {windowWidth} />
 
 	<Layer>
-		<!-- Embeddings -->
-		{#each mappedEmbeddings() as cross}
-			<Cross x={cross[0]} y={cross[1]} color={'black'} />
+		<!-- Neighbors -->
+
+		{#each mappedNeighbors() as cross}
+			<p>{cross.color}</p>
+			<Cross x={cross.x} y={cross.y} color={cross.color} />
 		{/each}
 
-		<!-- Neighbors -->
-		{#if $searchResults !== null}
-			{#each mappedNeighbors() as cross}
-				<Cross x={cross.x} y={cross.y} color={cross.color} />
-			{/each}
-		{/if}
+		<!-- Embeddings -->
+		<!-- {#each mappedEmbeddings() as cross}
+			<Cross x={cross[0]} y={cross[1]} color={'red'} />
+		{/each} -->
 	</Layer>
 </Stage>
 
