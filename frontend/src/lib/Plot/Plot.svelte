@@ -77,7 +77,7 @@
 			<Cross x={cross[0]} y={cross[1]} color={'black'} />
 		{/each}
 
-		<!-- Active searches -->
+		<!-- Searches -->
 		{#if $searches}
 			{#each mappedSearchEmbeddings.coordinates as cross}
 				<Cross x={cross[0]} y={cross[1]} color={'blue'} />
