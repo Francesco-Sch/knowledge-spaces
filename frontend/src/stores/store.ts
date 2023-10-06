@@ -4,9 +4,9 @@ import { writable } from 'svelte/store';
 export const selectedDataset = writable(localStorage.getItem('selectedDataset') || 'redpajama');
 selectedDataset.subscribe((value) => (localStorage.selectedDataset = value));
 
-export const neighbors = writable(localStorage.getItem('neighbors') || '5');
-neighbors.subscribe((value) => (localStorage.neighbors = value));
+export const amountOfNeighbors = writable(localStorage.getItem('amountOfNeighbors') || '5');
+amountOfNeighbors.subscribe((value) => (localStorage.amountOfNeighbors = value));
 
 // --- Searches ---
-export const searchResults = writable(JSON.parse(localStorage.getItem('searchResults') || 'null'));
-searchResults.subscribe((value) => (localStorage.searchResults = JSON.stringify(value)));
+export const searches = writable(JSON.parse(localStorage.getItem('searches') || 'null'));
+searches.subscribe((value) => (localStorage.searches = JSON.stringify(value)));

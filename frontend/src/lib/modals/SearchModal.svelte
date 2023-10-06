@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { selectedDataset, neighbors, searchResults } from '../../stores/store';
+	import { selectedDataset, amountOfNeighbors, searches } from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
 
 	// provided by <Modals />
-	export let isOpen;
+	export let isOpen: boolean = false;
 
 	let query: string = '';
 	let loading: boolean = false;
@@ -15,7 +15,7 @@
 		console.log('The query is: ' + query);
 
 		const res = await fetch(
-			`http://localhost:7100/search/${$selectedDataset}?query=${query}&k=${$neighbors}`
+			`http://localhost:7100/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
 		);
 
 		const results = await res.json();
@@ -44,17 +44,18 @@
 
 		// Add the search result to the search results store
 		let searchResult = {
+			dataset: $selectedDataset,
 			query: query,
 			neighbors: results[0]
 		};
 
-		if ($searchResults === null) {
-			searchResults.update(() => [searchResult]);
+		if ($searches === null) {
+			searches.update(() => [searchResult]);
 		} else {
-			searchResults.update((results) => [...results, searchResult]);
+			searches.update((results) => [...results, searchResult]);
 		}
 
-		console.log($searchResults);
+		console.log($searches);
 
 		loading = false;
 		isOpen = false;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Stage, Layer } from 'svelte-konva';
-	import { searchResults } from '../../stores/store';
+	import { searches } from '../../stores/store';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 
@@ -20,9 +20,9 @@
 	};
 
 	const mappedNeighbors = (): Array<{ x: number; y: number; color: string }> => {
-		if ($searchResults === null) return [];
+		if ($searches === null) return [];
 
-		const mappedResults = $searchResults.map((search, index: number) => {
+		const mappedResults = $searches.map((search, index: number) => {
 			// Add x,y and color to each neighbor per result
 			return search.neighbors.map((neighbor: any) => {
 				return {
@@ -95,17 +95,10 @@
 	<Grid {scale} strokes={20} {windowWidth} />
 
 	<Layer>
-		<!-- Neighbors -->
-
-		{#each mappedNeighbors() as cross}
-			<p>{cross.color}</p>
-			<Cross x={cross.x} y={cross.y} color={cross.color} />
-		{/each}
-
 		<!-- Embeddings -->
-		<!-- {#each mappedEmbeddings() as cross}
+		{#each mappedEmbeddings() as cross}
 			<Cross x={cross[0]} y={cross[1]} color={'red'} />
-		{/each} -->
+		{/each}
 	</Layer>
 </Stage>
 
