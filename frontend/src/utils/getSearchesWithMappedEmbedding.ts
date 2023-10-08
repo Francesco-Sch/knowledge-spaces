@@ -23,13 +23,19 @@ const getSearchesWithMappedEmbeddings = (windowWidth: number, windowHeight: numb
 			if (mappedEmbedding === undefined) return;
 
 			if (activeSearches[index].searchPoint) {
+				console.log('searchPoint', activeSearches[index].searchPoint);
+
+				const mappedSearchPoint = mapEmbeddingsToWindowSize(
+					[[activeSearches[index].searchPoint.x, activeSearches[index].searchPoint.y]],
+					windowWidth,
+					windowHeight
+				)[0];
+
+				console.log('mappedSearchPoint', mappedSearchPoint);
+
 				return {
 					...activeSearches[index],
-					searchPoint: mapEmbeddingsToWindowSize(
-						[[activeSearches[index].searchPoint.x, activeSearches[index].searchPoint.y]],
-						windowWidth,
-						windowHeight
-					)[0],
+					searchPoint: mappedSearchPoint,
 					neighbors: mappedEmbedding
 				};
 			}

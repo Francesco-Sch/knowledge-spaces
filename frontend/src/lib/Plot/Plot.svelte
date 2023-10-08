@@ -86,21 +86,19 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		<!-- {#each mappedEmbeddings as cross}
+		{#each mappedEmbeddings as cross}
 			<Cross x={cross[0]} y={cross[1]} color={'black'} />
-		{/each} -->
+		{/each}
 
 		<!-- Searches -->
 		{#key mappedSearches}
 			{#if $searches}
 				{#each mappedSearches as search}
 					{#if search.searchPoint}
-						<Cross x={search.searchPoint.x} y={search.searchPoint.y} color={'blue'} />
+						<Cross x={search.searchPoint[0]} y={search.searchPoint[1]} color={search.color} />
 					{/if}
 					{#each search.neighbors as cross}
-						<div>
-							<Cross x={cross[0]} y={cross[1]} color={search.color} />
-						</div>
+						<Cross x={cross[0]} y={cross[1]} color={search.color} />
 					{/each}
 				{/each}
 			{/if}
