@@ -43,10 +43,35 @@
 			results[0][index].y = embedding[1];
 		});
 
+		// Create a random point that is in close proximity to the embeddings
+		let sumX = 0;
+		let sumY = 0;
+
+		embeddings.forEach((embedding: any[]) => {
+			sumX += embedding[0];
+			sumY += embedding[1];
+		});
+
+		const centroid = {
+			x: sumX / embeddings.length,
+			y: sumY / embeddings.length
+		};
+
+		function randomInRange(min: number, max: number): number {
+			return Math.random() * (max - min) + min;
+		}
+
+		const offsetRange = 0.3;
+		const randomPoint = {
+			x: centroid.x + randomInRange(-offsetRange, offsetRange),
+			y: centroid.y + randomInRange(-offsetRange, offsetRange)
+		};
+
 		// Add the search result to the search results store
 		let searchResult = {
 			dataset: $selectedDataset,
 			query: query,
+			searchPoint: randomPoint,
 			neighbors: results[0],
 			color: getRandomColor()
 		};

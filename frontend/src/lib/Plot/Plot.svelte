@@ -14,6 +14,8 @@
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
 	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 
+	console.log($searches);
+
 	// Zooming
 	let scale = 1;
 	let scaleBy = 1.15;
@@ -81,6 +83,9 @@
 		<!-- Searches -->
 		{#if $searches}
 			{#each mappedSearches as search}
+				{#if search.searchPoint}
+					<Cross x={search.searchPoint.x} y={search.searchPoint.y} color={search.color} />
+				{/if}
 				{#each search.neighbors as cross}
 					<div>
 						<Cross x={cross[0]} y={cross[1]} color={search.color} />
