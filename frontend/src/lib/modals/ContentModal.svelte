@@ -1,17 +1,13 @@
 <script lang="ts">
-	import SearchBar from '../search/SearchBar.svelte';
+	import { fly } from 'svelte/transition';
 	// provided by <Modals />
-	export let isOpen;
-
-	export let type: string;
+	export let isOpen: boolean = true;
 </script>
 
 {#if isOpen}
-	<div role="dialog" class="modal">
-		<div class="contents" class:text={type !== 'search'}>
-			{#if type === 'search'}
-				<SearchBar />
-			{/if}
+	<div role="dialog" class="modal" transition:fly={{ y: -10, duration: 500 }}>
+		<div class="contents">
+			<h1>This is going to be content</h1>
 		</div>
 	</div>
 {/if}

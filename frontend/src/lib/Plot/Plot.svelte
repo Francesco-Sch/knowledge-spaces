@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Stage, Layer } from 'svelte-konva';
 	import Grid from './Grid.svelte';
+	import CrossWrapper from './CrossWrapper.svelte';
 	import Cross from './Cross.svelte';
 
 	import { searches } from '../../stores/store';
@@ -81,7 +82,9 @@
 		{#if $searches}
 			{#each mappedSearches as search}
 				{#each search.neighbors as cross}
-					<Cross x={cross[0]} y={cross[1]} color={search.color} />
+					<div>
+						<Cross x={cross[0]} y={cross[1]} color={search.color} />
+					</div>
 				{/each}
 			{/each}
 		{/if}
