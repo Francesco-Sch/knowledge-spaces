@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { Stage, Layer, Line } from 'svelte-konva';
+	import { Stage, Layer } from 'svelte-konva';
 	import Grid from './Grid.svelte';
 	import CrossWrapper from './CrossWrapper.svelte';
 	import Cross from './Cross.svelte';
+	import LineToCross from './LineToCross.svelte';
 
 	import { searches } from '../../stores/store';
 	import { getSearchesWithMappedEmbeddings } from '../../utils/getSearchesWithMappedEmbedding';
@@ -76,28 +77,6 @@
 		};
 		stage.position(newPos);
 	}
-
-	function computeBow(searchPoint, cross) {
-		// Calculate the slope of the line
-		const slope = (cross[1] - searchPoint[1]) / (cross[0] - searchPoint[0]);
-
-		// Calculate the length of the line
-		const lineLength = Math.sqrt(
-			Math.pow(cross[0] - searchPoint[0], 2) + Math.pow(cross[1] - searchPoint[1], 2)
-		);
-
-		// Calculate the bow magnitude based on line length (adjust the multiplier as needed)
-		const bowMagnitude = lineLength * 0.2;
-
-		// Calculate the midpoint and adjust y for the bow effect
-		const midX = (searchPoint[0] + cross[0]) / 2;
-		let midY = (searchPoint[1] + cross[1]) / 2;
-
-		// Adjust the bow based on slope and magnitude
-		midY += slope > 0 ? -bowMagnitude : bowMagnitude;
-
-		return { midX, midY };
-	}
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
@@ -121,24 +100,7 @@
 					{/if}
 					{#each search.neighbors as cross}
 						<!-- Draw line from searchPoint to neighbor -->
-						<Line
-							config={{
-								// @ts-ignore
-								points: [
-									search.searchPoint[0],
-									search.searchPoint[1],
-									computeBow(search.searchPoint, cross).midX,
-									computeBow(search.searchPoint, cross).midY,
-									cross[0],
-									cross[1]
-								],
-								stroke: search.color,
-								strokeWidth: 2,
-								dash: [10, 10],
-								tension: 0.5,
-								bezier: true
-							}}
-						/>
+						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
 						<Cross x={cross[0]} y={cross[1]} color={search.color} />
 					{/each}
