@@ -7,14 +7,24 @@
 	import { searches } from '../../stores/store';
 	import { getSearchesWithMappedEmbeddings } from '../../utils/getSearchesWithMappedEmbedding';
 	import { mapEmbeddingsToWindowSize } from '../../utils/mapEmbeddingsToWindowSize';
+	import { onMount } from 'svelte';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
 	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
+	$: if ($searches) {
+		console.log('Searches changed');
+		console.log(mappedSearches);
+		mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 
-	console.log($searches);
+		console.log(mappedSearches);
+	}
+
+	onMount(() => {
+		console.log(mappedSearches);
+	});
 
 	// Zooming
 	let scale = 1;
@@ -76,23 +86,25 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		{#each mappedEmbeddings as cross}
+		<!-- {#each mappedEmbeddings as cross}
 			<Cross x={cross[0]} y={cross[1]} color={'black'} />
-		{/each}
+		{/each} -->
 
 		<!-- Searches -->
-		{#if $searches}
-			{#each mappedSearches as search}
-				{#if search.searchPoint}
-					<Cross x={search.searchPoint.x} y={search.searchPoint.y} color={search.color} />
-				{/if}
-				{#each search.neighbors as cross}
-					<div>
-						<Cross x={cross[0]} y={cross[1]} color={search.color} />
-					</div>
+		{#key mappedSearches}
+			{#if $searches}
+				{#each mappedSearches as search}
+					{#if search.searchPoint}
+						<Cross x={search.searchPoint.x} y={search.searchPoint.y} color={'blue'} />
+					{/if}
+					{#each search.neighbors as cross}
+						<div>
+							<Cross x={cross[0]} y={cross[1]} color={search.color} />
+						</div>
+					{/each}
 				{/each}
-			{/each}
-		{/if}
+			{/if}
+		{/key}
 	</Layer>
 </Stage>
 

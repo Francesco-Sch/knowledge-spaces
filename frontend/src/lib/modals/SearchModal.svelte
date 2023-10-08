@@ -57,11 +57,13 @@
 			y: sumY / embeddings.length
 		};
 
+		console.log('Centroid: ' + JSON.stringify(centroid));
+
 		function randomInRange(min: number, max: number): number {
 			return Math.random() * (max - min) + min;
 		}
 
-		const offsetRange = 0.3;
+		const offsetRange = 0.05;
 		const randomPoint = {
 			x: centroid.x + randomInRange(-offsetRange, offsetRange),
 			y: centroid.y + randomInRange(-offsetRange, offsetRange)
