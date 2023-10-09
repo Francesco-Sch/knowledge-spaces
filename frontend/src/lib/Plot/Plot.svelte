@@ -1,14 +1,17 @@
 <script lang="ts">
-	import { Stage, Layer, Label, Tag, Text } from 'svelte-konva';
+	import { Stage, Layer, Label, Tag, Text, Circle } from 'svelte-konva';
 	import Grid from './Grid.svelte';
 	import CrossWrapper from './CrossWrapper.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
+	import Blob from './Blob.svelte';
 
 	import { searches } from '../../stores/store';
-	import { getSearchesWithMappedEmbeddings } from '../../utils/getSearchesWithMappedEmbedding';
-	import { mapEmbeddingsToWindowSize } from '../../utils/mapEmbeddingsToWindowSize';
-	import { onMount } from 'svelte';
+	import {
+		generateBlobPointsForSearch,
+		getSearchesWithMappedEmbeddings,
+		mapEmbeddingsToWindowSize
+	} from '../../utils';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
@@ -16,16 +19,8 @@
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
 	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 	$: if ($searches) {
-		console.log('Searches changed');
-		console.log(mappedSearches);
 		mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
-
-		console.log(mappedSearches);
 	}
-
-	onMount(() => {
-		console.log(mappedSearches);
-	});
 
 	// Zooming
 	let scale = 1;
@@ -96,6 +91,9 @@
 			{#if $searches}
 				{#each mappedSearches as search}
 					{#each search.neighbors as cross}
+						<!-- Draw the bubbly circle around the cross -->
+						<Blob points={generateBlobPointsForSearch(search)} color={search.color} />
+
 						<!-- Draw line from searchPoint to neighbor -->
 						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
@@ -103,7 +101,6 @@
 					{/each}
 
 					{#if search.searchPoint}
-						<!-- <Cross x={search.searchPoint[0]} y={search.searchPoint[1]} color={search.color} /> -->
 						<Label
 							config={{
 								x: search.searchPoint[0],
