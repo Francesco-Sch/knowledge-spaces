@@ -4,12 +4,13 @@
 	export let scale: number;
 	export let strokes: number;
 	export let windowWidth: number;
+	export let windowHeight: number;
 
 	let color: string = '#dbdbdb';
 	let dash: Array<number> = [5, 5];
 	let grid: Layer;
 
-	$: size = scale * windowWidth;
+	$: size = Math.max(windowWidth, windowHeight) * (1 / scale);
 
 	function handleLayerCreate(event: CustomEvent<Layer>) {
 		grid = event.detail;

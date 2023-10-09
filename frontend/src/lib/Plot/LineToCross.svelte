@@ -41,7 +41,7 @@
 		],
 		stroke: color,
 		strokeWidth: 2,
-		dash: [10, 10],
+		dash: [5, 5],
 		tension: 0.5,
 		bezier: true
 	}}

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { Line } from 'svelte-konva';
 
 	export let points = [];
@@ -11,7 +11,8 @@
 		fill: 'transparent',
 		stroke: color,
 		strokeWidth: 1,
-		dash: [10, 10],
+		opacity: 0.5,
+		dash: [5, 5],
 		closed: true,
 		tension: 0.5
 	}}

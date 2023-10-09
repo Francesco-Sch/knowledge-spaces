@@ -78,7 +78,7 @@
 
 <Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
 	<!-- Grid -->
-	<Grid {scale} strokes={20} {windowWidth} />
+	<Grid {scale} strokes={20} {windowWidth} {windowHeight} />
 
 	<Layer>
 		<!-- Embeddings -->
