@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Stage, Layer } from 'svelte-konva';
+	import { Stage, Layer, Label, Tag, Text } from 'svelte-konva';
 	import Grid from './Grid.svelte';
 	import CrossWrapper from './CrossWrapper.svelte';
 	import Cross from './Cross.svelte';
@@ -95,15 +95,38 @@
 		{#key mappedSearches}
 			{#if $searches}
 				{#each mappedSearches as search}
-					{#if search.searchPoint}
-						<Cross x={search.searchPoint[0]} y={search.searchPoint[1]} color={search.color} />
-					{/if}
 					{#each search.neighbors as cross}
 						<!-- Draw line from searchPoint to neighbor -->
 						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
 						<Cross x={cross[0]} y={cross[1]} color={search.color} />
 					{/each}
+
+					{#if search.searchPoint}
+						<!-- <Cross x={search.searchPoint[0]} y={search.searchPoint[1]} color={search.color} /> -->
+						<Label
+							config={{
+								x: search.searchPoint[0],
+								y: search.searchPoint[1]
+							}}
+						>
+							<Tag
+								config={{
+									fill: search.color
+								}}
+							/>
+							<Text
+								config={{
+									text: search.query,
+									fontSize: 12,
+									padding: 2,
+									fontFamily: 'Editorial New',
+									x: search.searchPoint[0],
+									y: search.searchPoint[1]
+								}}
+							/>
+						</Label>
+					{/if}
 				{/each}
 			{/if}
 		{/key}
