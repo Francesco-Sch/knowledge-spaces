@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Stage, Layer, Label, Tag, Text } from 'svelte-konva';
 	import Grid from './Grid.svelte';
-	// import CrossWrapper from './CrossWrapper.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
 	import Blob from './Blob.svelte';

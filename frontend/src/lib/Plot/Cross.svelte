@@ -56,16 +56,16 @@
 		context.fillStrokeShape(shape);
 	}
 
-	function handleClick(ctx) {
+	function handleClick(ctx: { detail: any }) {
 		dispatch('cross-clicked', ctx.detail);
 	}
 
-	function handleMouseEnter(ctx) {
+	function handleMouseEnter(ctx: { detail: { target: any } }) {
 		document.body.style.cursor = 'pointer';
 		let cross = ctx.detail.target;
 
 		// Add backdrop shadow to cross
-		cross.shadowColor('black');
+		cross.shadowColor(color);
 		cross.shadowBlur(2);
 		cross.shadowOffset({ x: 0, y: 0 });
 		cross.shadowOpacity(1);
@@ -74,7 +74,7 @@
 		cross.draw();
 	}
 
-	function handleMouseLeave(ctx) {
+	function handleMouseLeave(ctx: { detail: { target: any } }) {
 		document.body.style.cursor = 'default';
 		let cross = ctx.detail.target;
 
