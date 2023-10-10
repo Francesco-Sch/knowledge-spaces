@@ -17,6 +17,7 @@
 		"esbuild": "^0.19.4",
 		"konva": "^9.2.0",
 		"polygon-offset": "^0.3.2",
+		"simplify-js": "^1.2.4",
 		"svelte-konva": "^0.2.0",
 		"svelte-modals": "^1.2.1"
 	},

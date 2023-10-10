@@ -31,7 +31,7 @@
 	}
 
 	.contents {
-		position: absolute
+		position: absolute;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;

@@ -14,6 +14,8 @@
 		opacity: 0.5,
 		dash: [5, 5],
 		closed: true,
-		tension: 0.5
+		tension: 0.5,
+		listening: false,
+		cached: true
 	}}
 />
