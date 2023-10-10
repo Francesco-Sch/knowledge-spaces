@@ -15,7 +15,7 @@
 		justify-content: center;
 		align-items: center;
 		width: max-content;
-		height: auto;
+		height: 5rem;
 		padding: 1rem;
 		aspect-ratio: 1 / 1;
 		background-color: black;

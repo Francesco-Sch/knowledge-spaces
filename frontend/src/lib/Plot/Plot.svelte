@@ -21,6 +21,22 @@
 	$: if ($searches) {
 		mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 	}
+	$: if ($searches && $searches.length > 0) {
+		const lastSearch = mappedSearches[mappedSearches.length - 1];
+		zoomToSearchPoint(lastSearch.searchPoint);
+	}
+
+	let stageConfig = {
+		width: 0,
+		height: 0,
+		draggable: true,
+		x: 0,
+		y: 0,
+		scaleX: 1,
+		scaleY: 1
+	};
+	$: stageConfig.width = windowWidth;
+	$: stageConfig.height = windowHeight;
 
 	// Zooming
 	let scale = 1;
@@ -72,11 +88,26 @@
 		};
 		stage.position(newPos);
 	}
+
+	function zoomToSearchPoint(searchPoint) {
+		if (!stageConfig) return; // Exit the function if stage is not yet defined
+
+		console.log(stageConfig);
+
+		const stageScale = 1; // Define the zoom level you want here
+		const stageX = windowWidth / 2 - searchPoint[0] * stageScale;
+		const stageY = windowHeight / 2 - searchPoint[1] * stageScale;
+
+		stageConfig.x = stageX;
+		stageConfig.y = stageY;
+		stageConfig.scaleX = stageScale;
+		stageConfig.scaleY = stageScale;
+	}
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
-<Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
+<Stage bind:config={stageConfig} on:wheel={scaleShape}>
 	<!-- Grid -->
 	<!-- <Grid {scale} strokes={20} {windowWidth} {windowHeight} /> -->
 

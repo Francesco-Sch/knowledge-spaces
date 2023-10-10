@@ -3,7 +3,7 @@ import Offset from 'polygon-offset';
 import simplify from 'simplify-js';
 
 function generateBlobPointsForSearch(search) {
-	const hull = concaveman(search.neighbors, 1, 1);
+	const hull = concaveman(search.neighbors.concat([search.searchPoint]), 1, 1);
 
 	const offset = new Offset();
 	const offsetAmount = 50;
