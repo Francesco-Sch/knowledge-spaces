@@ -21,8 +21,6 @@
 
 		const results = await res.json();
 
-		console.log(results);
-
 		// Check if there are any results
 		if (results.length === 0) {
 			console.log('No results found');
@@ -59,8 +57,6 @@
 			y: sumY / embeddings.length
 		};
 
-		console.log('Centroid: ' + JSON.stringify(centroid));
-
 		function randomInRange(min: number, max: number): number {
 			return Math.random() * (max - min) + min;
 		}
@@ -85,8 +81,6 @@
 		} else {
 			searches.update((results) => [...results, searchResult]);
 		}
-
-		console.log($searches);
 
 		loading = false;
 		isOpen = false;
