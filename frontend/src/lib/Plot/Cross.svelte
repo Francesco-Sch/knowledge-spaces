@@ -2,14 +2,14 @@
 	import type { Context } from 'konva/lib/Context';
 	import type { ShapeConfig } from 'konva/lib/Shape';
 	import { Shape } from 'svelte-konva';
-
-	import { openModal } from 'svelte-modals';
-	import ContentModal from '$lib/modals/ContentModal.svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	// ----- Data -----
 	export let x: number;
 	export let y: number;
 	export let color: string;
+
+	const dispatch = createEventDispatcher();
 
 	// Function to draw a cross
 	function renderCross(context: Context, shape: Shape<ShapeConfig>): void {
@@ -40,15 +40,62 @@
 		context.fillStrokeShape(shape);
 	}
 
-	function handleClick(e) {
-		openModal(ContentModal, { x: e.detail.target, y });
+	// Define hit function
+	const padding = 1;
+	function hitRegion(context: Context, shape: Shape<ShapeConfig>): void {
+		let width = shape.getAttr('width');
+		let height = shape.getAttr('height');
+		context.beginPath();
+		context.rect(
+			-width - padding,
+			-height - padding,
+			2 * width + 2 * padding,
+			2 * height + 2 * padding
+		);
+		context.closePath();
+		context.fillStrokeShape(shape);
+	}
+
+	function handleClick(ctx) {
+		dispatch('cross-clicked', ctx.detail);
+	}
+
+	function handleMouseEnter(ctx) {
+		document.body.style.cursor = 'pointer';
+		let cross = ctx.detail.target;
+
+		// Add backdrop shadow to cross
+		cross.shadowColor('black');
+		cross.shadowBlur(2);
+		cross.shadowOffset({ x: 0, y: 0 });
+		cross.shadowOpacity(1);
+
+		// Redraw parent layer
+		cross.draw();
+	}
+
+	function handleMouseLeave(ctx) {
+		document.body.style.cursor = 'default';
+		let cross = ctx.detail.target;
+
+		// Remove backdrop shadow from cross
+		cross.shadowColor(undefined);
+		cross.shadowBlur(0);
+		cross.shadowOffset({ x: 0, y: 0 });
+		cross.shadowOpacity(0);
+
+		// Redraw parent layer
+		cross.draw();
 	}
 </script>
 
 <Shape
+	on:mouseenter={handleMouseEnter}
+	on:mouseleave={handleMouseLeave}
 	on:click={handleClick}
 	config={{
 		sceneFunc: renderCross,
+		hitFunc: hitRegion,
 		x: x,
 		y: y,
 		width: 5,

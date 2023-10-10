@@ -103,6 +103,11 @@
 		stageConfig.scaleX = stageScale;
 		stageConfig.scaleY = stageScale;
 	}
+
+	function handleCrossClick(e) {
+		console.log('Cross clicked');
+		console.log(e);
+	}
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
@@ -114,7 +119,7 @@
 	<Layer>
 		<!-- Embeddings -->
 		{#each mappedEmbeddings as cross, i}
-			<Cross x={cross[0]} y={cross[1]} color={'black'} />
+			<Cross x={cross[0]} y={cross[1]} color={'black'} on:cross-clicked={handleCrossClick} />
 		{/each}
 
 		<!-- Searches -->
@@ -128,7 +133,12 @@
 						<!-- Draw line from searchPoint to neighbor -->
 						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
-						<Cross x={cross[0]} y={cross[1]} color={search.color} />
+						<Cross
+							x={cross[0]}
+							y={cross[1]}
+							color={search.color}
+							on:cross-clicked={handleCrossClick}
+						/>
 					{/each}
 
 					{#if search.searchPoint}
@@ -159,6 +169,8 @@
 			{/if}
 		{/key}
 	</Layer>
+
+	<Layer />
 </Stage>
 
 <style></style>
