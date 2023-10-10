@@ -2,8 +2,8 @@
 	import { fly } from 'svelte/transition';
 	// provided by <Modals />
 	export let isOpen: boolean = true;
-	export let x = 0;
-	export let y = 0;
+	// export let x = 0;
+	// export let y = 0;
 </script>
 
 {#if isOpen}

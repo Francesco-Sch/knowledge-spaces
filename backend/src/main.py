@@ -6,7 +6,8 @@ from routes import embeddings, search
 app = FastAPI()
 
 # --- CORS ---
-origins = ["http://localhost:5173", "http://localhost:8080"]
+# origins = ["http://localhost:5173", "http://localhost:8080"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

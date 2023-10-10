@@ -15,7 +15,7 @@ function generateBlobPointsForSearch(search) {
 	});
 
 	// Simplify the offsetted hull
-	const simplifiedHullPoints = simplify(ofsettedHullPoints, 10, true);
+	const simplifiedHullPoints = simplify(ofsettedHullPoints, 5, true);
 
 	// Transform the array of objects with x and y properties back to an array of arrays
 	const simplifiedHull = simplifiedHullPoints.map((point) => {

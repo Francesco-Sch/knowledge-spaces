@@ -5,6 +5,8 @@ from sentence_transformers import util
 
 
 async def search(dataset_name: str, query: str, k: int = 1):
+    print(f"Searching for {query} in {dataset_name}...")
+
     # Load the dataset
     if dataset_name == "20newsgroups":
         dataset = _20Newsgroups
@@ -19,5 +21,7 @@ async def search(dataset_name: str, query: str, k: int = 1):
     top_similar_results = util.semantic_search(
         query_embedding, embeddings_tensor, top_k=k
     )
+
+    print(top_similar_results)
 
     return top_similar_results

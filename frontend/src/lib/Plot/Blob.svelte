@@ -8,10 +8,8 @@
 <Line
 	config={{
 		points: points,
-		fill: 'transparent',
 		stroke: color,
 		strokeWidth: 1,
-		opacity: 0.5,
 		dash: [5, 5],
 		closed: true,
 		tension: 0.5,

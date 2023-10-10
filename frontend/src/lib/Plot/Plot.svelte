@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Stage, Layer, Label, Tag, Text, Circle } from 'svelte-konva';
+	import { Stage, Layer, Label, Tag, Text } from 'svelte-konva';
 	import Grid from './Grid.svelte';
-	import CrossWrapper from './CrossWrapper.svelte';
+	// import CrossWrapper from './CrossWrapper.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
 	import Blob from './Blob.svelte';
@@ -82,7 +82,7 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		{#each mappedEmbeddings as cross}
+		{#each mappedEmbeddings as cross, i}
 			<Cross x={cross[0]} y={cross[1]} color={'black'} />
 		{/each}
 
