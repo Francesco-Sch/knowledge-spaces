@@ -78,7 +78,7 @@
 
 <Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
 	<!-- Grid -->
-	<Grid {scale} strokes={20} {windowWidth} {windowHeight} />
+	<!-- <Grid {scale} strokes={20} {windowWidth} {windowHeight} /> -->
 
 	<Layer>
 		<!-- Embeddings -->
@@ -91,7 +91,7 @@
 			{#if $searches}
 				{#each mappedSearches as search}
 					{#each search.neighbors as cross}
-						<!-- Draw the bubbly circle around the cross -->
+						<!-- Draw the blob around the cross -->
 						<Blob points={generateBlobPointsForSearch(search)} color={search.color} />
 
 						<!-- Draw line from searchPoint to neighbor -->

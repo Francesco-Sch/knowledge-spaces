@@ -2,12 +2,14 @@
 	import { fly } from 'svelte/transition';
 	// provided by <Modals />
 	export let isOpen: boolean = true;
+	export let x = 0;
+	export let y = 0;
 </script>
 
 {#if isOpen}
 	<div role="dialog" class="modal" transition:fly={{ y: -10, duration: 500 }}>
-		<div class="contents">
-			<h1>This is going to be content</h1>
+		<div class="contents" style="">
+			<h1 class="text">This is going to be content</h1>
 		</div>
 	</div>
 {/if}
@@ -29,6 +31,7 @@
 	}
 
 	.contents {
+		position: absolute
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;

@@ -3,6 +3,9 @@
 	import type { ShapeConfig } from 'konva/lib/Shape';
 	import { Shape } from 'svelte-konva';
 
+	import { openModal } from 'svelte-modals';
+	import ContentModal from '$lib/modals/ContentModal.svelte';
+
 	// ----- Data -----
 	export let x: number;
 	export let y: number;
@@ -36,9 +39,14 @@
 
 		context.fillStrokeShape(shape);
 	}
+
+	function handleClick(e) {
+		openModal(ContentModal, { x: e.detail.target, y });
+	}
 </script>
 
 <Shape
+	on:click={handleClick}
 	config={{
 		sceneFunc: renderCross,
 		x: x,
