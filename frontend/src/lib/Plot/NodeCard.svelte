@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Rect, Text } from 'svelte-konva';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, tick, afterUpdate } from 'svelte';
 	import { selectedDataset } from '../../stores/store';
+
+	const dispatch = createEventDispatcher();
 
 	// ----- Data -----
 	export let display: boolean = false;
@@ -9,8 +11,6 @@
 	export let y: number = 0;
 	export let color: string = 'black';
 	export let id: number = 0;
-
-	const dispatch = createEventDispatcher();
 
 	// ----- Configs -----
 	const padding = 15;
@@ -53,23 +53,27 @@
 	let coloredRect;
 	let text;
 
-	$: if (text) {
-		rectConfig.width = text.width() + 2 * padding;
-		rectConfig.height = text.height() + 2 * padding;
-	}
+	afterUpdate(() => {
+		if (text) {
+			rectConfig.width = text.width() + 2 * padding;
+			rectConfig.height = text.height() + 2 * padding;
+		}
+	});
 
+	// ----- Event Handlers -----
 	function handleClick(event) {
 		dispatch('card-click', event);
 	}
 
 	async function fetchDatasetEntry() {
 		const res = await fetch(`http://localhost:7100/dataset-entry/${$selectedDataset}/${id}`);
+		const fetchedText = await res.json();
 
-		const text = await res.json();
+		textConfig.text = fetchedText;
 
-		textConfig.text = text;
+		// Ensure updates take effect in the DOM
+		await tick();
 	}
-
 	$: if (display || id || x || y) {
 		fetchDatasetEntry();
 	}
