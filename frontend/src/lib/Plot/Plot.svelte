@@ -4,6 +4,7 @@
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
 	import Blob from './Blob.svelte';
+	import NodeCard from './NodeCard.svelte';
 
 	import { searches } from '../../stores/store';
 	import {
@@ -103,9 +104,29 @@
 		stageConfig.scaleY = stageScale;
 	}
 
+	let NodeCardConfig = {
+		display: false,
+		x: 0,
+		y: 0,
+		color: 'black'
+	};
+	let CardLayer;
+
 	function handleCrossClick(e) {
-		console.log('Cross clicked');
-		console.log(e);
+		const cross = e.detail.target;
+
+		// Get x and y coordinates of the cross
+		const crossX = cross.attrs.x + 20;
+		const crossY = cross.attrs.y;
+
+		// Set the NodeCardConfig
+		NodeCardConfig.display = true;
+		NodeCardConfig.x = crossX;
+		NodeCardConfig.y = crossY;
+		NodeCardConfig.color = cross.attrs.stroke;
+
+		// Redraw the layer
+		CardLayer.draw();
 	}
 </script>
 
@@ -169,7 +190,14 @@
 		{/key}
 	</Layer>
 
-	<Layer />
+	<Layer bind:handle={CardLayer}>
+		<NodeCard
+			display={NodeCardConfig.display}
+			x={NodeCardConfig.x}
+			y={NodeCardConfig.y}
+			color={NodeCardConfig.color}
+		/>
+	</Layer>
 </Stage>
 
 <style></style>
