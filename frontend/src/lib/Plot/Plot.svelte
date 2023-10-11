@@ -126,14 +126,9 @@
 
 		const cross = e.detail.detail;
 
-		console.log('Cross clicked', cross);
-
 		// Get x and y coordinates of the cross
 		const crossX = cross.target.attrs.x + 20;
 		const crossY = cross.target.attrs.y;
-
-		console.log('Cross x', crossX);
-		console.log('Cross y', crossY);
 
 		const mappedEntryIndex = mappedEmbeddings.findIndex(
 			(embedding) => embedding[0] === cross.target.attrs.x && embedding[1] === cross.target.attrs.y
