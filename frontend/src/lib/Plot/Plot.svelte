@@ -16,8 +16,6 @@
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
-	$: console.log(embeddings);
-
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
 	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 	$: if ($searches) {
@@ -113,7 +111,8 @@
 		display: false,
 		x: 0,
 		y: 0,
-		color: 'black'
+		color: 'black',
+		id: 0
 	};
 	let CardLayer;
 
@@ -129,11 +128,19 @@
 		const crossX = cross.target.attrs.x + 20;
 		const crossY = cross.target.attrs.y;
 
+		console.log('Cross x', crossX);
+		console.log('Cross y', crossY);
+
+		const mappedEntryIndex = mappedEmbeddings.findIndex(
+			(embedding) => embedding[0] === cross.target.attrs.x && embedding[1] === cross.target.attrs.y
+		);
+
 		// Set the NodeCardConfig
 		NodeCardConfig.display = true;
 		NodeCardConfig.x = crossX;
 		NodeCardConfig.y = crossY;
 		NodeCardConfig.color = cross.target.attrs.stroke;
+		NodeCardConfig.id = mappedEntryIndex;
 
 		// Redraw the layer
 		CardLayer.draw();
@@ -153,7 +160,7 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		{#each mappedEmbeddings as cross, i}
+		{#each mappedEmbeddings as cross}
 			<Cross x={cross[0]} y={cross[1]} color={'black'} on:cross-clicked={handleCrossClick} />
 		{/each}
 
@@ -211,6 +218,7 @@
 			x={NodeCardConfig.x}
 			y={NodeCardConfig.y}
 			color={NodeCardConfig.color}
+			id={NodeCardConfig.id}
 			on:card-click={stopPropagation}
 		/>
 	</Layer>

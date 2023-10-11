@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { Rect, Text } from 'svelte-konva';
 	import { createEventDispatcher } from 'svelte';
+	import { selectedDataset } from '../../stores/store';
 
 	// ----- Data -----
 	export let display: boolean = false;
 	export let x: number = 0;
 	export let y: number = 0;
 	export let color: string = 'black';
+	export let id: number = 0;
 
 	const dispatch = createEventDispatcher();
 
@@ -37,7 +39,7 @@
 		textConfig = {
 			x: x,
 			y: y + 20,
-			text: "COMPLEX TEXT\n\nAll the world's a stage, and all the men and women merely players. They have their exits and their entrances.",
+			text: '',
 			fontSize: 14,
 			fontFamily: 'Arial',
 			width: 300,
@@ -51,13 +53,25 @@
 	let coloredRect;
 	let text;
 
-	$: if (text && x && y) {
+	$: if (text) {
 		rectConfig.width = text.width() + 2 * padding;
 		rectConfig.height = text.height() + 2 * padding;
 	}
 
 	function handleClick(event) {
 		dispatch('card-click', event);
+	}
+
+	async function fetchDatasetEntry() {
+		const res = await fetch(`http://localhost:7100/dataset-entry/${$selectedDataset}/${id}`);
+
+		const text = await res.json();
+
+		textConfig.text = text;
+	}
+
+	$: if (display || id || x || y) {
+		fetchDatasetEntry();
 	}
 </script>
 
