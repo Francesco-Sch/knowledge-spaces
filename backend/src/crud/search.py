@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from loader import model, _20Newsgroups
+from loader import model, _20Newsgroups_Embeddings
 import torch
 from sentence_transformers import util
 
@@ -10,7 +10,7 @@ async def search(dataset_name: str, query: str, k: int = 1):
     try:
         # Load the dataset
         if dataset_name == "20newsgroups":
-            dataset = _20Newsgroups
+            dataset = _20Newsgroups_Embeddings
         else:
             raise HTTPException(
                 status_code=404, detail=f"Unknown dataset: {dataset_name}"

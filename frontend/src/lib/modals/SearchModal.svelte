@@ -21,6 +21,8 @@
 
 		const results = await res.json();
 
+		console.log(results);
+
 		// Check if there are any results
 		if (results.length === 0) {
 			console.log('No results found');

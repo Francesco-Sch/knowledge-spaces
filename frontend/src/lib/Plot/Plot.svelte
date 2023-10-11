@@ -12,10 +12,11 @@
 		getSearchesWithMappedEmbeddings,
 		mapEmbeddingsToWindowSize
 	} from '../../utils';
-	import { stop_propagation } from 'svelte/internal';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
+
+	$: console.log(embeddings);
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
 	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
