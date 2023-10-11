@@ -112,7 +112,11 @@
 		x: 0,
 		y: 0,
 		color: 'black',
-		id: 0
+		embedding: {
+			id: 0,
+			x: 0,
+			y: 0
+		}
 	};
 	let CardLayer;
 
@@ -134,13 +138,16 @@
 		const mappedEntryIndex = mappedEmbeddings.findIndex(
 			(embedding) => embedding[0] === cross.target.attrs.x && embedding[1] === cross.target.attrs.y
 		);
+		const embedding = embeddings[mappedEntryIndex];
 
 		// Set the NodeCardConfig
 		NodeCardConfig.display = true;
 		NodeCardConfig.x = crossX;
 		NodeCardConfig.y = crossY;
 		NodeCardConfig.color = cross.target.attrs.stroke;
-		NodeCardConfig.id = mappedEntryIndex;
+		NodeCardConfig.embedding.id = mappedEntryIndex;
+		NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
+		NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
 
 		// Redraw the layer
 		CardLayer.draw();
@@ -218,7 +225,7 @@
 			x={NodeCardConfig.x}
 			y={NodeCardConfig.y}
 			color={NodeCardConfig.color}
-			id={NodeCardConfig.id}
+			embedding={NodeCardConfig.embedding}
 			on:card-click={stopPropagation}
 		/>
 	</Layer>
