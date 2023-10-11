@@ -57,7 +57,7 @@
 	}
 
 	function handleClick(ctx: { detail: any }) {
-		dispatch('cross-clicked', ctx.detail);
+		dispatch('cross-clicked', ctx);
 	}
 
 	function handleMouseEnter(ctx: { detail: { target: any } }) {

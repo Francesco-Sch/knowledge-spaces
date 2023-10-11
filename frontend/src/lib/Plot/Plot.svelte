@@ -12,6 +12,7 @@
 		getSearchesWithMappedEmbeddings,
 		mapEmbeddingsToWindowSize
 	} from '../../utils';
+	import { stop_propagation } from 'svelte/internal';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
@@ -92,8 +93,6 @@
 	function zoomToSearchPoint(searchPoint) {
 		if (!stageConfig) return; // Exit the function if stage is not yet defined
 
-		console.log(stageConfig);
-
 		const stageScale = 1; // Define the zoom level you want here
 		const stageX = windowWidth / 2 - searchPoint[0] * stageScale;
 		const stageY = windowHeight / 2 - searchPoint[1] * stageScale;
@@ -102,6 +101,11 @@
 		stageConfig.y = stageY;
 		stageConfig.scaleX = stageScale;
 		stageConfig.scaleY = stageScale;
+	}
+
+	function handleStageClick() {
+		NodeCardConfig.display = false;
+		CardLayer.draw();
 	}
 
 	let NodeCardConfig = {
@@ -113,26 +117,36 @@
 	let CardLayer;
 
 	function handleCrossClick(e) {
-		const cross = e.detail.target;
+		// Prevent bubbling
+		e.detail.detail.cancelBubble = true;
+
+		const cross = e.detail.detail;
+
+		console.log('Cross clicked', cross);
 
 		// Get x and y coordinates of the cross
-		const crossX = cross.attrs.x + 20;
-		const crossY = cross.attrs.y;
+		const crossX = cross.target.attrs.x + 20;
+		const crossY = cross.target.attrs.y;
 
 		// Set the NodeCardConfig
 		NodeCardConfig.display = true;
 		NodeCardConfig.x = crossX;
 		NodeCardConfig.y = crossY;
-		NodeCardConfig.color = cross.attrs.stroke;
+		NodeCardConfig.color = cross.target.attrs.stroke;
 
 		// Redraw the layer
 		CardLayer.draw();
+	}
+
+	function stopPropagation(e) {
+		// Prevent bubbling
+		e.detail.detail.cancelBubble = true;
 	}
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
-<Stage bind:config={stageConfig} on:wheel={scaleShape}>
+<Stage bind:config={stageConfig} on:wheel={scaleShape} on:click={handleStageClick}>
 	<!-- Grid -->
 	<!-- <Grid {scale} strokes={20} {windowWidth} {windowHeight} /> -->
 
@@ -196,6 +210,7 @@
 			x={NodeCardConfig.x}
 			y={NodeCardConfig.y}
 			color={NodeCardConfig.color}
+			on:card-click={stopPropagation}
 		/>
 	</Layer>
 </Stage>
