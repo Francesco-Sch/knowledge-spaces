@@ -6,8 +6,12 @@ from routes import embeddings, search, dataset_entry
 app = FastAPI()
 
 # --- CORS ---
-# origins = ["http://localhost:5173", "http://localhost:8080"]
-origins = ["*"]
+origins = [
+    "https://knowledge-spaces.com",
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "http://localhost:4173",
+]
 
 app.add_middleware(
     CORSMiddleware,

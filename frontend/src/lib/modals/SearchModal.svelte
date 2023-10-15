@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
+	import { BASE_URL } from '../../data/config';
 	import { selectedDataset, amountOfNeighbors, searches } from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
 	import { getRandomColor } from '../../utils/getRandomColor';
@@ -16,7 +17,7 @@
 		console.log('The query is: ' + query);
 
 		const res = await fetch(
-			`http://localhost:7100/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
+			`${BASE_URL}/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
 		);
 
 		const results = await res.json();
@@ -32,9 +33,7 @@
 		let ids = results[0].map((id: { corpus_id: any }) => `ids=${id.corpus_id}`).join('&');
 
 		// Fetch the embeddings for the ids
-		const embeddings_res = await fetch(
-			`http://localhost:7100/embeddings/${$selectedDataset}?${ids}`
-		);
+		const embeddings_res = await fetch(`${BASE_URL}/embeddings/${$selectedDataset}?${ids}`);
 
 		const embeddings = await embeddings_res.json();
 

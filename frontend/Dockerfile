@@ -13,7 +13,8 @@ FROM node:lts-slim AS build
 
 WORKDIR /app
 COPY . . 
-RUN yarn && yarn build
+RUN yarn
+RUN yarn build
 
 FROM nginx:stable AS production
 

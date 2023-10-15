@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BASE_URL } from '../../data/config';
 	import { Rect, Text } from 'svelte-konva';
 	import { createEventDispatcher, afterUpdate } from 'svelte';
 	import { selectedDataset } from '../../stores/store';
@@ -82,9 +83,7 @@
 	}
 
 	async function fetchDatasetEntry() {
-		const res = await fetch(
-			`http://localhost:7100/dataset-entry/${$selectedDataset}/${embedding.id}`
-		);
+		const res = await fetch(`${BASE_URL}/dataset-entry/${$selectedDataset}/${embedding.id}`);
 		const fetchedText = await res.json();
 
 		textConfig.text = fetchedText;
