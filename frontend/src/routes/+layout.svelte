@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '@fontsource-variable/newsreader';
 	import { Modals, closeModal } from 'svelte-modals';
 </script>
 

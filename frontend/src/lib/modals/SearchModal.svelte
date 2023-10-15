@@ -102,7 +102,7 @@
 						bind:value={query}
 						type="text"
 						placeholder="Enter your search term"
-						class="editorial-new-400"
+						class="newsreader-400"
 						autofocus
 						on:keydown={(e) => {
 							if (e.key === 'Enter') {
@@ -110,7 +110,7 @@
 							}
 						}}
 					/>
-					<button class="editorial-new-400" on:click={fetchNN}>→</button>
+					<button class="newsreader-400" on:click={fetchNN}>→</button>
 				</div>
 			{/if}
 		</div>
@@ -180,6 +180,7 @@
 		aspect-ratio: 1 / 1;
 
 		font-size: 3rem;
+		line-height: 100%;
 
 		transition: all 0.2s ease-in-out;
 	}

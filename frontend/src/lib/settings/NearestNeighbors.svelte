@@ -22,16 +22,16 @@
 
 <div class="nearest-neighbors">
 	<div class="counter" on:wheel={handleScroll}>
-		<p class="counter_number editorial-new-400">{$amountOfNeighbors}</p>
+		<p class="counter_number newsreader-400">{$amountOfNeighbors}</p>
 		<div class="counter_buttons">
 			<button
-				class="editorial-new-400"
+				class="newsreader-400"
 				on:click={() => {
 					$amountOfNeighbors++;
 				}}>▲</button
 			>
 			<button
-				class="editorial-new-400"
+				class="newsreader-400"
 				on:click={() => {
 					$amountOfNeighbors--;
 				}}>▼</button

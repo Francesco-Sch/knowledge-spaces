@@ -7,7 +7,7 @@
 	}
 </script>
 
-<button class="editorial-new-400" on:click={handleClick}>+</button>
+<button class="newsreader-400" on:click={handleClick}>+</button>
 
 <style>
 	button {
@@ -21,7 +21,7 @@
 		background-color: black;
 		color: white;
 		border: none;
-		font-size: 5rem;
+		font-size: 6rem;
 		pointer-events: all;
 
 		transition: all 0.2s ease-in-out;

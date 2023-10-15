@@ -10,7 +10,7 @@
 <div class="datasets">
 	<div class="select_toggle">
 		<button
-			class="editorial-new-400"
+			class="newsreader-400"
 			on:click={() => {
 				open = !open;
 			}}
@@ -25,7 +25,7 @@
 		{#if open}
 			{#each datasets as dataset}
 				<button
-					class="editorial-new-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
+					class="newsreader-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
 					on:click={() => {
 						$selectedDataset = dataset.name;
 						open = false;
@@ -57,8 +57,8 @@
 		background: none;
 		border: none;
 		text-align: left;
-		font-size: 5.5rem;
-		line-height: 90%;
+		font-size: 6rem;
+		line-height: 80%;
 
 		transition: all 0.2s ease-in-out;
 	}
