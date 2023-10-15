@@ -165,7 +165,7 @@
 		border: none;
 	}
 	.search-wrapper input::placeholder {
-		color: #cacaca;
+		color: var(--text-secondary);
 	}
 	.search-wrapper input:focus {
 		outline: none;
