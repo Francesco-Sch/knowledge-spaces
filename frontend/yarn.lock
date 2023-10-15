@@ -264,11 +264,6 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.0.0.tgz#f22824caff3ae506b18207bad4126dbc6ccdb6b8"
   integrity sha512-JUFJad5lv7jxj926GPgymrWQxxjPYuJNiNjNMzqT+HiuP6Vl3dk5xzG+8sTX96np0ZAluvaMzPsjhHZ5rNuNQQ==
 
-"@fontsource-variable/newsreader@^5.0.14":
-  version "5.0.14"
-  resolved "https://registry.yarnpkg.com/@fontsource-variable/newsreader/-/newsreader-5.0.14.tgz#740c5e3d9b9115cfb3179776bc9683cc986d25fc"
-  integrity sha512-h3pKZxOAUizDTRe/K00Fbo6Yaab1eI2B4WC6tXmM0wYtPVvxNsEoGfCa07LeTeipvd3hZkAZJwYrvyp94/S7QQ==
-
 "@humanwhocodes/config-array@^0.11.11":
   version "0.11.11"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.11.tgz#88a04c570dbbc7dd943e4712429c3df09bc32844"

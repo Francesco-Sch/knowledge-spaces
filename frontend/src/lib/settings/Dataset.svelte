@@ -10,7 +10,7 @@
 <div class="datasets">
 	<div class="select_toggle">
 		<button
-			class="newsreader-400"
+			class="times-400"
 			on:click={() => {
 				open = !open;
 			}}
@@ -25,7 +25,7 @@
 		{#if open}
 			{#each datasets as dataset}
 				<button
-					class="newsreader-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
+					class="times-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
 					on:click={() => {
 						$selectedDataset = dataset.name;
 						open = false;
@@ -52,13 +52,12 @@
 	}
 	.select_toggle button {
 		width: 100%;
-		margin-top: 0.5rem;
 		padding: 0;
 		background: none;
 		border: none;
 		text-align: left;
 		font-size: 6rem;
-		line-height: 80%;
+		line-height: 75%;
 
 		transition: all 0.2s ease-in-out;
 	}

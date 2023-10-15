@@ -1,13 +1,4 @@
-/* ----- IMPORT ----- */
-@font-face {
-	font-family: 'Editorial New';
-	font-style: normal;
-	font-weight: 400;
-	src: url('../fonts/EditorialNew-Regular.woff2') format('woff2'),
-		url('../fonts/EditorialNew-Regular.woff') format('woff');
-}
-
 /* ----- UTILITIES ----- */
-.newsreader-400 {
-	font-family: 'Newsreader Variable', 'Times New Roman', Times, serif;
+.times-400 {
+	font-family: 'Times New Roman', Times, serif;
 }

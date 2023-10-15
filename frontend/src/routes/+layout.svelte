@@ -3,6 +3,10 @@
 	import { Modals, closeModal } from 'svelte-modals';
 </script>
 
+<svelte:head>
+	<title>knowledge spaces</title>
+</svelte:head>
+
 <slot />
 
 <Modals>
