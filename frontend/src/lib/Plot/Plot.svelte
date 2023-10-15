@@ -1,22 +1,42 @@
 <script lang="ts">
-	import { Stage, Layer } from 'svelte-konva';
+	import { Stage, Layer, Label, Tag, Text } from 'svelte-konva';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
+	import LineToCross from './LineToCross.svelte';
+	import Blob from './Blob.svelte';
+	import NodeCard from './NodeCard.svelte';
+
+	import { searches } from '../../stores/store';
+	import {
+		generateBlobPointsForSearch,
+		getSearchesWithMappedEmbeddings,
+		mapEmbeddingsToWindowSize
+	} from '../../utils';
 
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
-	// Map embeddings to the window size
-	function map_range(value: number, low1: number, high1: number, low2: number, high2: number) {
-		return low2 + ((high2 - low2) * (value - low1)) / (high1 - low1);
+	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
+	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
+	$: if ($searches) {
+		mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
+	}
+	$: if ($searches && $searches.length > 0) {
+		const lastSearch = mappedSearches[mappedSearches.length - 1];
+		zoomToSearchPoint(lastSearch.searchPoint);
 	}
 
-	const mappedEmbeddings = (): Array<Array<number>> => {
-		return embeddings.map(([x, y]) => [
-			map_range(x, -0.1, 0.5, -1000, windowWidth + 1000),
-			map_range(y, -0.1, 0.5, -1000, windowHeight + 1000)
-		]);
+	let stageConfig = {
+		width: 0,
+		height: 0,
+		draggable: true,
+		x: 0,
+		y: 0,
+		scaleX: 1,
+		scaleY: 1
 	};
+	$: stageConfig.width = windowWidth;
+	$: stageConfig.height = windowHeight;
 
 	// Zooming
 	let scale = 1;
@@ -68,19 +88,141 @@
 		};
 		stage.position(newPos);
 	}
+
+	function zoomToSearchPoint(searchPoint) {
+		if (!stageConfig) return; // Exit the function if stage is not yet defined
+
+		const stageScale = 1; // Define the zoom level you want here
+		const stageX = windowWidth / 2 - searchPoint[0] * stageScale;
+		const stageY = windowHeight / 2 - searchPoint[1] * stageScale;
+
+		stageConfig.x = stageX;
+		stageConfig.y = stageY;
+		stageConfig.scaleX = stageScale;
+		stageConfig.scaleY = stageScale;
+	}
+
+	function handleStageClick() {
+		NodeCardConfig.display = false;
+		CardLayer.draw();
+	}
+
+	let NodeCardConfig = {
+		display: false,
+		x: 0,
+		y: 0,
+		color: 'black',
+		embedding: {
+			id: 0,
+			x: 0,
+			y: 0
+		}
+	};
+	let CardLayer;
+
+	function handleCrossClick(e) {
+		// Prevent bubbling
+		e.detail.detail.cancelBubble = true;
+
+		const cross = e.detail.detail;
+
+		// Get x and y coordinates of the cross
+		const crossX = cross.target.attrs.x + 20;
+		const crossY = cross.target.attrs.y;
+
+		const mappedEntryIndex = mappedEmbeddings.findIndex(
+			(embedding) => embedding[0] === cross.target.attrs.x && embedding[1] === cross.target.attrs.y
+		);
+		const embedding = embeddings[mappedEntryIndex];
+
+		// Set the NodeCardConfig
+		NodeCardConfig.display = true;
+		NodeCardConfig.x = crossX;
+		NodeCardConfig.y = crossY;
+		NodeCardConfig.color = cross.target.attrs.stroke;
+		NodeCardConfig.embedding.id = mappedEntryIndex;
+		NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
+		NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
+
+		// Redraw the layer
+		CardLayer.draw();
+	}
+
+	function stopPropagation(e) {
+		// Prevent bubbling
+		e.detail.detail.cancelBubble = true;
+	}
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
-<Stage config={{ width: windowWidth, height: windowHeight, draggable: true }} on:wheel={scaleShape}>
+<Stage bind:config={stageConfig} on:wheel={scaleShape} on:click={handleStageClick}>
 	<!-- Grid -->
-	<Grid {scale} strokes={20} {windowWidth} />
+	<!-- <Grid {scale} strokes={20} {windowWidth} {windowHeight} /> -->
 
-	<!-- Embeddings -->
 	<Layer>
-		{#each mappedEmbeddings() as cross}
-			<Cross x={cross[0]} y={cross[1]} />
+		<!-- Embeddings -->
+		{#each mappedEmbeddings as cross}
+			<Cross x={cross[0]} y={cross[1]} color={'black'} on:cross-clicked={handleCrossClick} />
 		{/each}
+
+		<!-- Searches -->
+		{#key mappedSearches}
+			{#if $searches}
+				{#each mappedSearches as search}
+					{#each search.neighbors as cross}
+						<!-- Draw the blob around the cross -->
+						<Blob points={generateBlobPointsForSearch(search)} color={search.color} />
+
+						<!-- Draw line from searchPoint to neighbor -->
+						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
+
+						<Cross
+							x={cross[0]}
+							y={cross[1]}
+							color={search.color}
+							on:cross-clicked={handleCrossClick}
+						/>
+					{/each}
+
+					{#if search.searchPoint}
+						<Label
+							config={{
+								x: search.searchPoint[0],
+								y: search.searchPoint[1]
+							}}
+						>
+							<Tag
+								config={{
+									fill: search.color
+								}}
+							/>
+							<Text
+								config={{
+									text: search.query,
+									fontSize: 12,
+									padding: 2,
+									fontFamily: 'Editorial New',
+									x: search.searchPoint[0],
+									y: search.searchPoint[1]
+								}}
+							/>
+						</Label>
+					{/if}
+				{/each}
+			{/if}
+		{/key}
+	</Layer>
+
+	<Layer bind:handle={CardLayer}>
+		<NodeCard
+			display={NodeCardConfig.display}
+			x={NodeCardConfig.x}
+			y={NodeCardConfig.y}
+			color={NodeCardConfig.color}
+			embedding={NodeCardConfig.embedding}
+			on:card-click={stopPropagation}
+		/>
 	</Layer>
 </Stage>
 

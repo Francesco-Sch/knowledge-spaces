@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import embeddings, search
+from routes import embeddings, search, dataset_entry
 
 app = FastAPI()
 
 # --- CORS ---
-origins = ["http://localhost:5173", "http://localhost:8080"]
+# origins = ["http://localhost:5173", "http://localhost:8080"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +20,10 @@ app.add_middleware(
 # --- ROUTER ---
 app.include_router(embeddings.router)
 app.include_router(search.router)
+app.include_router(dataset_entry.router)
+
+# add debug mode
+app.debug = True
 
 
 # --- STARTUP ---

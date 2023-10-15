@@ -5,8 +5,6 @@
 
 	// Filter dataset for the dataset that name is the same as selecetedDataset
 	$: selected = datasets.filter((dataset) => dataset.name === $selectedDataset)[0].label;
-
-	console.log(selected);
 </script>
 
 <div class="datasets">
