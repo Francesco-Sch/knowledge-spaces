@@ -202,7 +202,7 @@
 									text: search.query,
 									fontSize: 12,
 									padding: 2,
-									fontFamily: 'Editorial New',
+									fontFamily: 'Newsreader Variable',
 									x: search.searchPoint[0],
 									y: search.searchPoint[1]
 								}}

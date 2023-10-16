@@ -47,7 +47,7 @@
 			y: y,
 			text: `x: ${embedding.x}, y: ${embedding.y}`,
 			fontSize: 8,
-			fontFamily: 'Arial',
+			fontFamily: 'Helvetica',
 			width: 300,
 			padding: padding,
 			align: 'right'
@@ -58,7 +58,7 @@
 			y: y + 30,
 			text: '',
 			fontSize: 14,
-			fontFamily: 'Arial',
+			fontFamily: 'Helvetica',
 			width: 300,
 			padding: padding,
 			align: 'left'

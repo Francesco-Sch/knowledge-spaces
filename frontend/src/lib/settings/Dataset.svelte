@@ -10,14 +10,16 @@
 <div class="datasets">
 	<div class="select_toggle">
 		<button
-			class="editorial-new-400"
+			class="times-400"
 			on:click={() => {
-				open = !open;
+				if (datasets.length > 1) open = !open;
 			}}
 		>
 			{@html selected}
 
-			<span class={open ? 'rotated' : ''}>▼</span>
+			{#if datasets.length > 1}
+				<span class={open ? 'rotated' : ''}>▼</span>
+			{/if}
 		</button>
 	</div>
 
@@ -25,7 +27,7 @@
 		{#if open}
 			{#each datasets as dataset}
 				<button
-					class="editorial-new-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
+					class="times-400 {$selectedDataset === dataset.name ? 'selected' : ''}"
 					on:click={() => {
 						$selectedDataset = dataset.name;
 						open = false;
@@ -52,13 +54,12 @@
 	}
 	.select_toggle button {
 		width: 100%;
-		margin-top: 0.5rem;
 		padding: 0;
 		background: none;
 		border: none;
 		text-align: left;
-		font-size: 5.5rem;
-		line-height: 90%;
+		font-size: 6rem;
+		line-height: 75%;
 
 		transition: all 0.2s ease-in-out;
 	}

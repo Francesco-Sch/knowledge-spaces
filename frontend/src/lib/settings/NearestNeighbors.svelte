@@ -22,16 +22,16 @@
 
 <div class="nearest-neighbors">
 	<div class="counter" on:wheel={handleScroll}>
-		<p class="counter_number editorial-new-400">{$amountOfNeighbors}</p>
+		<p class="counter_number times-400">{$amountOfNeighbors}</p>
 		<div class="counter_buttons">
 			<button
-				class="editorial-new-400"
+				class="times-400"
 				on:click={() => {
 					$amountOfNeighbors++;
 				}}>▲</button
 			>
 			<button
-				class="editorial-new-400"
+				class="times-400"
 				on:click={() => {
 					$amountOfNeighbors--;
 				}}>▼</button
@@ -56,7 +56,7 @@
 		display: flex;
 		flex-direction: row;
 		font-size: 6rem;
-		line-height: 85%;
+		line-height: 75%;
 
 		transition: all 0.2s ease-in-out;
 	}
@@ -64,7 +64,7 @@
 		text-shadow: var(--hover-text-shadow_black);
 	}
 	.counter .counter_number {
-		margin: 0.5rem 0 0;
+		margin: 0 0;
 	}
 
 	.counter .counter_buttons {

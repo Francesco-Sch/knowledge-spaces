@@ -10,8 +10,7 @@
 	/* ----- COLOURS ----- */
 	--bg: #ebeaeb;
 	--grid-strokes: #dbdbdb;
-
-	/* ----- FONTS ----- */
+	--text-secondary: #cacaca;
 
 	/* ----- HOVER EFFECTS ----- */
 	--hover-text-shadow_black: 0px 0px 4px black, 0px 0px 12px black;

@@ -7,7 +7,7 @@
 	}
 </script>
 
-<button class="editorial-new-400" on:click={handleClick}>+</button>
+<button class="times-400" on:click={handleClick}>+</button>
 
 <style>
 	button {
@@ -22,6 +22,7 @@
 		color: white;
 		border: none;
 		font-size: 5rem;
+		font-weight: 700;
 		pointer-events: all;
 
 		transition: all 0.2s ease-in-out;
