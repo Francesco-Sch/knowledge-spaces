@@ -12,12 +12,14 @@
 		<button
 			class="times-400"
 			on:click={() => {
-				open = !open;
+				if (datasets.length > 1) open = !open;
 			}}
 		>
 			{@html selected}
 
-			<span class={open ? 'rotated' : ''}>▼</span>
+			{#if datasets.length > 1}
+				<span class={open ? 'rotated' : ''}>▼</span>
+			{/if}
 		</button>
 	</div>
 
