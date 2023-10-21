@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Stage, Layer, Label, Tag, Text } from 'svelte-konva';
+	import { onMount, tick } from 'svelte';
+	import { Stage, Layer, Group, Label, Tag, Text } from 'svelte-konva';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
@@ -37,6 +38,24 @@
 	};
 	$: stageConfig.width = windowWidth;
 	$: stageConfig.height = windowHeight;
+
+	// Cross group
+	let crossGroup;
+
+	onMount(() => {
+		tick().then(() => {
+			if (crossGroup != null) {
+				// Check if the group has valid size
+				const bbox = crossGroup.getClientRect();
+				if (bbox.width > 0 && bbox.height > 0) {
+					console.log('Caching crossGroup');
+					crossGroup.cache();
+				} else {
+					console.warn('Group has invalid size. Caching skipped.');
+				}
+			}
+		});
+	});
 
 	// Zooming
 	let scale = 1;
@@ -162,9 +181,11 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		{#each mappedEmbeddings as cross}
-			<Cross x={cross[0]} y={cross[1]} color={'black'} on:cross-clicked={handleCrossClick} />
-		{/each}
+		<Group bind:handle={crossGroup}>
+			{#each mappedEmbeddings as cross}
+				<Cross x={cross[0]} y={cross[1]} color={'black'} on:cross-clicked={handleCrossClick} />
+			{/each}
+		</Group>
 
 		<!-- Searches -->
 		{#key mappedSearches}
@@ -202,7 +223,7 @@
 									text: search.query,
 									fontSize: 12,
 									padding: 2,
-									fontFamily: 'Newsreader Variable',
+									fontFamily: 'Times New Roman',
 									x: search.searchPoint[0],
 									y: search.searchPoint[1]
 								}}

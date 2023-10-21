@@ -1,5 +1,12 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import { Modals, closeModal } from 'svelte-modals';
+	import { searchModalLoading } from '../stores/store';
+
+	function closeTheModal() {
+		if (get(searchModalLoading)) return;
+		closeModal();
+	}
 </script>
 
 <svelte:head>
@@ -9,7 +16,7 @@
 <slot />
 
 <Modals>
-	<div slot="backdrop" class="backdrop" on:click={closeModal} on:keyup={closeModal} />
+	<div slot="backdrop" class="backdrop" on:click={closeTheModal} on:keyup={closeTheModal} />
 </Modals>
 
 <style>

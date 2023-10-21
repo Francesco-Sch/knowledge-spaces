@@ -4,7 +4,10 @@
 	let open = false;
 
 	// Filter dataset for the dataset that name is the same as selecetedDataset
-	$: selected = datasets.filter((dataset) => dataset.name === $selectedDataset)[0].label;
+	$: selected =
+		datasets.length === 1
+			? datasets[0].label
+			: datasets.filter((dataset) => dataset.name === $selectedDataset)[0].label;
 </script>
 
 <div class="datasets">
