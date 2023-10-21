@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store';
 
 // --- Settings components ---
-export const selectedDataset = writable(localStorage.getItem('selectedDataset') || 'redpajama');
+export const selectedDataset = writable(localStorage.getItem('selectedDataset') || '20newsgroups');
 selectedDataset.subscribe((value) => (localStorage.selectedDataset = value));
 
 export const amountOfNeighbors = writable(localStorage.getItem('amountOfNeighbors') || '5');
