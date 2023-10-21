@@ -87,7 +87,7 @@
 </script>
 
 {#if isOpen}
-	<div role="dialog" class="modal" transition:fly={{ y: -10, duration: 500 }}>
+	<div role="dialog" class="modal" transition:fly|global={{ y: -10, duration: 500 }}>
 		<div class="contents">
 			{#if loading}
 				<!-- Loading state -->
