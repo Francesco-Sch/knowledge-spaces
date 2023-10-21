@@ -58,7 +58,7 @@
 
 		grid-column: -1 / -3;
 		grid-row: 1 / end;
-		padding: 1rem 1rem 0 0;
+		padding: 1rem 0 0 0;
 	}
 
 	.plot {
