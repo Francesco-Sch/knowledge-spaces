@@ -154,17 +154,19 @@
 		);
 		const embedding = embeddings[mappedEntryIndex];
 
-		// Set the NodeCardConfig
-		NodeCardConfig.display = true;
-		NodeCardConfig.x = crossX;
-		NodeCardConfig.y = crossY;
-		NodeCardConfig.color = cross.target.attrs.stroke;
-		NodeCardConfig.embedding.id = mappedEntryIndex;
-		NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
-		NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
+		if (!NodeCardConfig.display) {
+			// Set the NodeCardConfig
+			NodeCardConfig.display = true;
+			NodeCardConfig.x = crossX;
+			NodeCardConfig.y = crossY;
+			NodeCardConfig.color = cross.target.attrs.stroke;
+			NodeCardConfig.embedding.id = mappedEntryIndex;
+			NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
+			NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
 
-		// Redraw the layer
-		CardLayer.draw();
+			// Redraw the layer
+			CardLayer.draw();
+		}
 	}
 
 	function stopPropagation(e) {
