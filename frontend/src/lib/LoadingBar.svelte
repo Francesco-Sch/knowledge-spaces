@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Spinner from './Spinner.svelte';
-	export let loading: boolean = false;
 </script>
 
 <div class="loading-bar">
