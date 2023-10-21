@@ -47,8 +47,8 @@
 		rectConfig = {
 			x: x,
 			y: y,
-			width: 300,
-			height: 0,
+			width: 325,
+			height: 100,
 			fill: 'white'
 		};
 
@@ -99,12 +99,16 @@
 	}
 
 	async function fetchDatasetEntry() {
+		setTimeout(() => {
+			textConfig.text = 'Loading...';
+		}, 1);
+
 		const res = await fetch(`${BASE_URL}/dataset-entry/${$selectedDataset}/${embedding.id}`);
 		const fetchedText = await res.json();
 
 		textConfig.text = fetchedText;
 	}
-	$: if (display || embedding.id || x || y) {
+	$: if (display) {
 		fetchDatasetEntry();
 	}
 </script>
