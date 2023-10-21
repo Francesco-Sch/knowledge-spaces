@@ -9,10 +9,14 @@
 		searchModalLoading
 	} from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
-	import { getRandomColor } from '../../utils/getRandomColor';
+	import { getRandomColor, getSearchesWithMappedEmbeddings, zoomToSearchPoint } from '../../utils';
 
 	// provided by <Modals />
 	export let isOpen: boolean = false;
+	let windowWidth: number = 0;
+	let windowHeight: number = 0;
+
+	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
 
 	let query: string = '';
 
@@ -21,6 +25,31 @@
 
 		console.log('The query is: ' + query);
 
+		// Check if the query was already searched for
+		if (
+			$searches &&
+			$searches.some((search) => search.dataset === $selectedDataset && search.query === query)
+		) {
+			const search = $searches.find(
+				(search) => search.dataset === $selectedDataset && search.query === query
+			);
+			console.log('Search already exists');
+			$searchModalLoading = false;
+			isOpen = false;
+			closeModal();
+
+			// Get mapped search
+			const mappedSearch = mappedSearches.find(
+				(search) => search.dataset === $selectedDataset && search.query === query
+			);
+
+			// Zoom to the search point
+			zoomToSearchPoint(mappedSearch.searchPoint, windowWidth, windowHeight);
+
+			return;
+		}
+
+		// Fetch the nearest neighbors
 		const res = await fetch(
 			`${BASE_URL}/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
 		);
@@ -93,13 +122,15 @@
 	};
 </script>
 
+<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
+
 {#if isOpen}
 	<div role="dialog" class="modal" transition:fly|global={{ y: -10, duration: 500 }}>
 		<div class="contents">
 			{#if $searchModalLoading}
 				<!-- Loading state -->
 				<div class="loading">
-					<LoadingBar loading={$searchModalLoading} />
+					<LoadingBar />
 				</div>
 			{:else}
 				<!-- Search input -->

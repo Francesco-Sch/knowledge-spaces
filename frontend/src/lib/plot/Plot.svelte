@@ -7,11 +7,12 @@
 	import Blob from './Blob.svelte';
 	import NodeCard from './NodeCard.svelte';
 
-	import { searches } from '../../stores/store';
+	import { searches, stageConfig } from '../../stores/store';
 	import {
 		generateBlobPointsForSearch,
 		getSearchesWithMappedEmbeddings,
-		mapEmbeddingsToWindowSize
+		mapEmbeddingsToWindowSize,
+		zoomToSearchPoint
 	} from '../../utils';
 
 	let windowWidth: number, windowHeight: number;
@@ -24,20 +25,11 @@
 	}
 	$: if ($searches && $searches.length > 0) {
 		const lastSearch = mappedSearches[mappedSearches.length - 1];
-		zoomToSearchPoint(lastSearch.searchPoint);
+		zoomToSearchPoint(lastSearch.searchPoint, windowWidth, windowHeight);
 	}
 
-	let stageConfig = {
-		width: 0,
-		height: 0,
-		draggable: true,
-		x: 0,
-		y: 0,
-		scaleX: 1,
-		scaleY: 1
-	};
-	$: stageConfig.width = windowWidth;
-	$: stageConfig.height = windowHeight;
+	$: $stageConfig.width = windowWidth;
+	$: $stageConfig.height = windowHeight;
 
 	// Cross group
 	let crossGroup;
@@ -108,19 +100,6 @@
 		stage.position(newPos);
 	}
 
-	function zoomToSearchPoint(searchPoint) {
-		if (!stageConfig) return; // Exit the function if stage is not yet defined
-
-		const stageScale = 1; // Define the zoom level you want here
-		const stageX = windowWidth / 2 - searchPoint[0] * stageScale;
-		const stageY = windowHeight / 2 - searchPoint[1] * stageScale;
-
-		stageConfig.x = stageX;
-		stageConfig.y = stageY;
-		stageConfig.scaleX = stageScale;
-		stageConfig.scaleY = stageScale;
-	}
-
 	function handleStageClick() {
 		NodeCardConfig.display = false;
 		CardLayer.draw();
@@ -135,7 +114,8 @@
 			id: 0,
 			x: 0,
 			y: 0
-		}
+		},
+		search: null
 	};
 	let CardLayer;
 
@@ -154,6 +134,15 @@
 		);
 		const embedding = embeddings[mappedEntryIndex];
 
+		// Check if cross is part of a search
+		let search = null;
+
+		if ($searches) {
+			search = $searches.find((search) =>
+				search.neighbors.some((neighbor) => neighbor.corpus_id === mappedEntryIndex)
+			);
+		}
+
 		if (!NodeCardConfig.display) {
 			// Set the NodeCardConfig
 			NodeCardConfig.display = true;
@@ -163,6 +152,7 @@
 			NodeCardConfig.embedding.id = mappedEntryIndex;
 			NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
 			NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
+			NodeCardConfig.search = search != undefined ? search : null;
 
 			// Redraw the layer
 			CardLayer.draw();
@@ -177,7 +167,7 @@
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
-<Stage bind:config={stageConfig} on:wheel={scaleShape} on:click={handleStageClick}>
+<Stage bind:config={$stageConfig} on:wheel={scaleShape} on:click={handleStageClick}>
 	<!-- Grid -->
 	<!-- <Grid {scale} strokes={20} {windowWidth} {windowHeight} /> -->
 

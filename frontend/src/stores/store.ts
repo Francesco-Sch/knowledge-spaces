@@ -27,3 +27,14 @@ export const getActiveSearches = derived(
 export const getEmbeddingsFromSearches = derived(getActiveSearches, ($getActiveSearches: any) => {
 	return $getActiveSearches.map((search: any) => search.neighbors);
 });
+
+// --- Plot ---
+export const stageConfig = writable({
+	width: 0,
+	height: 0,
+	draggable: true,
+	x: 0,
+	y: 0,
+	scaleX: 1,
+	scaleY: 1
+});
