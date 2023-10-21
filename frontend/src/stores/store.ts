@@ -7,6 +7,9 @@ selectedDataset.subscribe((value) => (localStorage.selectedDataset = value));
 export const amountOfNeighbors = writable(localStorage.getItem('amountOfNeighbors') || '5');
 amountOfNeighbors.subscribe((value) => (localStorage.amountOfNeighbors = value));
 
+// --- Modals ---
+export const searchModalLoading = writable(false);
+
 // --- Searches ---
 export const searches = writable(JSON.parse(localStorage.getItem('searches') || 'null'));
 searches.subscribe((value) => (localStorage.searches = JSON.stringify(value)));

@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
+	import { closeModal } from 'svelte-modals';
 	import { BASE_URL } from '../../data/config';
-	import { selectedDataset, amountOfNeighbors, searches } from '../../stores/store';
+	import {
+		selectedDataset,
+		amountOfNeighbors,
+		searches,
+		searchModalLoading
+	} from '../../stores/store';
 	import LoadingBar from '$lib/LoadingBar.svelte';
 	import { getRandomColor } from '../../utils/getRandomColor';
 
@@ -9,10 +15,9 @@
 	export let isOpen: boolean = false;
 
 	let query: string = '';
-	let loading: boolean = false;
 
 	const fetchNN = async () => {
-		loading = true;
+		$searchModalLoading = true;
 
 		console.log('The query is: ' + query);
 
@@ -25,7 +30,7 @@
 		// Check if there are any results
 		if (results.length === 0) {
 			console.log('No results found');
-			loading = false;
+			$searchModalLoading = true;
 			return;
 		}
 
@@ -81,18 +86,20 @@
 			searches.update((results) => [...results, searchResult]);
 		}
 
-		loading = false;
+		$searchModalLoading = false;
 		isOpen = false;
+
+		closeModal();
 	};
 </script>
 
 {#if isOpen}
 	<div role="dialog" class="modal" transition:fly|global={{ y: -10, duration: 500 }}>
 		<div class="contents">
-			{#if loading}
+			{#if $searchModalLoading}
 				<!-- Loading state -->
 				<div class="loading">
-					<LoadingBar {loading} />
+					<LoadingBar loading={$searchModalLoading} />
 				</div>
 			{:else}
 				<!-- Search input -->
