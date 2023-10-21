@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { BASE_URL } from '../../data/config';
-	import { Rect, Text } from 'svelte-konva';
+	import { Rect, Text, Group } from 'svelte-konva';
 	import { createEventDispatcher, afterUpdate } from 'svelte';
 	import { selectedDataset } from '../../stores/store';
 
@@ -16,21 +16,40 @@
 		x: 0,
 		y: 0
 	};
+	export let search = {};
 
 	// ----- Configs -----
 	const padding = 15;
 
-	let rectConfig;
-	let coloredRectConfig;
-	let coordinatesConfig;
-	let textConfig;
+	let rectConfig: { width: any; height: any; x?: number; y?: number; fill?: string };
+	let coloredRectConfig: { x: number; y: number; width: number; height: number; fill: string };
+	let coordinatesConfig: {
+		x: number;
+		y: number;
+		text: string;
+		fontSize: number;
+		fontFamily: string;
+		width: number;
+		padding: number;
+		align: string;
+	};
+	let textConfig: {
+		text: any;
+		x?: number;
+		y?: number;
+		fontSize?: number;
+		fontFamily?: string;
+		width?: number;
+		padding?: number;
+		align?: string;
+	};
 
 	$: {
 		rectConfig = {
 			x: x,
 			y: y,
-			width: 300,
-			height: 0,
+			width: 325,
+			height: 100,
 			fill: 'white'
 		};
 
@@ -66,9 +85,7 @@
 	}
 
 	// ----- Canvas Objects -----
-	let backgroundRect;
-	let coloredRect;
-	let text;
+	let text: any;
 
 	afterUpdate(() => {
 		if (text) {
@@ -83,19 +100,41 @@
 	}
 
 	async function fetchDatasetEntry() {
+		setTimeout(() => {
+			textConfig.text = 'Loading...';
+		}, 1);
+
 		const res = await fetch(`${BASE_URL}/dataset-entry/${$selectedDataset}/${embedding.id}`);
 		const fetchedText = await res.json();
 
 		textConfig.text = fetchedText;
 	}
-	$: if (display || embedding.id || x || y) {
+	$: if (display) {
 		fetchDatasetEntry();
 	}
 </script>
 
 {#if display}
-	<Rect bind:config={rectConfig} bind:handle={backgroundRect} on:click={handleClick} />
-	<Rect bind:config={coloredRectConfig} bind:handle={coloredRect} on:click={handleClick} />
-	<Text bind:config={coordinatesConfig} on:click={handleClick} />
-	<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
+	<Group>
+		<Rect bind:config={rectConfig} on:click={handleClick} />
+		<Rect bind:config={coloredRectConfig} on:click={handleClick} />
+		<Text bind:config={coordinatesConfig} on:click={handleClick} />
+		<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
+
+		{#if search != null}
+			<Text
+				config={{
+					x: x + 30,
+					y: y + 15,
+					text: `Search: ${search}`,
+					fontSize: 8,
+					fontFamily: 'Helvetica',
+					width: 300,
+					padding: padding,
+					align: 'right'
+				}}
+				on:click={handleClick}
+			/>
+		{/if}
+	</Group>
 {/if}

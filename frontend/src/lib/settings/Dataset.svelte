@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { selectedDataset } from '../../stores/store';
-	import datasets from '../../data/datasets.json';
+	import datasets from '../../data/datasets';
+	import { openModal } from 'svelte-modals';
+	import DatasetModal from '$lib/modals/DatasetModal.svelte';
+
 	let open = false;
 
 	// Filter dataset for the dataset that name is the same as selecetedDataset
@@ -8,6 +11,10 @@
 		datasets.length === 1
 			? datasets[0].label
 			: datasets.filter((dataset) => dataset.name === $selectedDataset)[0].label;
+
+	function openDatasetModal() {
+		openModal(DatasetModal);
+	}
 </script>
 
 <div class="datasets">
@@ -40,7 +47,10 @@
 		{/if}
 	</div>
 
-	<p class="label">Dataset</p>
+	<div class="meta_information">
+		<p class="label">Dataset</p>
+		<button class="info_btn" on:click={openDatasetModal}> [info] </button>
+	</div>
 </div>
 
 <style>
@@ -108,9 +118,30 @@
 		margin-right: 1rem;
 	}
 
-	.label {
-		display: block;
+	.meta_information {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
 		margin: 2rem 0 0 0;
+	}
+
+	.meta_information .label {
+		display: block;
+		flex-grow: 1;
 		font-size: 1.4rem;
+		margin: 0;
+	}
+
+	.meta_information .info_btn {
+		display: inline-block;
+		border: none;
+		background: none;
+		padding: 0;
+
+		transition: all 0.2s ease-in-out;
+	}
+	.meta_information .info_btn:hover {
+		cursor: pointer;
+		text-shadow: var(--hover-text-shadow_black);
 	}
 </style>

@@ -3,7 +3,7 @@
 </script>
 
 <div class="loading-bar">
-	<p class="times-400 loading-bar__message">AI is searching in its knowledge space...</p>
+	<p class="times-400 loading-bar__message">AI searches its knowledge space...</p>
 	<Spinner />
 </div>
 
