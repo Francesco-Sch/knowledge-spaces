@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { BASE_URL } from '../../data/config';
-	import { Rect, Text } from 'svelte-konva';
+	import { Rect, Text, Group } from 'svelte-konva';
 	import { createEventDispatcher, afterUpdate } from 'svelte';
 	import { selectedDataset } from '../../stores/store';
 
@@ -114,8 +114,10 @@
 </script>
 
 {#if display}
-	<Rect bind:config={rectConfig} on:click={handleClick} />
-	<Rect bind:config={coloredRectConfig} on:click={handleClick} />
-	<Text bind:config={coordinatesConfig} on:click={handleClick} />
-	<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
+	<Group>
+		<Rect bind:config={rectConfig} on:click={handleClick} />
+		<Rect bind:config={coloredRectConfig} on:click={handleClick} />
+		<Text bind:config={coordinatesConfig} on:click={handleClick} />
+		<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
+	</Group>
 {/if}
