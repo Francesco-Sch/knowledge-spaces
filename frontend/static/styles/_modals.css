@@ -1,0 +1,26 @@
+.modal {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	z-index: 100;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	/* allow click-through to backdrop */
+	pointer-events: none;
+}
+
+.contents {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	padding: 1rem;
+
+	background-color: white;
+	box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 1);
+
+	pointer-events: auto;
+}

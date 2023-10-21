@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { BASE_URL } from '../../data/config';
 	import { Rect, Text } from 'svelte-konva';
-	import { createEventDispatcher, afterUpdate, onMount } from 'svelte';
+	import { createEventDispatcher, afterUpdate } from 'svelte';
 	import { selectedDataset } from '../../stores/store';
 
 	const dispatch = createEventDispatcher();
