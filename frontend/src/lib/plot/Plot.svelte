@@ -49,24 +49,6 @@
 		});
 	});
 
-	// Cross group
-	let crossGroup;
-
-	onMount(() => {
-		tick().then(() => {
-			if (crossGroup != null) {
-				// Check if the group has valid size
-				const bbox = crossGroup.getClientRect();
-				if (bbox.width > 0 && bbox.height > 0) {
-					console.log('Caching crossGroup');
-					crossGroup.cache();
-				} else {
-					console.warn('Group has invalid size. Caching skipped.');
-				}
-			}
-		});
-	});
-
 	// Zooming
 	let scale = 1;
 	let scaleBy = 1.15;
