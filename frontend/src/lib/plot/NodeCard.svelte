@@ -43,6 +43,15 @@
 		padding?: number;
 		align?: string;
 	};
+	let nextSearchEntryConfig: {
+		x: number;
+		y: number;
+		text: string;
+		fontSize: number;
+		fontFamily: string;
+		padding: number;
+		align: string;
+	};
 
 	$: {
 		rectConfig = {
@@ -82,6 +91,16 @@
 			padding: padding,
 			align: 'left'
 		};
+
+		nextSearchEntryConfig = {
+			x: x + rectConfig.width,
+			y: y + rectConfig.height,
+			text: `→`,
+			fontSize: 24,
+			fontFamily: 'Helvetica',
+			padding: 0,
+			align: 'right'
+		};
 	}
 
 	// ----- Canvas Objects -----
@@ -91,6 +110,9 @@
 		if (text) {
 			rectConfig.width = text.width() + 2 * padding;
 			rectConfig.height = text.height() + 2 * padding;
+		} else if (text && search) {
+			rectConfig.width = text.width() + 3 * padding;
+			rectConfig.height = text.height() + 3 * padding;
 		}
 	});
 
@@ -112,6 +134,10 @@
 	$: if (display) {
 		fetchDatasetEntry();
 	}
+
+	function navigateToNextSearchEntry(event) {
+		dispatch('next-entry', { event: event, embedding: embedding, search: search });
+	}
 </script>
 
 {#if display}
@@ -122,19 +148,8 @@
 		<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
 
 		{#if search != null}
-			<Text
-				config={{
-					x: x + 30,
-					y: y + 15,
-					text: `Search: ${search}`,
-					fontSize: 8,
-					fontFamily: 'Helvetica',
-					width: 300,
-					padding: padding,
-					align: 'right'
-				}}
-				on:click={handleClick}
-			/>
+			<!-- To the next entry -->
+			<Text bind:config={nextSearchEntryConfig} on:click={navigateToNextSearchEntry} />
 		{/if}
 	</Group>
 {/if}

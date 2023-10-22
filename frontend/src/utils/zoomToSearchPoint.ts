@@ -4,8 +4,6 @@ import { stageConfig } from '../stores/store';
 function zoomToSearchPoint(searchPoint, windowWidth, windowHeight) {
 	const stage = get(stageConfig);
 
-	console.log('zoomToSearchPoint', searchPoint);
-
 	if (!stage) return; // Exit the function if stage is not yet defined
 
 	const stageScale = 1; // Define the zoom level you want here

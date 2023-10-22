@@ -115,7 +115,7 @@
 			x: 0,
 			y: 0
 		},
-		search: null
+		search: {}
 	};
 	let CardLayer;
 
@@ -157,6 +157,48 @@
 			// Redraw the layer
 			CardLayer.draw();
 		}
+	}
+
+	function navigateToNextSearchEntry(ctx) {
+		// Prevent bubbling
+		ctx.detail.event.detail.cancelBubble = true;
+
+		const currentEmbedding = ctx.detail.embedding;
+
+		// Get the search
+		const search = ctx.detail.search;
+
+		// Get the index of the current embedding
+		const currentEmbeddingIndex = embeddings.findIndex((embedding) => {
+			return (
+				embedding[0].toFixed(6) === currentEmbedding.x &&
+				embedding[1].toFixed(6) === currentEmbedding.y
+			);
+		});
+
+		console.log(currentEmbeddingIndex);
+
+		// Get the index of the current embedding in the search
+		const currentEmbeddingIndexInSearch = search.neighbors.findIndex(
+			(neighbor) => neighbor.corpus_id === currentEmbeddingIndex
+		);
+
+		// Get the next embedding in the search
+		const nextEmbeddingIndexInSearch = currentEmbeddingIndexInSearch + 1;
+
+		// Get the next embedding
+		const nextEmbeddingIndex = search.neighbors[nextEmbeddingIndexInSearch].corpus_id;
+
+		// Get the next embedding coordinates
+		const nextEmbedding = mappedEmbeddings[nextEmbeddingIndex];
+
+		// Set the NodeCardConfig
+		NodeCardConfig.embedding.id = nextEmbeddingIndex;
+		NodeCardConfig.embedding.x = parseFloat(nextEmbedding[0].toFixed(6));
+		NodeCardConfig.embedding.y = parseFloat(nextEmbedding[1].toFixed(6));
+
+		// Redraw the layer
+		CardLayer.draw();
 	}
 
 	function stopPropagation(e) {
@@ -234,7 +276,9 @@
 			y={NodeCardConfig.y}
 			color={NodeCardConfig.color}
 			embedding={NodeCardConfig.embedding}
+			search={NodeCardConfig.search}
 			on:card-click={stopPropagation}
+			on:next-entry={navigateToNextSearchEntry}
 		/>
 	</Layer>
 </Stage>
