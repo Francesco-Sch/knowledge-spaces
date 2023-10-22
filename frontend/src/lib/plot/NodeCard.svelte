@@ -16,7 +16,6 @@
 		x: 0,
 		y: 0
 	};
-	export let search = {};
 
 	// ----- Configs -----
 	const padding = 15;
@@ -120,21 +119,5 @@
 		<Rect bind:config={coloredRectConfig} on:click={handleClick} />
 		<Text bind:config={coordinatesConfig} on:click={handleClick} />
 		<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
-
-		{#if search != null}
-			<Text
-				config={{
-					x: x + 30,
-					y: y + 15,
-					text: `Search: ${search}`,
-					fontSize: 8,
-					fontFamily: 'Helvetica',
-					width: 300,
-					padding: padding,
-					align: 'right'
-				}}
-				on:click={handleClick}
-			/>
-		{/if}
 	</Group>
 {/if}
