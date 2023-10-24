@@ -1,4 +1,7 @@
 <script lang="ts">
+	// ----- Assets -----
+	import logo from '$lib/assets/knowledge-spaces_logo.png';
+
 	// ----- Components -----
 	import Plot from '$lib/plot/Plot.svelte';
 	import Dataset from '$lib/settings/Dataset.svelte';
@@ -17,6 +20,10 @@
 	<div class="settings">
 		<Dataset />
 		<NearestNeighbors />
+	</div>
+
+	<div class="logo">
+		<img src={logo} alt="Logo of the knowledge spaces project" />
 	</div>
 
 	<div class="actions">
@@ -49,6 +56,27 @@
 		grid-column: 1 / 3;
 		grid-row: 1 / end;
 		padding: 1rem 0 0 1rem;
+	}
+
+	.logo {
+		grid-column: 5 / 7;
+		grid-row: 1 / 2;
+
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+
+		width: 100%;
+		height: auto;
+		margin: 1rem 0 0 0;
+	}
+
+	.logo img {
+		width: 70%;
+		height: auto;
+		margin: 0 auto;
+
+		z-index: 1000;
 	}
 
 	.actions {
