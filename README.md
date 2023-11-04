@@ -8,6 +8,21 @@
 
 # knowledge spaces
 
+## 📝 Colophon
+
+- Fonts in use:
+  - Times New Roman by Stanley Morison und Victor Lardent
+  - Helvetica by Max Miedinger
+- Technology:
+  - Frontend:
+    - Build with [SvelteKit](https://kit.svelte.dev/)
+    - Canvas powered by [Konva](https://konvajs.org/)
+    - Modals are created with [svelte-modals](https://svelte-modals.mattjennings.io/)
+  - Backend:
+    - Build with [FastAPI](https://fastapi.tiangolo.com/)
+    - Datasets are fetched through the [🤗 Datasets library](https://huggingface.co/docs/datasets/index)
+    - Creating embeddings and searching is made possible thanks to [Sentence Transformers](https://www.sbert.net/)
+
 Based on:
 
 - <https://testdriven.io/blog/developing-a-single-page-app-with-fastapi-and-vuejs/>
