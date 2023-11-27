@@ -8,6 +8,8 @@
 
 # knowledge spaces
 
+> Visualizing the knowledge of Large Language AI models.
+
 Recent developments in AI in 2022 and 2023 have led to a large number of newly released tools based on large language models, such as [ChatGPT](https://chat.openai.com/), [Bing Chat](https://copilot.microsoft.com/) or [Bard](https://bard.google.com/chat). While these models are impressive, it has become increasingly clear that they don't know everything. This raises questions about the limits of AI's knowledge, the nature of latent spaces, and their accessibility.
 
 The aim of this project is to explore new ways of visualising and exploring latent spaces and making them more accessible for the public. It does this through a web interface that provides users with an interactive platform to explore and search high-dimensional vector embeddings, visualised on a two-dimensional `<canvas>`. Each high-dimensional vector embedding will be represented as a cross in the `<canvas>`, and each search will generate a new cross on the `<canvas>`, drawing connections between similar pieces of data in the embedding space. The resulting network of interconnected information will be visually similar to a map of an underground railway network, following [recent studies](https://www.ted.com/talks/manuel_lima_a_visual_history_of_human_knowledge) that suggest knowledge is best represented as rich, interconnected networks rather than linear trees.
@@ -33,9 +35,11 @@ See [✨ are.na](https://www.are.na/francesco-scheffczyk/knowledge-spaces) for a
 
 ### Processing the datasets
 
-In order to make a text datasets searchable and two-dimensional, it had to be processed in two steps. First, it had to be converted into vector embeddings. As these vector embeddings are usually multi-dimensional, a second processing step must be added to reduce the information value of the multi-dimensional vector to two dimensions. By reducing the vectors to two dimensions, they become visualisable.
+In order to make a text datasets searchable and two-dimensional, it had to be processed in two steps. First, it had to be converted into vector embeddings. As these vector embeddings are usually multi-dimensional, a second processing step must be added to reduce the information value of the multi-dimensional vector to two dimensions. By reducing the vectors to two dimensions, they can be rendered.
 
-- Describe the steps taken
+The [sentence transformers library](https://www.sbert.net/), specifically the `multi-qa-MiniLM-L6-cos-v1` model, was used for vector encoding of the data sets. [Truncated singular value decomposition (TruncatedSVD)](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD) was then used to reduce the information density of the vector embeddings to two dimensions. This transformation is also known as latent semantic analysis (LSA). I chose TruncatedSVD over tSNE because it always produces the same two-dimensional vectors given the same multi-dimensional vectors. The [scikit-learn](https://scikit-learn.org/stable/index.html) implementation of TruncatedSVD was used to apply this transformation.
+
+Both embedding datasets, the multi-dimensional and the two-dimensional, were stored on Huggingface via its [🤗 Datasets library](https://huggingface.co/docs/datasets/index).
 
 #### List of processed Datasets
 
@@ -46,9 +50,6 @@ In order to make a text datasets searchable and two-dimensional, it had to be pr
 Different datasets should be added in the future. This issue keeps track of them: [#4](https://github.com/Francesco-Sch/knowledge-spaces/issues/4).
 
 ### Building the search function
-
-- API on backend server
-- Datasets and model are download to file system on startup
 
 ### Rendering the embeddings and search results
 
