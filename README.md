@@ -42,7 +42,7 @@ docker compose -f docker-compose.dev.yml up -d
 ```
 
 This starts the frontend on `http://localhost:8080` and the backend on `http://localhost:7100`.
-Both have a watch service enabled and reload automatically, when changes to the source code were made.
+Both have a watch services enabled and reload automatically, when changes to the source code were made.
 
 To rebuild the development setup run:
 
@@ -85,16 +85,3 @@ docker run -d --name backend_knowledge-spaces -p 7100:7100 <YOUR_DOCKER_HUB_USER
 # Pull and run the frontend image
 docker run -d --name frontend_knowledge-spaces -p 8080:80 <YOUR_DOCKER_HUB_USERNAME>/frontend_knowledge-spaces:latest
 ```
-
-## Acknowledgements
-
-Based on:
-
-- <https://testdriven.io/blog/developing-a-single-page-app-with-fastapi-and-vuejs/>
-- <https://medium.com/@bruno.fosados/simple-learn-docker-fastapi-and-vue-js-first-part-docker-setup-a8e4c09ef9c4>
-- <https://medium.com/@jwdobken/vue-with-docker-initialize-develop-and-build-51fad21ad5e6>
-
-- <https://www.okupter.com/blog/build-a-sveltekit-application-with-docker>
-- <https://gist.github.com/williamngan/d18e4a6d9fc2fbd19e6907561b908a88>
-
-- <https://dev.to/danawoodman/svelte-quick-tip-connect-a-store-to-local-storage-4idi>
