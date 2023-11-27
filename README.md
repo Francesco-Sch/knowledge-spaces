@@ -59,9 +59,11 @@ This is all done on the backend server, which returns the results via a custom A
 
 ### Rendering the embeddings and search results
 
-- calling api
-- map the returned values to screen size
-- safe searches to localstorage to make them persistent
+By calling various endpoints of the custom API, the frontend can receive the two-dimensional representation, browse and retrieve individual data points from the datasets.
+
+After receiving the embeddings from the API, they are mapped to the current screen size, as the original position values are in a range between 0 and 1. The canvas library [Konva](https://konvajs.org/) is used to render the datasets.
+
+By calling the search endpoint, the frontend can submit a search query and get the similar results back as a response. These are then mapped to the screen size and cached locally to make the search results persistent between reloads.
 
 ## 🚧 Development
 
