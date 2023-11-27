@@ -37,7 +37,7 @@ See [✨ are.na](https://www.are.na/francesco-scheffczyk/knowledge-spaces) for a
 
 In order to make a text datasets searchable and two-dimensional, it had to be processed in two steps. First, it had to be converted into vector embeddings. As these vector embeddings are usually multi-dimensional, a second processing step must be added to reduce the information value of the multi-dimensional vector to two dimensions. By reducing the vectors to two dimensions, they can be rendered.
 
-The [sentence transformers library](https://www.sbert.net/), specifically the `multi-qa-MiniLM-L6-cos-v1` model, was used for vector encoding of the data sets. [Truncated singular value decomposition (TruncatedSVD)](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD) was then used to reduce the information density of the vector embeddings to two dimensions. This transformation is also known as latent semantic analysis (LSA). I chose TruncatedSVD over tSNE because it always produces the same two-dimensional vectors given the same multi-dimensional vectors. The [scikit-learn](https://scikit-learn.org/stable/index.html) implementation of TruncatedSVD was used to apply this transformation.
+The [Sentence Transformers library](https://www.sbert.net/), specifically the `multi-qa-MiniLM-L6-cos-v1` model, was used for vector encoding of the data sets. [Truncated singular value decomposition (TruncatedSVD)](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD) was then used to reduce the information density of the vector embeddings to two dimensions. This transformation is also known as latent semantic analysis (LSA). I chose TruncatedSVD over tSNE because it always produces the same two-dimensional vectors given the same multi-dimensional vectors. The [scikit-learn](https://scikit-learn.org/stable/index.html) implementation of TruncatedSVD was used to apply this transformation.
 
 Both embedding datasets, the multi-dimensional and the two-dimensional, were stored on Huggingface via its [🤗 Datasets library](https://huggingface.co/docs/datasets/index).
 
@@ -50,6 +50,12 @@ Both embedding datasets, the multi-dimensional and the two-dimensional, were sto
 Different datasets should be added in the future. This issue keeps track of them: [#4](https://github.com/Francesco-Sch/knowledge-spaces/issues/4).
 
 ### Building the search function
+
+To make the dataset searchable, a function from the [Sentence Transformers library](https://www.sbert.net/) called [semantic search](https://www.sbert.net/examples/applications/semantic-search/README.html#util-semantic-search) was used. For the function to work, the search term has to be encoded with the same model that was used to encode the whole dataset. In this case, the `multi-qa-MiniLM-L6-cos-v1` model. Once this is done, you pass the encoded search term, the encoded dataset and the number of similar results you want to retrieve to the function.
+
+Among other things, the function returns the index of the similar results in the dataset, which is then used to map the results to the two-dimensional representation.
+
+This is all done on the backend server, which returns the results via a custom API built with [FastAPI](https://fastapi.tiangolo.com/). At startup, the datasets and the model are downloaded to the file system using the [🤗 Datasets library](https://huggingface.co/docs/datasets/index). Of course, this makes the startup very time consuming, but it allows for faster computation and response time during operation.
 
 ### Rendering the embeddings and search results
 
