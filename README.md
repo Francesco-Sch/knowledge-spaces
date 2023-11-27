@@ -31,6 +31,31 @@ See [✨ are.na](https://www.are.na/francesco-scheffczyk/knowledge-spaces) for a
 
 ## ⚙️ Technical implementation
 
+### Processing the datasets
+
+In order to make a text datasets searchable and two-dimensional, it had to be processed in two steps. First, it had to be converted into vector embeddings. As these vector embeddings are usually multi-dimensional, a second processing step must be added to reduce the information value of the multi-dimensional vector to two dimensions. By reducing the vectors to two dimensions, they become visualisable.
+
+- Describe the steps taken
+
+#### List of processed Datasets
+
+- [20Newsgroups](http://qwone.com/~jason/20Newsgroups/)
+  - [Multi-dimensional vector embeddings](https://huggingface.co/datasets/fscheffczyk/20newsgroups_embeddings)
+  - [Two-dimensional vector embeddings](https://huggingface.co/datasets/fscheffczyk/2D_20newsgroups_embeddings)
+
+Different datasets should be added in the future. This issue keeps track of them: [#4](https://github.com/Francesco-Sch/knowledge-spaces/issues/4).
+
+### Building the search function
+
+- API on backend server
+- Datasets and model are download to file system on startup
+
+### Rendering the embeddings and search results
+
+- calling api
+- map the returned values to screen size
+- safe searches to localstorage to make them persistent
+
 ## 🚧 Development
 
 Docker must be installed and running to start the development setup. Instructions on how to install Docker for your OS can be found [here](https://docs.docker.com/desktop/install/mac-install/).
