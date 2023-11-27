@@ -41,7 +41,7 @@ The [Sentence Transformers library](https://www.sbert.net/), specifically the `m
 
 Both embedding datasets, the multi-dimensional and the two-dimensional, were stored on Huggingface via its [🤗 Datasets library](https://huggingface.co/docs/datasets/index).
 
-#### List of processed Datasets
+#### List of processed datasets
 
 - [20Newsgroups](http://qwone.com/~jason/20Newsgroups/)
   - [Multi-dimensional vector embeddings](https://huggingface.co/datasets/fscheffczyk/20newsgroups_embeddings)
