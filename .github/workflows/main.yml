@@ -23,5 +23,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🚀 Build Images and push them to GitHub Container Registry
+      - name: 🚀 Build images and push to GitHub Container Registry
         run: docker buildx bake -f docker-compose.ci.yml backend frontend --push
