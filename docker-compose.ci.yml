@@ -9,6 +9,8 @@ services:
       target: production
       x-bake:
         platforms: ["linux/amd64", "linux/arm64"]
+      tags:
+        - "ghcr.io/francesco-sch/backend_knowledge-spaces:latest"
 
   # SvelteKit as the frontend
   frontend:
@@ -20,3 +22,5 @@ services:
       target: production
       x-bake:
         platforms: ["linux/amd64", "linux/arm64"]
+      tags:
+        - "ghcr.io/francesco-sch/frontend_knowledge-spaces:latest"
