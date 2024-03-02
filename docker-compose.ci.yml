@@ -2,7 +2,7 @@ services:
   # FastAPI as the backend/middleware
   backend:
     container_name: backend_knowledge-spaces
-    image: https://ghcr.io/Francesco-Sch/backend_knowledge-spaces:latest
+    image: ghcr.io/Francesco-Sch/backend_knowledge-spaces:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -13,7 +13,7 @@ services:
   # SvelteKit as the frontend
   frontend:
     container_name: frontend_knowledge-spaces
-    image: https://ghcr.io/Francesco-Sch/frontend_knowledge-spaces:latest
+    image: ghcr.io/Francesco-Sch/frontend_knowledge-spaces:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
