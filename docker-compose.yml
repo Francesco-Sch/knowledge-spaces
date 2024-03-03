@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  # FastAPI as the backend/middleware
+  backend:
+    container_name: backend_knowledge-spaces
+    image: francescosch/backend_knowledge-spaces:latest
+
+  # SvelteKit as the frontend
+  frontend:
+    container_name: frontend_knowledge-spaces
+    image: francescosch/frontend_knowledge-spaces:latest
