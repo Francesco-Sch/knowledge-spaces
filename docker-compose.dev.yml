@@ -22,6 +22,8 @@ services:
       target: development
     ports:
       - 8080:8080
+    environment:
+      - PUBLIC_BACKEND_URL=http://localhost:7100
     volumes:
       - ./frontend:/app
       - /app/node_modules

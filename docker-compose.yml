@@ -19,7 +19,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "80:3000"
     environment:
       - PUBLIC_BACKEND_URL=http://localhost:7100
     networks:
