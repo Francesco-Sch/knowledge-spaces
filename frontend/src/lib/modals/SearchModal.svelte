@@ -50,11 +50,18 @@
 		}
 
 		// Fetch the nearest neighbors
+		// const res = await fetch(
+		// 	`${BASE_URL}/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
+		// );
+
 		const res = await fetch(
-			`${BASE_URL}/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
+			`/api/search?dataset=${$selectedDataset}&query=${query}&k=${$amountOfNeighbors}`
 		);
+		console.log('fetching search results');
 
 		const results = await res.json();
+
+		console.log('Results:', results);
 
 		// Check if there are any results
 		if (results.length === 0) {
