@@ -10,6 +10,7 @@ services:
       target: development
     volumes:
       - ./backend/src:/app
+    # The ports are exposed for easier development and debugging
     ports:
       - 7100:7100
 
