@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from routes import embeddings, search, dataset_entry
+from routes import dataset_entry, embeddings, search
 
 app = FastAPI()
 
 # --- CORS ---
 origins = [
     "https://knowledge-spaces.com",
+    "http://localhost:80",
     "http://localhost:8080",
     "http://localhost:5173",
     "http://localhost:4173",
