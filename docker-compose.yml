@@ -21,7 +21,7 @@ services:
     ports:
       - "80:80"
     environment:
-      - VITE_BACKEND_URL=${BACKEND_URL}
+      - PUBLIC_BACKEND_URL=http://localhost:7100
     networks:
       - default_knowledge-spaces
 
