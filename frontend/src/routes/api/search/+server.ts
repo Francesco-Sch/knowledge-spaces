@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { BASE_URL } from '../../../data/config';
 
@@ -8,7 +8,6 @@ export const GET: RequestHandler = async ({ url }) => {
 	const k = url.searchParams.get('k');
 
 	const res = await fetch(`${BASE_URL}/search/${dataset}?query=${query}&k=${k}`);
-	console.log(res);
 
 	const data = await res.json();
 

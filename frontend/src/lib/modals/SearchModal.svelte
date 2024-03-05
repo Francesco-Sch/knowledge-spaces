@@ -50,18 +50,11 @@
 		}
 
 		// Fetch the nearest neighbors
-		// const res = await fetch(
-		// 	`${BASE_URL}/search/${$selectedDataset}?query=${query}&k=${$amountOfNeighbors}`
-		// );
-
 		const res = await fetch(
 			`/api/search?dataset=${$selectedDataset}&query=${query}&k=${$amountOfNeighbors}`
 		);
-		console.log('fetching search results');
 
 		const results = await res.json();
-
-		console.log('Results:', results);
 
 		// Check if there are any results
 		if (results.length === 0) {
@@ -73,10 +66,15 @@
 		// Prepare id query string
 		let ids = results[0].map((id: { corpus_id: any }) => `ids=${id.corpus_id}`).join('&');
 
+		console.log('The ids are: ' + ids);
+
 		// Fetch the embeddings for the ids
-		const embeddings_res = await fetch(`${BASE_URL}/embeddings/${$selectedDataset}?${ids}`);
+		// const embeddings_res = await fetch(`${BASE_URL}/embeddings/${$selectedDataset}?${ids}`);
+		const embeddings_res = await fetch(`/api/embeddings?dataset=${$selectedDataset}&${ids}`);
 
 		const embeddings = await embeddings_res.json();
+
+		console.log(embeddings);
 
 		embeddings.forEach((embedding: any[], index: string | number) => {
 			results[0][index].x = embedding[0];
