@@ -103,7 +103,9 @@
 			textConfig.text = 'Loading...';
 		}, 1);
 
-		const res = await fetch(`${BASE_URL}/dataset-entry/${$selectedDataset}/${embedding.id}`);
+		const res = await fetch(
+			`/api/dataset-entry?dataset=${$selectedDataset}&embedding=${embedding.id}`
+		);
 		const fetchedText = await res.json();
 
 		textConfig.text = fetchedText;
