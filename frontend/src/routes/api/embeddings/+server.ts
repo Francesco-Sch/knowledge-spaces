@@ -6,14 +6,14 @@ export const GET: RequestHandler = async ({ url }) => {
 	const dataset = url.searchParams.get('dataset');
 	const ids = url.searchParams.get('ids');
 
-	console.log('ids', ids);
+	const idsQuery = ids
+		.split(',')
+		.map((id) => `ids=${id}`)
+		.join('&');
 
-	const idds: number[] | null = [3824, 5391, 5085, 5272, 1703];
-
-	const rest = await fetch(`${BASE_URL}/embeddings/${dataset}?ids=${idds}`);
+	const rest = await fetch(`${BASE_URL}/embeddings/${dataset}?${idsQuery}`);
 
 	const data = await rest.json();
-	console.log('data:', data);
 
 	return json(data);
 };

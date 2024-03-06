@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 import { BASE_URL } from '../data/config';
 
-export const load = (async ({ fetch }) => {
+export const load = (async () => {
 	const url = `${BASE_URL}/embeddings/20newsgroups`;
 	const res = await fetch(url);
 	const embeddings: object = await res.json();
