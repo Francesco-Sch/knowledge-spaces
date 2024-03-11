@@ -9,16 +9,20 @@ COPY . .
 EXPOSE 8080
 CMD ["yarn", "dev"]
 
-FROM node:lts-slim AS build
+# Created production image based on this tutorial: 
+# https://snyk.io/de/blog/10-best-practices-to-containerize-nodejs-web-applications-with-docker/
+FROM node:20.11.1-bullseye-slim AS production
 
-WORKDIR /app
-COPY . . 
+WORKDIR /usr/src/app
+
+COPY package.json .
 RUN yarn
+
+COPY --chown=node:node . .
+# COPY . .
+
 RUN yarn build
 
-FROM nginx:stable AS production
-
-WORKDIR /usr/share/nginx/html
-RUN rm -rf ./*
-COPY --from=build /app/build .
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+ENV NODE_ENV production
+USER node
+CMD ["node", "build"]

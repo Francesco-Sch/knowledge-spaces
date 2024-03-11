@@ -1,5 +1,5 @@
-const BASE_URL = import.meta.env.PROD
-	? 'https://api.knowledge-spaces.com'
-	: 'http://localhost:7100';
+import { env } from '$env/dynamic/public';
+
+const BASE_URL = env.PUBLIC_BACKEND_URL;
 
 export { BASE_URL };

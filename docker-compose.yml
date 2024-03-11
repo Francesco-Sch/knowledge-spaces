@@ -5,8 +5,29 @@ services:
   backend:
     container_name: backend_knowledge-spaces
     image: francescosch/backend_knowledge-spaces:latest
+    # Exposing the ports is only necessary if the API should be accessible publicly
+    # ports:
+    #   - "7100:7100"
+    environment:
+      - FRONTEND_URL=${FRONTEND_URL}
+    volumes:
+      - ./data:/data
+    networks:
+      - default_knowledge-spaces
 
   # SvelteKit as the frontend
   frontend:
     container_name: frontend_knowledge-spaces
     image: francescosch/frontend_knowledge-spaces:latest
+    depends_on:
+      - backend
+    ports:
+      - "80:3000"
+    environment:
+      - PUBLIC_BACKEND_URL=${BACKEND_URL}
+    networks:
+      - default_knowledge-spaces
+
+networks:
+  default_knowledge-spaces:
+    name: knowledge-spaces
