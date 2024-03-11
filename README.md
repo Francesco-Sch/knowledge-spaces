@@ -92,30 +92,72 @@ docker compose -f docker-compose.dev.yml up -d --build frontend
 
 ## 🐳 Deploy with Docker
 
-To deploy this project to your server, the images need to be availabe on a container registry such as [Docker Hub](https://hub.docker.com/). The easiest way to do this, is to use the GitHub Action of this repository.
+The images for the frontend and backend are published and kept up to date on Docker Hub:
 
-### 1. Add secrets to GitHub Repo
+- [Frontend](https://hub.docker.com/r/francescosch/frontend_knowledge-spaces)
+- [Backend](https://hub.docker.com/r/francescosch/backend_knowledge-spaces)
 
-To push the images to Docker Hub you need to add a secret for your username and a secret for your Docker Hub access token to the GitHub Repo.
+You could either use the provided [`docker-compose.yml`](docker-compose.yml) or run the containers via docker commands to start the app for production.
 
-Navigate for that to `Settings > Secrets and Variables > Actions` of the Github Repo and create two new secrets called `DOCKER_HUB_USERNAME` and `DOCKER_HUB_ACCESS_TOKEN`.
+### Docker Compose (recommended)
 
-Add your Docker Hub username and your access token, to the newly created secrets. To create a new access token for Docker Hub, log in to your profile, navigate to `Account Settings > Security` and click on "New Access Token".
+This is the recommended way to start the app for production.
 
-### 2. Push images
+#### 1. Set environment variables in .env
 
-With the next push on `main` the images will be pushed to [Docker Hub](https://hub.docker.com/).
+First copy the provided .env.example to .env and adjust the environment variables.
 
-### 3. Pull images and start the containers
+```zsh
+cp .env.example .env
+```
 
-One option would be to use a managed Docker service to pull your images and start the containers automatically.
+A good default for the environment variables is:
 
-Otherwise you can log into your server via SSH and execute the following command to pull the images and start the containers:
+```Dotenv
+# CORS
+FRONTEND_URL=http://frontend:80
+BACKEND_URL=http://backend:7100
+```
 
-```bash
-# Pull and run the backend image
-docker run -d --name backend_knowledge-spaces -p 7100:7100 <YOUR_DOCKER_HUB_USERNAME>/backend_knowledge-spaces:latest
+If you host the app on any other URL or Port make sure to adjust the environment variables accordingly.
 
-# Pull and run the frontend image
-docker run -d --name frontend_knowledge-spaces -p 8080:80 <YOUR_DOCKER_HUB_USERNAME>/frontend_knowledge-spaces:latest
+#### 2. Run docker compose
+
+Use this command to start knowledge spaces.
+
+```zsh
+docker compose up -d
+```
+
+### Docker Commands
+
+You can also use the following docker commands to start the backend and frontend container. Make sure to adjust the environment variables and ports according to your needs.
+
+#### Network
+
+```zsh
+docker network create knowledge-spaces
+```
+
+#### Frontend
+
+```zsh
+docker run \
+  --name backend_knowledge-spaces \
+  -e FRONTEND_URL=YOUR_FRONTEND_URL \
+  -v $(pwd)/data:/data \
+  --network knowledge-spaces \
+  francescosch/backend_knowledge-spaces:latest
+```
+
+#### Backend
+
+```zsh
+docker run \
+  --name frontend_knowledge-spaces \
+  -e PUBLIC_BACKEND_URL=YOUR_BACKEND_URL \
+  -p 80:3000 \
+  --network knowledge-spaces \
+  --depends-on backend \
+  francescosch/frontend_knowledge-spaces:latest
 ```
