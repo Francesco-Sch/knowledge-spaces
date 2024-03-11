@@ -8,6 +8,8 @@ services:
     # Exposing the ports is only necessary if the API should be accessible publicly
     # ports:
     #   - "7100:7100"
+    environment:
+      - FRONTEND_URL=${FRONTEND_URL}
     volumes:
       - ./data:/data
     networks:
@@ -22,7 +24,7 @@ services:
     ports:
       - "80:3000"
     environment:
-      - PUBLIC_BACKEND_URL=http://backend:7100
+      - PUBLIC_BACKEND_URL=${BACKEND_URL}
     networks:
       - default_knowledge-spaces
 

@@ -13,6 +13,8 @@ services:
     # The ports are exposed for easier development and debugging
     ports:
       - 7100:7100
+    environment:
+      - FRONTEND_URL=${FRONTEND_URL}
 
   # SvelteKit as the frontend
   frontend:
@@ -24,7 +26,7 @@ services:
     ports:
       - 8080:8080
     environment:
-      - PUBLIC_BACKEND_URL=http://backend:7100
+      - PUBLIC_BACKEND_URL=${BACKEND_URL}
     volumes:
       - ./frontend:/app
       - /app/node_modules
