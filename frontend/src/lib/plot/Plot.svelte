@@ -26,7 +26,7 @@
 		scale: number;
 	};
 
-	const CULLING_ENTER_SCALE = 2;
+	const CULLING_ENTER_SCALE = 1.5;
 	const CULLING_EXIT_SCALE = 1.25;
 	const RENDER_MODE_SWITCH_DELAY = 180;
 
