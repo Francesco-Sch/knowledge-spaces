@@ -46,6 +46,11 @@
 		searchPoint?: Array<number>;
 	};
 
+	type SearchKeySource = {
+		dataset?: string;
+		query?: string;
+	};
+
 	// Cross group
 	let crossGroup: KonvaGroup | undefined;
 	let stageHandle: KonvaStage | undefined;
@@ -75,6 +80,10 @@
 			plotProfiler?.measureBlobGeneration(() => generateBlobPointsForSearch(search)) ??
 			generateBlobPointsForSearch(search)
 		);
+	}
+
+	function getSearchKey(search: SearchKeySource) {
+		return JSON.stringify([search.dataset ?? '', search.query ?? '']);
 	}
 
 	// Zooming
@@ -215,54 +224,52 @@
 		</Group>
 
 		<!-- Searches -->
-		{#key mappedSearches}
-			{#if $searches}
-				{#each mappedSearches as search}
-					<!-- Draw one blob around all neighbors in the search -->
-					<Blob points={getBlobPoints(search)} color={search.color} />
+		{#if $searches}
+			{#each mappedSearches as search (getSearchKey(search))}
+				<!-- Draw one blob around all neighbors in the search -->
+				<Blob points={getBlobPoints(search)} color={search.color} />
 
-					{#each search.neighbors as cross}
-						<!-- Draw line from searchPoint to neighbor -->
-						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
+				{#each search.neighbors as cross}
+					<!-- Draw line from searchPoint to neighbor -->
+					<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
-						<Cross
-							x={cross[0]}
-							y={cross[1]}
-							color={search.color}
-							on:cross-clicked={handleCrossClick}
-						/>
-					{/each}
+					<Cross
+						x={cross[0]}
+						y={cross[1]}
+						color={search.color}
+						on:cross-clicked={handleCrossClick}
+					/>
+				{/each}
 
-					{#if search.searchPoint}
-						<Label
+				{#if search.searchPoint}
+					<Label
+						config={{
+							x: search.searchPoint[0],
+							y: search.searchPoint[1],
+							listening: false
+						}}
+					>
+						<Tag
 							config={{
-								x: search.searchPoint[0],
-								y: search.searchPoint[1],
+								fill: search.color,
 								listening: false
 							}}
-						>
-							<Tag
-								config={{
-									fill: search.color,
-									listening: false
-								}}
-							/>
-							<Text
-								config={{
-									text: search.query,
-									fontSize: 12,
-									padding: 2,
-									fontFamily: 'Times New Roman',
-									listening: false,
-									x: search.searchPoint[0],
-									y: search.searchPoint[1]
-								}}
-							/>
-						</Label>
-					{/if}
-				{/each}
-			{/if}
-		{/key}
+						/>
+						<Text
+							config={{
+								text: search.query,
+								fontSize: 12,
+								padding: 2,
+								fontFamily: 'Times New Roman',
+								listening: false,
+								x: search.searchPoint[0],
+								y: search.searchPoint[1]
+							}}
+						/>
+					</Label>
+				{/if}
+			{/each}
+		{/if}
 	</Layer>
 
 	<Layer bind:handle={CardLayer}>
