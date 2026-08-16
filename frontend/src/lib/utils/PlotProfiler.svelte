@@ -20,6 +20,7 @@
 	let scenario = 'unspecified';
 	let cacheEnabled = true;
 	let cullEnabled = false;
+	let hybridEnabled = false;
 	let enabled = false;
 
 	function isKonvaContainer(node: KonvaNode): node is KonvaContainer {
@@ -39,7 +40,8 @@
 
 		scenario = params.get('plotScenario') || 'unspecified';
 		cullEnabled = params.get('plotCull') === '1';
-		cacheEnabled = params.get('plotCache') !== '0' && !cullEnabled;
+		hybridEnabled = params.get('plotHybrid') === '1';
+		cacheEnabled = params.get('plotCache') !== '0' && !cullEnabled && !hybridEnabled;
 		sessionStartedAt = new Date().toISOString();
 		profiler = createPlotProfiler({
 			onSnapshot: (nextSnapshot) => {
@@ -85,6 +87,7 @@
 				scenario,
 				cacheEnabled,
 				cullEnabled,
+				hybridEnabled,
 				sessionStartedAt,
 				exportedAt: exportedAt.toISOString(),
 				url: window.location.href,
@@ -107,8 +110,8 @@
 			scenario.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '') || 'unspecified';
 
 		link.href = downloadUrl;
-		const cacheState = cacheEnabled ? 'enabled' : 'disabled';
-		const cullState = cullEnabled ? 'enabled' : 'disabled';
+		const cacheState = hybridEnabled ? 'hybrid' : cacheEnabled ? 'enabled' : 'disabled';
+		const cullState = hybridEnabled ? 'hybrid' : cullEnabled ? 'enabled' : 'disabled';
 		link.download = `plot-profile-${safeScenario}-cache-${cacheState}-cull-${cullState}-${timestamp}.json`;
 		link.click();
 		window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
