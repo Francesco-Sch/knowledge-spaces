@@ -23,10 +23,7 @@
 	export let embeddings: Array<Array<number>>;
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
-	$: mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
-	$: if ($searches) {
-		mappedSearches = getSearchesWithMappedEmbeddings(windowWidth, windowHeight);
-	}
+	$: mappedSearches = $searches ? getSearchesWithMappedEmbeddings(windowWidth, windowHeight) : [];
 	$: if ($searches && $searches.length > 0) {
 		const lastSearch = mappedSearches[mappedSearches.length - 1];
 		zoomToSearchPoint(lastSearch.searchPoint, windowWidth, windowHeight);
