@@ -1,7 +1,7 @@
 import concaveman from 'concaveman';
 import Offset from 'polygon-offset';
 import simplify from 'simplify-js';
-import type { Point } from '../lib/plot/types';
+import type { Point } from '$lib/types';
 
 function generateBlobPointsForSearch(search) {
 	const neighborCoordinates = search.neighbors.map((neighbor: Point) => [neighbor.x, neighbor.y]);

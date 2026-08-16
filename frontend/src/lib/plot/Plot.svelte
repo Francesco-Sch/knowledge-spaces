@@ -4,7 +4,7 @@
 	import type { Group as KonvaGroup } from 'konva/lib/Group';
 	import type { Layer as KonvaLayer } from 'konva/lib/Layer';
 	import type { Stage as KonvaStage } from 'konva/lib/Stage';
-	import type { Point } from './types';
+	import type { Point } from '$lib/types';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
