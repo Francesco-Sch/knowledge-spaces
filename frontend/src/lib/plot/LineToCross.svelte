@@ -45,6 +45,7 @@
 		strokeWidth: 2,
 		dash: [5, 5],
 		tension: 0.5,
+		listening: false,
 		bezier: true
 	}}
 />

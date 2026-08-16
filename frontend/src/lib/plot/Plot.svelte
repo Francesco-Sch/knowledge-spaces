@@ -237,12 +237,14 @@
 						<Label
 							config={{
 								x: search.searchPoint[0],
-								y: search.searchPoint[1]
+								y: search.searchPoint[1],
+								listening: false
 							}}
 						>
 							<Tag
 								config={{
-									fill: search.color
+									fill: search.color,
+									listening: false
 								}}
 							/>
 							<Text
@@ -251,6 +253,7 @@
 									fontSize: 12,
 									padding: 2,
 									fontFamily: 'Times New Roman',
+									listening: false,
 									x: search.searchPoint[0],
 									y: search.searchPoint[1]
 								}}
