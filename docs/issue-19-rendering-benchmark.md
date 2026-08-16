@@ -151,6 +151,42 @@ The Run 02 screenshots show that:
 - the dataset-entry card is readable when there is room;
 - the card remains attached to the transformed Konva stage and can occupy a large part of the viewport at high zoom.
 
+## Run 03 findings: base-group cache comparison
+
+Run 03 compared the base-group cache with `plotCache=0` (disabled) and `plotCache=1` (enabled).
+
+### Environment
+
+- Browser: Chrome 151
+- Viewport: `2556 × 1296` for all scenarios except disabled wheel zoom (`2001 × 1296`)
+- Device pixel ratio: `1`
+- Dataset: 20 Newsgroups
+- Dataset point count: `11,314`
+
+The values below use the median of the recorded 500 ms intervals after discarding the first three warm-up samples. The frame p95 column shows the median interval value followed by the worst interval value.
+
+| Scenario            | Cache disabled FPS | Cache enabled FPS | Disabled frame p95 | Enabled frame p95 |
+| ------------------- | -----------------: | ----------------: | -----------------: | ----------------: |
+| Initial view        |               60.0 |              60.0 |     17.4 / 17.8 ms |    17.3 / 17.8 ms |
+| Panning             |               24.6 |              60.0 |     52.2 / 98.2 ms |    17.4 / 18.5 ms |
+| Pointer movement    |               29.7 |              60.0 |    83.8 / 110.8 ms |    17.5 / 17.8 ms |
+| Wheel zoom          |               25.2 |              60.0 |  108.3 / 2240.7 ms |    27.6 / 33.5 ms |
+| Search results      |               60.0 |              60.0 |     17.0 / 96.3 ms |    17.1 / 17.8 ms |
+| Hover and selection |               45.3 |              60.0 |    78.3 / 109.6 ms |    17.4 / 17.8 ms |
+| Minimum zoom        |               44.5 |              60.0 |    50.2 / 154.1 ms |    17.4 / 27.2 ms |
+| Maximum zoom        |               42.0 |              60.0 |    74.6 / 153.6 ms |    17.6 / 34.6 ms |
+
+The disabled wheel-zoom run used a narrower viewport, so that comparison is directional rather than strict. Search-result node counts also differed because the two sessions had different persisted search states.
+
+### Findings
+
+- The cache provides a major interaction benefit for this laptop and dataset. Panning, pointer movement, zooming, and hover/selection were substantially smoother with caching enabled.
+- Initial rendering and search-result median FPS were similar, but the cache reduced long-frame outliers.
+- The cache does not reduce the Konva node count; it primarily reduces the cost of drawing the base group.
+- Cached crosses become visibly pixelated when zoomed in. The uncached vector crosses preserve the preferred visual quality.
+- The cache should remain enabled by default for now because the interaction-performance improvement is decisive.
+- The `plotCache=0` toggle should remain available while an adaptive or higher-quality caching strategy is investigated.
+
 ### Phase 1 handoff
 
 The next agent should begin with the low-risk Konva optimizations from the migration plan:
