@@ -40,17 +40,20 @@
 		: mappedEmbeddings;
 	$: if ($searches && $searches.length > 0) {
 		const lastSearch = mappedSearches[mappedSearches.length - 1];
-		zoomToSearchPoint(lastSearch.searchPoint, windowWidth, windowHeight);
+		if (
+			lastSearch?.searchPoint &&
+			Number.isFinite(lastSearch.searchPoint[0]) &&
+			Number.isFinite(lastSearch.searchPoint[1])
+		) {
+			const nextStage = zoomToSearchPoint(lastSearch.searchPoint, windowWidth, windowHeight);
+			if (nextStage) updateViewportFromConfig(nextStage);
+		}
 	}
 
 	$: $stageConfig.width = windowWidth;
 	$: $stageConfig.height = windowHeight;
 	$: if ($stageConfig) {
-		viewport = {
-			x: $stageConfig.x,
-			y: $stageConfig.y,
-			scale: $stageConfig.scaleX
-		};
+		updateViewportFromConfig($stageConfig);
 	}
 
 	type PlotProfilerHandle = {
@@ -134,6 +137,23 @@
 			y: stage.y(),
 			scale: stage.scaleX()
 		};
+	}
+
+	function updateViewportFromConfig(config: { x: number; y: number; scaleX: number }) {
+		viewport = {
+			x: config.x,
+			y: config.y,
+			scale: config.scaleX
+		};
+
+		if (cullingEnabled) {
+			visibleMappedEmbeddings = getVisiblePoints(
+				mappedEmbeddings,
+				viewport,
+				windowWidth,
+				windowHeight
+			);
+		}
 	}
 
 	function handleStageTransform(e: any) {
