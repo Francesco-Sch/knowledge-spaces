@@ -4,13 +4,13 @@ This document records the Phase 0 profiling procedure for the current Konva rend
 
 ## Enable profiling
 
-Start the frontend and open the plot with the `plotDebug` query parameter:
+Start the frontend and open the plot with the `plotDebug` query parameter. Add `plotScenario` to label the exported session:
 
 ```text
-http://localhost:5173/?plotDebug=1
+http://localhost:8080/?plotDebug=1&plotScenario=panning
 ```
 
-The debug panel appears in the top-left corner. It is non-interactive and does not intercept pointer events.
+The debug panel appears in the top-left corner. The **Save JSON** button downloads all 500 ms samples collected during the current session. Use a separate scenario value for each test, such as `initial`, `panning`, `wheel-zoom`, or `search-result`.
 
 ## Metrics
 
@@ -24,7 +24,7 @@ The debug panel appears in the top-left corner. It is non-interactive and does n
 | Konva nodes     | Current number of nodes returned by the stage's Konva tree search.                              |
 | Heap            | JavaScript heap usage when the browser exposes `performance.memory`.                            |
 
-The profiler samples every 500 ms. Let each interaction run for several seconds and record a representative steady-state interval rather than a single panel update.
+The profiler samples every 500 ms. Let each interaction run for several seconds and save the JSON after the interaction reaches a steady state. The JSON metadata includes the browser, URL, viewport, device-pixel ratio, scenario, and capture timestamps.
 
 ## Reference scenarios
 
@@ -75,4 +75,4 @@ Complete this table for at least one representative laptop before changing the r
 | Search Konva node count      |       |
 | Heap usage                   |       |
 
-Store screenshots outside generated build directories and name them by scenario, for example `baseline-search-result.png` and `baseline-card-right-edge.png`.
+Store downloaded JSON files and screenshots outside generated build directories. Name screenshots by scenario, for example `baseline-search-result.png` and `baseline-card-right-edge.png`. Keep the matching JSON filename with each screenshot when possible.
