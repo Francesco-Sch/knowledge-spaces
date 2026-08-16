@@ -26,9 +26,18 @@
 		scale: number;
 	};
 
+	const CULLING_ENTER_SCALE = 2;
+	const CULLING_EXIT_SCALE = 1.25;
+	const RENDER_MODE_SWITCH_DELAY = 180;
+
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 	let cullingEnabled = false;
+	let forcedCulling = false;
+	let hybridEnabled = false;
+	let cacheRequested = true;
+	let baseGroupCached = false;
+	let renderModeTimer: number | undefined;
 	let viewport: Viewport = { x: 0, y: 0, scale: 1 };
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight).map(
@@ -79,24 +88,13 @@
 
 	onMount(() => {
 		const params = new URLSearchParams(window.location.search);
-		cullingEnabled = params.get('plotCull') === '1';
+		forcedCulling = params.get('plotCull') === '1';
+		hybridEnabled = params.get('plotHybrid') === '1';
+		cacheRequested = params.get('plotCache') !== '0';
+		cullingEnabled = getCullingMode(stageHandle?.scaleX() ?? $stageConfig.scaleX);
+
 		if (stageHandle) updateViewport(stageHandle);
-
-		const cacheEnabled = params.get('plotCache') !== '0' && !cullingEnabled;
-		if (!cacheEnabled) return;
-
-		tick().then(() => {
-			if (crossGroup != null) {
-				// Check if the group has valid size
-				const bbox = crossGroup.getClientRect();
-				if (bbox.width > 0 && bbox.height > 0) {
-					console.log('Caching crossGroup');
-					crossGroup.cache();
-				} else {
-					console.warn('Group has invalid size. Caching skipped.');
-				}
-			}
-		});
+		if (!cullingEnabled) cacheBaseGroup();
 	});
 
 	function handlePointerMove() {
@@ -131,12 +129,70 @@
 		);
 	}
 
+	function getCullingMode(stageScale: number) {
+		if (forcedCulling) return true;
+		if (!hybridEnabled) return false;
+		return cullingEnabled ? stageScale > CULLING_EXIT_SCALE : stageScale >= CULLING_ENTER_SCALE;
+	}
+
+	function clearBaseGroupCache() {
+		if (!baseGroupCached || !crossGroup) return;
+		crossGroup.clearCache();
+		baseGroupCached = false;
+	}
+
+	function cacheBaseGroup() {
+		if (baseGroupCached || !cacheRequested || cullingEnabled || !crossGroup) return;
+
+		tick().then(() => {
+			if (baseGroupCached || !cacheRequested || cullingEnabled || !crossGroup) return;
+
+			const bbox = crossGroup.getClientRect();
+			if (bbox.width > 0 && bbox.height > 0) {
+				crossGroup.cache();
+				baseGroupCached = true;
+			} else {
+				console.warn('Group has invalid size. Caching skipped.');
+			}
+		});
+	}
+
+	function applyRenderMode(nextCullingMode: boolean) {
+		if (nextCullingMode === cullingEnabled) return;
+
+		cullingEnabled = nextCullingMode;
+		if (!cullingEnabled) cacheBaseGroup();
+	}
+
+	function updateRenderMode(stageScale: number) {
+		const nextCullingMode = getCullingMode(stageScale);
+		if (nextCullingMode === cullingEnabled) {
+			if (renderModeTimer !== undefined) {
+				window.clearTimeout(renderModeTimer);
+				renderModeTimer = undefined;
+			}
+			return;
+		}
+
+		if (!hybridEnabled) {
+			applyRenderMode(nextCullingMode);
+			return;
+		}
+
+		if (renderModeTimer !== undefined) window.clearTimeout(renderModeTimer);
+		renderModeTimer = window.setTimeout(() => {
+			renderModeTimer = undefined;
+			applyRenderMode(getCullingMode(stageScale));
+		}, RENDER_MODE_SWITCH_DELAY);
+	}
+
 	function updateViewport(stage: KonvaStage) {
 		viewport = {
 			x: stage.x(),
 			y: stage.y(),
 			scale: stage.scaleX()
 		};
+		updateRenderMode(viewport.scale);
 	}
 
 	function updateViewportFromConfig(config: { x: number; y: number; scaleX: number }) {
@@ -145,6 +201,7 @@
 			y: config.y,
 			scale: config.scaleX
 		};
+		updateRenderMode(viewport.scale);
 
 		if (cullingEnabled) {
 			visibleMappedEmbeddings = getVisiblePoints(
@@ -158,6 +215,11 @@
 
 	function handleStageTransform(e: any) {
 		updateViewport(e.detail.target.getStage());
+	}
+
+	function handleWindowResize() {
+		clearBaseGroupCache();
+		if (!cullingEnabled) cacheBaseGroup();
 	}
 
 	// Zooming
@@ -278,7 +340,11 @@
 	}
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
+<svelte:window
+	bind:innerWidth={windowWidth}
+	bind:innerHeight={windowHeight}
+	on:resize={handleWindowResize}
+/>
 
 <Stage
 	bind:config={$stageConfig}
@@ -293,8 +359,8 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		<Group bind:handle={crossGroup}>
-			{#each visibleMappedEmbeddings as cross (cross.id)}
+		<Group config={{ visible: !cullingEnabled }} bind:handle={crossGroup}>
+			{#each mappedEmbeddings as cross (cross.id)}
 				<Cross
 					x={cross.x}
 					y={cross.y}
@@ -304,6 +370,20 @@
 				/>
 			{/each}
 		</Group>
+
+		{#if cullingEnabled}
+			<Group>
+				{#each visibleMappedEmbeddings as cross (cross.id)}
+					<Cross
+						x={cross.x}
+						y={cross.y}
+						pointId={cross.id}
+						color={'black'}
+						on:cross-clicked={handleCrossClick}
+					/>
+				{/each}
+			</Group>
+		{/if}
 
 		<!-- Searches -->
 		{#if $searches}
@@ -345,8 +425,8 @@
 								padding: 2,
 								fontFamily: 'Times New Roman',
 								listening: false,
-								x: cullingEnabled ? 0 : search.searchPoint[0],
-								y: cullingEnabled ? 0 : search.searchPoint[1]
+								x: cullingEnabled || hybridEnabled ? 0 : search.searchPoint[0],
+								y: cullingEnabled || hybridEnabled ? 0 : search.searchPoint[1]
 							}}
 						/>
 					</Label>

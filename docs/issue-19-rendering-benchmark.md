@@ -32,7 +32,17 @@ http://localhost:8080/?plotDebug=1&plotScenario=panning&plotCache=0&plotCull=1
 
 Culling converts the screen viewport into world-space bounds and renders only base points that can be visible, with a small margin for the cross stroke. The current one-time base-group cache is bypassed in this mode because its bitmap would otherwise become stale as points enter and leave the viewport.
 
-Profiler filenames include both `cache-enabled|disabled` and `cull-enabled|disabled` so the exported runs can be compared safely.
+Profiler filenames include `cache-enabled|disabled|hybrid` and `cull-enabled|disabled|hybrid` so the exported runs can be compared safely.
+
+## Test adaptive cache and culling
+
+Enable the hybrid mode with `plotHybrid=1`:
+
+```text
+http://localhost:8080/?plotDebug=1&plotScenario=wheel-zoom&plotHybrid=1
+```
+
+Hybrid mode uses the cache while the stage scale is below `2`, switches to vector culling at scale `2` or higher, and returns to cached mode at scale `1.5` or lower. The gap prevents rapid mode switching around the threshold. Mode transitions are delayed until 180 ms after the last zoom transform so continuous scrolling is not interrupted. Use `plotCache=0&plotHybrid=1` to test the same mode transitions without rebuilding the cache when returning to the zoomed-out mode.
 
 ## Metrics
 
