@@ -76,3 +76,87 @@ Complete this table for at least one representative laptop before changing the r
 | Heap usage                   |       |
 
 Store downloaded JSON files and screenshots outside generated build directories. Name screenshots by scenario, for example `baseline-search-result.png` and `baseline-card-right-edge.png`. Keep the matching JSON filename with each screenshot when possible.
+
+## Run 02 findings
+
+The second test run is stored locally in:
+
+```text
+Documents/knowledge-spaces-test-runs/run-02
+```
+
+The run was captured after the profiler timing and Konva-node-count fixes in commit `97293b9`.
+
+### Environment
+
+- Browser: Chrome 151
+- Viewport: `2556 × 1296`
+- Device pixel ratio: `1`
+- Dataset: 20 Newsgroups
+- Dataset point count: `11,314`
+
+Run 02 is not a strict performance comparison with Run 01 because Run 01 used Firefox 153 at a different viewport size.
+
+### Rendering and interaction results
+
+The values below use the median of the recorded 500 ms intervals after discarding the first three warm-up samples. The frame p95 and input p95 columns show the median interval value followed by the worst interval value.
+
+| Scenario            | Median FPS |       Frame p95 |     Input p95 | Worst average frame |
+| ------------------- | ---------: | --------------: | ------------: | ------------------: |
+| Initial view        |       60.0 |  17.2 / 17.9 ms |  0.0 / 0.3 ms |             16.7 ms |
+| Panning             |       60.0 |  17.3 / 18.7 ms | 0.0 / 13.9 ms |             19.2 ms |
+| Pointer movement    |       60.0 |  17.4 / 18.6 ms |  0.0 / 0.4 ms |             17.3 ms |
+| Wheel zoom          |       60.0 |  27.4 / 33.7 ms |  0.3 / 0.9 ms |             17.3 ms |
+| Minimum zoom        |       60.0 |  17.4 / 31.4 ms | 0.2 / 14.5 ms |             17.3 ms |
+| Maximum zoom        |       60.0 |  17.4 / 29.4 ms | 0.2 / 13.7 ms |             19.6 ms |
+| Hover and selection |       60.0 | 17.4 / 347.2 ms | 0.1 / 16.1 ms |             82.3 ms |
+| Search results      |       60.0 |  17.1 / 18.8 ms |  0.0 / 0.7 ms |            259.2 ms |
+
+The median results are close to 60 FPS, but the long-frame outliers during hover/selection and search rendering remain relevant to perceived responsiveness.
+
+### Konva node counts
+
+The initial scene reports `11,318` Konva nodes. Search states report `11,336`, `11,354`, and `11,359` nodes. This confirms that searches add separate blobs, connection lines, labels, and duplicate result crosses to the existing base scene.
+
+During hover and selection, one interval recorded:
+
+- `11,359` Konva nodes;
+- `10` blob-generation calls;
+- `4.7 ms` accumulated blob-generation time;
+- `347.2 ms` frame p95.
+
+This supports moving blob generation outside the neighbor loop before investigating a different renderer.
+
+### Memory caveat
+
+Chrome reported approximately `152 MB` during the initial view and between `882 MB` and `1,050 MB` in later search, hover, and zoom sessions. These values should not be treated as an isolated memory baseline because searches are persisted in `localStorage` and the scenarios may have been run in the same browser session. Repeat memory measurements in a fresh browser context or after clearing persisted searches.
+
+### Visual observations
+
+The Run 02 screenshots show that:
+
+- zoomed-out views are visually dense and difficult to target;
+- zoomed-in crosses become large;
+- search blobs and connections remain visually prominent;
+- the dataset-entry card is readable when there is room;
+- the card remains attached to the transformed Konva stage and can occupy a large part of the viewport at high zoom.
+
+### Phase 1 handoff
+
+The next agent should begin with the low-risk Konva optimizations from the migration plan:
+
+1. Compute `generateBlobPointsForSearch(search)` once per search.
+2. Render one blob outside the neighbor loop.
+3. Compute each connection's bowed midpoint once rather than once per coordinate.
+4. Set `listening: false` on visual-only lines, labels, tags, and other non-interactive nodes.
+5. Replace the `{#key mappedSearches}` remount with stable keyed updates.
+6. Rerun the Run 02 scenarios with the profiler after these changes.
+
+The comparison should focus on:
+
+- the worst average frame during search-result creation;
+- the hover/selection frame p95 outlier;
+- node counts before and after removing duplicate result crosses;
+- blob-generation call count and accumulated time.
+
+Do not move to nearest-point interaction or a custom Canvas 2D renderer until these changes have been measured. The existing profiler can be enabled with `?plotDebug=1&plotScenario=<name>`, and the **Save JSON** button exports the samples for comparison.
