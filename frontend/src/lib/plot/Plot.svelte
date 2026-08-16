@@ -20,13 +20,24 @@
 		zoomToSearchPoint
 	} from '../../utils';
 
+	type Viewport = {
+		x: number;
+		y: number;
+		scale: number;
+	};
+
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
+	let cullingEnabled = false;
+	let viewport: Viewport = { x: 0, y: 0, scale: 1 };
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight).map(
 		([x, y], id): Point => ({ id, x, y })
 	);
 	$: mappedSearches = $searches ? getSearchesWithMappedEmbeddings(windowWidth, windowHeight) : [];
+	$: visibleMappedEmbeddings = cullingEnabled
+		? getVisiblePoints(mappedEmbeddings, viewport, windowWidth, windowHeight)
+		: mappedEmbeddings;
 	$: if ($searches && $searches.length > 0) {
 		const lastSearch = mappedSearches[mappedSearches.length - 1];
 		zoomToSearchPoint(lastSearch.searchPoint, windowWidth, windowHeight);
@@ -57,7 +68,11 @@
 	let plotProfiler: PlotProfilerHandle | undefined;
 
 	onMount(() => {
-		const cacheEnabled = new URLSearchParams(window.location.search).get('plotCache') !== '0';
+		const params = new URLSearchParams(window.location.search);
+		cullingEnabled = params.get('plotCull') === '1';
+		if (stageHandle) updateViewport(stageHandle);
+
+		const cacheEnabled = params.get('plotCache') !== '0' && !cullingEnabled;
 		if (!cacheEnabled) return;
 
 		tick().then(() => {
@@ -87,6 +102,35 @@
 
 	function getSearchKey(search: SearchKeySource) {
 		return JSON.stringify([search.dataset ?? '', search.query ?? '']);
+	}
+
+	function getVisiblePoints(
+		points: Point[],
+		currentViewport: Viewport,
+		width: number,
+		height: number
+	) {
+		const margin = 6;
+		const left = -currentViewport.x / currentViewport.scale - margin;
+		const top = -currentViewport.y / currentViewport.scale - margin;
+		const right = (width - currentViewport.x) / currentViewport.scale + margin;
+		const bottom = (height - currentViewport.y) / currentViewport.scale + margin;
+
+		return points.filter(
+			(point) => point.x >= left && point.x <= right && point.y >= top && point.y <= bottom
+		);
+	}
+
+	function updateViewport(stage: KonvaStage) {
+		viewport = {
+			x: stage.x(),
+			y: stage.y(),
+			scale: stage.scaleX()
+		};
+	}
+
+	function handleStageTransform(e: any) {
+		updateViewport(e.detail.target.getStage());
 	}
 
 	// Zooming
@@ -139,6 +183,7 @@
 			y: pointer.y - mousePointTo.y * newScale
 		};
 		stage.position(newPos);
+		updateViewport(stage);
 	}
 
 	function handleStageClick() {
@@ -213,6 +258,7 @@
 	bind:handle={stageHandle}
 	on:wheel={scaleShape}
 	on:mousemove={handlePointerMove}
+	on:dragmove={handleStageTransform}
 	on:click={handleStageClick}
 >
 	<!-- Grid -->
@@ -221,7 +267,7 @@
 	<Layer>
 		<!-- Embeddings -->
 		<Group bind:handle={crossGroup}>
-			{#each mappedEmbeddings as cross}
+			{#each visibleMappedEmbeddings as cross (cross.id)}
 				<Cross
 					x={cross.x}
 					y={cross.y}

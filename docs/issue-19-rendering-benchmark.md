@@ -22,6 +22,18 @@ http://localhost:8080/?plotDebug=1&plotScenario=panning&plotCache=0
 
 Run the same scenario once with the default URL and once with `plotCache=0`. Keep the browser, viewport, dataset, interaction duration, and warm-up procedure the same. Compare frame time, input latency, heap usage, and visual correctness after resizing. The cache toggle is temporary and should remain available until the comparison is complete.
 
+## Compare viewport culling
+
+Viewport culling is an experimental mode. Enable it with `plotCull=1` and disable the base-group cache for a valid comparison:
+
+```text
+http://localhost:8080/?plotDebug=1&plotScenario=panning&plotCache=0&plotCull=1
+```
+
+Culling converts the screen viewport into world-space bounds and renders only base points that can be visible, with a small margin for the cross stroke. The current one-time base-group cache is bypassed in this mode because its bitmap would otherwise become stale as points enter and leave the viewport.
+
+Profiler filenames include both `cache-enabled|disabled` and `cull-enabled|disabled` so the exported runs can be compared safely.
+
 ## Metrics
 
 | Metric          | Meaning                                                                                         |
