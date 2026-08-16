@@ -6,19 +6,32 @@ function zoomToSearchPoint(searchPoint, windowWidth, windowHeight) {
 
 	console.log('zoomToSearchPoint', searchPoint);
 
-	if (!stage) return; // Exit the function if stage is not yet defined
+	if (
+		!stage ||
+		!searchPoint ||
+		!Number.isFinite(searchPoint[0]) ||
+		!Number.isFinite(searchPoint[1]) ||
+		!Number.isFinite(windowWidth) ||
+		!Number.isFinite(windowHeight)
+	) {
+		return;
+	}
 
 	const stageScale = 1; // Define the zoom level you want here
 	const stageX = windowWidth / 2 - searchPoint[0] * stageScale;
 	const stageY = windowHeight / 2 - searchPoint[1] * stageScale;
 
-	stage.x = stageX;
-	stage.y = stageY;
-	stage.scaleX = stageScale;
-	stage.scaleY = stageScale;
+	// Set a new config object so store subscribers always receive the update
+	const nextStage = {
+		...stage,
+		x: stageX,
+		y: stageY,
+		scaleX: stageScale,
+		scaleY: stageScale
+	};
+	stageConfig.set(nextStage);
 
-	// Update the stage
-	stageConfig.set(stage);
+	return nextStage;
 }
 
 export { zoomToSearchPoint };
