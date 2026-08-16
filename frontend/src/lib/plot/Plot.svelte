@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { Stage, Layer, Group, Label, Tag, Text } from 'svelte-konva';
+	import type { Group as KonvaGroup } from 'konva/lib/Group';
+	import type { Layer as KonvaLayer } from 'konva/lib/Layer';
+	import type { Stage as KonvaStage } from 'konva/lib/Stage';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
 	import Blob from './Blob.svelte';
 	import NodeCard from './NodeCard.svelte';
+	import PlotProfiler from '../utils/PlotProfiler.svelte';
 
 	import { searches, stageConfig } from '../../stores/store';
 	import {
@@ -31,8 +35,21 @@
 	$: $stageConfig.width = windowWidth;
 	$: $stageConfig.height = windowHeight;
 
+	type PlotProfilerHandle = {
+		recordPointerEvent: () => void;
+		recordWheelEvent: () => void;
+		measureBlobGeneration: <T>(callback: () => T) => T;
+	};
+
+	type MappedSearch = {
+		neighbors: Array<Array<number>>;
+		searchPoint?: Array<number>;
+	};
+
 	// Cross group
-	let crossGroup;
+	let crossGroup: KonvaGroup | undefined;
+	let stageHandle: KonvaStage | undefined;
+	let plotProfiler: PlotProfilerHandle | undefined;
 
 	onMount(() => {
 		tick().then(() => {
@@ -49,6 +66,17 @@
 		});
 	});
 
+	function handlePointerMove() {
+		plotProfiler?.recordPointerEvent();
+	}
+
+	function getBlobPoints(search: MappedSearch) {
+		return (
+			plotProfiler?.measureBlobGeneration(() => generateBlobPointsForSearch(search)) ??
+			generateBlobPointsForSearch(search)
+		);
+	}
+
 	// Zooming
 	let scale = 1;
 	let scaleBy = 1.15;
@@ -59,6 +87,7 @@
 		detail: { target: { getStage: () => any }; evt: { deltaY: number; ctrlKey: any } };
 		preventDefault: () => void;
 	}) {
+		plotProfiler?.recordWheelEvent();
 		let stage = e.detail.target.getStage();
 
 		// stop default scrolling
@@ -102,7 +131,7 @@
 
 	function handleStageClick() {
 		NodeCardConfig.display = false;
-		CardLayer.draw();
+		CardLayer?.draw();
 	}
 
 	let NodeCardConfig = {
@@ -117,7 +146,7 @@
 		},
 		search: null
 	};
-	let CardLayer;
+	let CardLayer: KonvaLayer | undefined;
 
 	function handleCrossClick(e) {
 		// Prevent bubbling
@@ -155,7 +184,7 @@
 			NodeCardConfig.search = search != undefined ? search : null;
 
 			// Redraw the layer
-			CardLayer.draw();
+			CardLayer?.draw();
 		}
 	}
 
@@ -167,7 +196,13 @@
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
-<Stage bind:config={$stageConfig} on:wheel={scaleShape} on:click={handleStageClick}>
+<Stage
+	bind:config={$stageConfig}
+	bind:handle={stageHandle}
+	on:wheel={scaleShape}
+	on:mousemove={handlePointerMove}
+	on:click={handleStageClick}
+>
 	<!-- Grid -->
 	<!-- <Grid {scale} strokes={20} {windowWidth} {windowHeight} /> -->
 
@@ -185,7 +220,7 @@
 				{#each mappedSearches as search}
 					{#each search.neighbors as cross}
 						<!-- Draw the blob around the cross -->
-						<Blob points={generateBlobPointsForSearch(search)} color={search.color} />
+						<Blob points={getBlobPoints(search)} color={search.color} />
 
 						<!-- Draw line from searchPoint to neighbor -->
 						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
@@ -238,5 +273,7 @@
 		/>
 	</Layer>
 </Stage>
+
+<PlotProfiler bind:this={plotProfiler} {stageHandle} />
 
 <style></style>
