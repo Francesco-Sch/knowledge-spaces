@@ -78,16 +78,17 @@ function createPlotProfiler({ onSnapshot, getKonvaNodeCount }: PlotProfilerOptio
 		blobTime += duration;
 	}
 
-	function renderFrame(timestamp: number) {
+	function renderFrame() {
 		if (!running) return;
 
+		const now = performance.now();
 		if (previousFrameTime !== undefined) {
-			frameTimes.push(timestamp - previousFrameTime);
+			frameTimes.push(now - previousFrameTime);
 		}
-		previousFrameTime = timestamp;
+		previousFrameTime = now;
 
 		if (pendingInputEvents.length > 0) {
-			inputLatencies.push(...pendingInputEvents.map((startTime) => timestamp - startTime));
+			inputLatencies.push(...pendingInputEvents.map((startTime) => now - startTime));
 			pendingInputEvents = [];
 		}
 
