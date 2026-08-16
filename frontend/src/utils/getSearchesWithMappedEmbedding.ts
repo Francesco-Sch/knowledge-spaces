@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { getActiveSearches } from '../stores/store';
 import { mapEmbeddingsToWindowSize } from './mapEmbeddingsToWindowSize';
-import type { Point } from '../lib/plot/types';
+import type { Point } from '$lib/types';
 
 function getMappedEmbeddings(
 	windowWidth: number,

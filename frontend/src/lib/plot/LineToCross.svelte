@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Line } from 'svelte-konva';
-	import type { Point } from './types';
+	import type { Point } from '$lib/types';
 
 	export let searchPoint: Array<number>;
 	export let cross: Point;
