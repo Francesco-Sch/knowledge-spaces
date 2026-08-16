@@ -26,6 +26,8 @@
 
 		return { midX, midY };
 	}
+
+	$: bowedPoint = computeBow(searchPoint, cross);
 </script>
 
 <Line
@@ -34,8 +36,8 @@
 		points: [
 			searchPoint[0],
 			searchPoint[1],
-			computeBow(searchPoint, cross).midX,
-			computeBow(searchPoint, cross).midY,
+			bowedPoint.midX,
+			bowedPoint.midY,
 			cross[0],
 			cross[1]
 		],
