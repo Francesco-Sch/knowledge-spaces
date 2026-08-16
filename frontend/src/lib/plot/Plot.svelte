@@ -57,6 +57,9 @@
 	let plotProfiler: PlotProfilerHandle | undefined;
 
 	onMount(() => {
+		const cacheEnabled = new URLSearchParams(window.location.search).get('plotCache') !== '0';
+		if (!cacheEnabled) return;
+
 		tick().then(() => {
 			if (crossGroup != null) {
 				// Check if the group has valid size

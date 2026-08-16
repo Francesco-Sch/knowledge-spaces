@@ -12,6 +12,16 @@ http://localhost:8080/?plotDebug=1&plotScenario=panning
 
 The debug panel appears in the top-left corner. The **Save JSON** button downloads all 500 ms samples collected during the current session. Use a separate scenario value for each test, such as `initial`, `panning`, `wheel-zoom`, or `search-result`.
 
+## Compare the base-group cache
+
+The base point group cache is enabled by default. Add `plotCache=0` to disable it for a comparison run:
+
+```text
+http://localhost:8080/?plotDebug=1&plotScenario=panning&plotCache=0
+```
+
+Run the same scenario once with the default URL and once with `plotCache=0`. Keep the browser, viewport, dataset, interaction duration, and warm-up procedure the same. Compare frame time, input latency, heap usage, and visual correctness after resizing. The cache toggle is temporary and should remain available until the comparison is complete.
+
 ## Metrics
 
 | Metric          | Meaning                                                                                         |
