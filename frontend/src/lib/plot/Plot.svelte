@@ -45,6 +45,13 @@
 
 	$: $stageConfig.width = windowWidth;
 	$: $stageConfig.height = windowHeight;
+	$: if ($stageConfig) {
+		viewport = {
+			x: $stageConfig.x,
+			y: $stageConfig.y,
+			scale: $stageConfig.scaleX
+		};
+	}
 
 	type PlotProfilerHandle = {
 		recordPointerEvent: () => void;
@@ -318,8 +325,8 @@
 								padding: 2,
 								fontFamily: 'Times New Roman',
 								listening: false,
-								x: search.searchPoint[0],
-								y: search.searchPoint[1]
+								x: cullingEnabled ? 0 : search.searchPoint[0],
+								y: cullingEnabled ? 0 : search.searchPoint[1]
 							}}
 						/>
 					</Label>
