@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { Container as KonvaContainer } from 'konva/lib/Container';
+	import type { Node as KonvaNode } from 'konva/lib/Node';
 	import type { Stage as KonvaStage } from 'konva/lib/Stage';
 	import { createPlotProfiler, type PlotProfilerSnapshot } from './plotProfiler';
 
@@ -17,6 +19,16 @@
 	let sessionStartedAt: string;
 	let scenario = 'unspecified';
 	let enabled = false;
+
+	function isKonvaContainer(node: KonvaNode): node is KonvaContainer {
+		return node.hasChildren();
+	}
+
+	function countKonvaNodes(node: KonvaNode): number {
+		if (!isKonvaContainer(node)) return 1;
+
+		return 1 + node.getChildren().reduce((count, child) => count + countKonvaNodes(child), 0);
+	}
 
 	onMount(() => {
 		const params = new URLSearchParams(window.location.search);
@@ -36,7 +48,7 @@
 					}
 				];
 			},
-			getKonvaNodeCount: () => stageHandle?.find('*').length ?? 0
+			getKonvaNodeCount: () => (stageHandle ? countKonvaNodes(stageHandle) : 0)
 		});
 		profiler.start();
 
