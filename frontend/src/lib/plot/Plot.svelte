@@ -218,10 +218,10 @@
 		{#key mappedSearches}
 			{#if $searches}
 				{#each mappedSearches as search}
-					{#each search.neighbors as cross}
-						<!-- Draw the blob around the cross -->
-						<Blob points={getBlobPoints(search)} color={search.color} />
+					<!-- Draw one blob around all neighbors in the search -->
+					<Blob points={getBlobPoints(search)} color={search.color} />
 
+					{#each search.neighbors as cross}
 						<!-- Draw line from searchPoint to neighbor -->
 						<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
