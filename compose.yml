@@ -9,7 +9,7 @@ services:
     environment:
       - FRONTEND_URL=${FRONTEND_URL}
     volumes:
-      - ./data:/data
+      - ./data:/data:Z
     networks:
       - default_knowledge-spaces
 
