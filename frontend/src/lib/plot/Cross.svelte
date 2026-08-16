@@ -7,6 +7,7 @@
 	// ----- Data -----
 	export let x: number;
 	export let y: number;
+	export let pointId: number;
 	export let color: string;
 
 	const dispatch = createEventDispatcher();
@@ -98,6 +99,7 @@
 		hitFunc: hitRegion,
 		x: x,
 		y: y,
+		pointId: pointId,
 		width: 5,
 		height: 5,
 		stroke: color,

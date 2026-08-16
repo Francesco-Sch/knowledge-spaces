@@ -4,6 +4,7 @@
 	import type { Group as KonvaGroup } from 'konva/lib/Group';
 	import type { Layer as KonvaLayer } from 'konva/lib/Layer';
 	import type { Stage as KonvaStage } from 'konva/lib/Stage';
+	import type { Point } from './types';
 	import Grid from './Grid.svelte';
 	import Cross from './Cross.svelte';
 	import LineToCross from './LineToCross.svelte';
@@ -22,7 +23,9 @@
 	let windowWidth: number, windowHeight: number;
 	export let embeddings: Array<Array<number>>;
 
-	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight);
+	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight).map(
+		([x, y], id): Point => ({ id, x, y })
+	);
 	$: mappedSearches = $searches ? getSearchesWithMappedEmbeddings(windowWidth, windowHeight) : [];
 	$: if ($searches && $searches.length > 0) {
 		const lastSearch = mappedSearches[mappedSearches.length - 1];
@@ -39,7 +42,7 @@
 	};
 
 	type MappedSearch = {
-		neighbors: Array<Array<number>>;
+		neighbors: Point[];
 		searchPoint?: Array<number>;
 	};
 
@@ -164,10 +167,10 @@
 		const crossX = cross.target.attrs.x + 20;
 		const crossY = cross.target.attrs.y;
 
-		const mappedEntryIndex = mappedEmbeddings.findIndex(
-			(embedding) => embedding[0] === cross.target.attrs.x && embedding[1] === cross.target.attrs.y
-		);
+		const mappedEntryIndex = cross.target.attrs.pointId;
 		const embedding = embeddings[mappedEntryIndex];
+
+		if (mappedEntryIndex == null || !embedding) return;
 
 		// Check if cross is part of a search
 		let search = null;
@@ -216,7 +219,13 @@
 		<!-- Embeddings -->
 		<Group bind:handle={crossGroup}>
 			{#each mappedEmbeddings as cross}
-				<Cross x={cross[0]} y={cross[1]} color={'black'} on:cross-clicked={handleCrossClick} />
+				<Cross
+					x={cross.x}
+					y={cross.y}
+					pointId={cross.id}
+					color={'black'}
+					on:cross-clicked={handleCrossClick}
+				/>
 			{/each}
 		</Group>
 
@@ -231,8 +240,9 @@
 					<LineToCross searchPoint={search.searchPoint} {cross} color={search.color} />
 
 					<Cross
-						x={cross[0]}
-						y={cross[1]}
+						x={cross.x}
+						y={cross.y}
+						pointId={cross.id}
 						color={search.color}
 						on:cross-clicked={handleCrossClick}
 					/>

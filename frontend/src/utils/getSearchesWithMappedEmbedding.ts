@@ -1,15 +1,25 @@
 import { get } from 'svelte/store';
 import { getActiveSearches } from '../stores/store';
 import { mapEmbeddingsToWindowSize } from './mapEmbeddingsToWindowSize';
+import type { Point } from '../lib/plot/types';
 
-function getMappedEmbeddings(windowWidth: number, windowHeight: number, search: any) {
+function getMappedEmbeddings(
+	windowWidth: number,
+	windowHeight: number,
+	search: any
+): Point[] | undefined {
 	// If neighbors are not set, return
 	if (!search.neighbors || search.neighbors.length === 0) return;
 
 	// Turn searhc neighbors into array of arrays based on the x and y value
 	const embeddingsArray = search.neighbors.map((neighbor: any) => [neighbor.x, neighbor.y]);
+	const mappedEmbeddings = mapEmbeddingsToWindowSize(embeddingsArray, windowWidth, windowHeight);
 
-	return mapEmbeddingsToWindowSize(embeddingsArray, windowWidth, windowHeight);
+	return mappedEmbeddings.map(([x, y], index) => ({
+		id: search.neighbors[index].corpus_id,
+		x,
+		y
+	}));
 }
 
 const getSearchesWithMappedEmbeddings = (windowWidth: number, windowHeight: number) => {

@@ -1,9 +1,11 @@
 import concaveman from 'concaveman';
 import Offset from 'polygon-offset';
 import simplify from 'simplify-js';
+import type { Point } from '../lib/plot/types';
 
 function generateBlobPointsForSearch(search) {
-	const hull = concaveman(search.neighbors.concat([search.searchPoint]), 1, 1);
+	const neighborCoordinates = search.neighbors.map((neighbor: Point) => [neighbor.x, neighbor.y]);
+	const hull = concaveman(neighborCoordinates.concat([search.searchPoint]), 1, 1);
 
 	const offset = new Offset();
 	const offsetAmount = 50;
