@@ -1,17 +1,18 @@
 <script lang="ts">
-	import { BASE_URL } from '../../data/config';
-	import { Rect, Text, Group } from 'svelte-konva';
-	import { createEventDispatcher, afterUpdate } from 'svelte';
-	import { selectedDataset } from '../../stores/store';
+	import { afterUpdate, createEventDispatcher } from 'svelte';
+	import type { Text as KonvaText } from 'konva/lib/shapes/Text';
+	import { Group, Rect, Text } from 'svelte-konva';
+	import { selectedDataset } from '../../../stores/store';
+	import type { CardEmbedding } from '../plot-data';
 
 	const dispatch = createEventDispatcher();
 
 	// ----- Data -----
-	export let display: boolean = false;
-	export let x: number = 0;
-	export let y: number = 0;
-	export let color: string = 'black';
-	export let embedding = {
+	export let display = false;
+	export let x = 0;
+	export let y = 0;
+	export let color = 'black';
+	export let embedding: CardEmbedding = {
 		id: 0,
 		x: 0,
 		y: 0
@@ -20,7 +21,7 @@
 	// ----- Configs -----
 	const padding = 15;
 
-	let rectConfig: { width: any; height: any; x?: number; y?: number; fill?: string };
+	let rectConfig: { width: number; height: number; x?: number; y?: number; fill?: string };
 	let coloredRectConfig: { x: number; y: number; width: number; height: number; fill: string };
 	let coordinatesConfig: {
 		x: number;
@@ -33,7 +34,7 @@
 		align: string;
 	};
 	let textConfig: {
-		text: any;
+		text: string;
 		x?: number;
 		y?: number;
 		fontSize?: number;
@@ -84,7 +85,7 @@
 	}
 
 	// ----- Canvas Objects -----
-	let text: any;
+	let text: KonvaText | undefined;
 
 	afterUpdate(() => {
 		if (text) {
@@ -94,7 +95,7 @@
 	});
 
 	// ----- Event Handlers -----
-	function handleClick(event) {
+	function handleClick(event: CustomEvent) {
 		dispatch('card-click', event);
 	}
 

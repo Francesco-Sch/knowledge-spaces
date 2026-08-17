@@ -172,16 +172,31 @@ async function waitForRenderMode(page, expectedMode) {
 	);
 }
 
+async function getPlotLayerOrder(page) {
+	return page.evaluate(() => {
+		const stage = window.Konva?.stages?.at(-1);
+		const layer = stage?.getChildren()?.[0];
+		return layer
+			? layer.getChildren().map((node, index) => ({
+					index,
+					className: node.getClassName(),
+					childCount: node.getChildren?.().length || 0,
+					stroke: node.getAttr('stroke'),
+					pointId: node.getAttr('pointId')
+			  }))
+			: [];
+	});
+}
+
 function getExpectedInitialRenderMode(mode) {
-	if (mode === 'cache') return 'cached';
 	if (mode === 'cull') return 'forced-culling';
-	return 'adaptive-culling';
+	return 'cached';
 }
 
 function getExpectedFinalRenderMode(mode, scenario) {
 	if (mode === 'cache') return 'cached';
 	if (mode === 'cull') return 'forced-culling';
-	return scenario === 'zoom-min' ? 'cached' : 'adaptive-culling';
+	return scenario === 'zoom-max' ? 'adaptive-culling' : 'cached';
 }
 
 function getPageViewport(page) {
@@ -292,7 +307,7 @@ async function findHoverableDarkCanvasPoint(page) {
 const PROFILE_SCENARIOS = {
 	'initial-view': {
 		needsSearch: false,
-		run: async () => {}
+		run: async () => undefined
 	},
 	panning: {
 		needsSearch: false,
@@ -335,7 +350,7 @@ const PROFILE_SCENARIOS = {
 	},
 	'search-results': {
 		needsSearch: true,
-		run: async () => {}
+		run: async () => undefined
 	},
 	'hover-and-selection': {
 		needsSearch: true,
@@ -544,10 +559,10 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			await page.screenshot({ path: `${ARTIFACT_DIR}/hybrid-zoomed-out.png` });
 		});
 
-		await t.test('adaptive mode caches only at very low zoom', async () => {
+		await t.test('adaptive mode follows its culling thresholds', async () => {
 			await resetPage();
 			await preparePage(page, '?plotDebug=1&plotScenario=playwright-adaptive');
-			await waitForRenderMode(page, 'adaptive-culling');
+			await waitForRenderMode(page, 'cached');
 			await page.mouse.move(VIEWPORT.width / 2, VIEWPORT.height / 2);
 
 			await dispatchWheel(page, 500, 24);
@@ -564,6 +579,49 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			assertHealthy(normalZoomStats, errors, 'adaptive normal zoom');
 			await page.screenshot({ path: `${ARTIFACT_DIR}/adaptive-normal-zoom.png` });
 		});
+
+		await t.test(
+			'search overlays stay above crosses after cache and culling transitions',
+			async () => {
+				await resetPage();
+				await seedSearch(page);
+				await page.goto(`${APP_URL}/?plotDebug=1&plotScenario=playwright-search-order`);
+				await page.waitForTimeout(1_500);
+				await waitForRenderMode(page, 'cached');
+
+				// Move through the cached mode and back into culling, matching the
+				// transition where the overlay draw order previously became inverted.
+				await dispatchWheel(page, 500, 5);
+				await page.waitForTimeout(700);
+				await waitForRenderMode(page, 'cached');
+				await dispatchWheel(page, -500, 7);
+				await page.waitForTimeout(700);
+				await waitForRenderMode(page, 'adaptive-culling');
+
+				const stats = await canvasStats(page);
+				assertHealthy(stats, errors, 'search order transition');
+				assert.ok(
+					stats.canvases.some((canvas) => canvas.greenPixels > 0),
+					'colored search overlay was not visible after the mode transition'
+				);
+
+				const layerOrder = await getPlotLayerOrder(page);
+				const searchNodeIndexes = layerOrder
+					.filter((node) => node.stroke === searchFixture.color)
+					.map((node) => node.index);
+				const embeddingGroupIndexes = layerOrder
+					.filter((node) => node.className === 'Group')
+					.map((node) => node.index);
+
+				assert.ok(searchNodeIndexes.length > 0, 'search overlay nodes were not rendered');
+				assert.ok(embeddingGroupIndexes.length > 0, 'embedding groups were not rendered');
+				assert.ok(
+					Math.max(...embeddingGroupIndexes) < Math.min(...searchNodeIndexes),
+					'search overlays were rendered behind an embedding group after the mode transition'
+				);
+				await page.screenshot({ path: `${ARTIFACT_DIR}/search-order-transition.png` });
+			}
+		);
 
 		await t.test('forced culling keeps search overlays visible after a search jump', async () => {
 			await resetPage();

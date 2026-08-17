@@ -1,4 +1,8 @@
-# Issue #19 rendering tests
+# Rendering test playbook
+
+> **Status:** Maintained validation runbook for the plot renderer.
+> **Origin:** The suite was created during [Issue #19: Rework dataset rendering for performance](https://github.com/Francesco-Sch/knowledge-spaces/issues/19).
+> **Scope:** This document describes how to reproduce rendering, interaction, visual, and profiling checks independently of the original issue.
 
 The plot rendering suite uses Playwright Core and runs the application in a local Chromium executable.
 
@@ -30,7 +34,7 @@ PLOT_TEST_ARTIFACTS=/tmp/plot-rendering-run pnpm test:plot
 
 Profiler recordings are enabled by default. The Playwright runner opens each configured URL, performs the same scenario interactions for every mode, clicks **Save JSON**, waits for the browser download, and saves the recording with a deterministic name. Each recording includes the final `metadata.renderMode`, and the debug panel displays the current mode while the scenario is running.
 
-The selected default application mode is adaptive: normal URLs use vector culling and switch to cached rendering only at very low zoom. The matrix also keeps an explicit cache-only baseline (`plotHybrid=0`) and forced-culling diagnostic mode for comparison. Its output includes:
+The selected default application mode is adaptive: normal URLs start in cached rendering at scale `1.0`, enter vector culling at scale `1.1` or higher, and return to cached rendering at scale `1.0` or lower. The matrix also keeps an explicit cache-only baseline (`plotHybrid=0`) and forced-culling diagnostic mode for comparison. Its output includes:
 
 ```text
 /tmp/plot-rendering-run/profiles/cache/initial-view.json
@@ -85,7 +89,7 @@ Useful environment variables:
 - JSON profiler recordings for the selected mode/scenario matrix.
 - Deterministic multi-search profiler fixtures for overlay and selection workloads.
 
-The scenario actions are renderer-agnostic. Cache, adaptive, and forced-culling behavior is selected only by the URL query parameters, so changing the final implementation requires changing the mode mapping rather than duplicating scenario tests.
+The scenario actions are renderer-agnostic. Cache, adaptive, and forced-culling behavior is selected only by the URL query parameters, so changing the final implementation requires changing the mode mapping rather than duplicating scenario tests. The current mode expectations are defined in `getExpectedInitialRenderMode` and `getExpectedFinalRenderMode` in the Playwright suite.
 
 ## Run an A/B comparison
 

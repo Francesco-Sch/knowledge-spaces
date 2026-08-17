@@ -1,13 +1,26 @@
 import { get } from 'svelte/store';
 import { stageConfig } from '../stores/store';
 
-function zoomToSearchPoint(searchPoint, windowWidth, windowHeight) {
-	const stage = get(stageConfig);
+type SearchPoint = [number, number];
 
-	console.log('zoomToSearchPoint', searchPoint);
+type StageConfig = {
+	width: number;
+	height: number;
+	draggable: boolean;
+	x: number;
+	y: number;
+	scaleX: number;
+	scaleY: number;
+};
+
+function zoomToSearchPoint(
+	searchPoint: SearchPoint | undefined,
+	windowWidth: number,
+	windowHeight: number
+): StageConfig | undefined {
+	const stage = get(stageConfig) as StageConfig;
 
 	if (
-		!stage ||
 		!searchPoint ||
 		!Number.isFinite(searchPoint[0]) ||
 		!Number.isFinite(searchPoint[1]) ||
@@ -17,11 +30,11 @@ function zoomToSearchPoint(searchPoint, windowWidth, windowHeight) {
 		return;
 	}
 
-	const stageScale = 1; // Define the zoom level you want here
+	const stageScale = 1;
 	const stageX = windowWidth / 2 - searchPoint[0] * stageScale;
 	const stageY = windowHeight / 2 - searchPoint[1] * stageScale;
 
-	// Set a new config object so store subscribers always receive the update
+	// Set a new config object so store subscribers always receive the update.
 	const nextStage = {
 		...stage,
 		x: stageX,
