@@ -413,3 +413,15 @@ The values below are median samples after discarding the first three warm-up sam
 - Pointer movement and hover/selection remained at approximately 60 FPS in all three modes during this run.
 - Forced culling still shows a minimum-zoom transition cost, which is a rendering-mode concern rather than a nearest-point lookup regression.
 - The focused index suite passed all five cases with `pnpm test:plot-index`.
+
+## Phase 3 duplicate-cross validation
+
+Phase 3 now recolors the existing base point nodes by stable point ID instead of rendering a second cross for each search neighbor.
+
+The focused rendering run passed all 11 tests with:
+
+```bash
+PLOT_TEST_PROFILES=0 pnpm test:plot
+```
+
+The run verifies that seeded search neighbors have exactly one point glyph with the search color in cached mode. Existing search overlay, adaptive-culling, forced-culling, hover, selection, and resize checks also remain passing.

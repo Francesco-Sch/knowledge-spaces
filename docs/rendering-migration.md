@@ -1,6 +1,6 @@
 # Rendering migration
 
-> **Status:** Phase 2 nearest-point interaction is complete and its exit validation has been recorded.
+> **Status:** Phase 3 search-point recoloring is complete and its exit validation has been recorded.
 > **Origin:** This roadmap originated from [Issue #19: Rework dataset rendering for performance](https://github.com/Francesco-Sch/knowledge-spaces/issues/19).
 > **Scope:** This document records the rendering architecture, completed decisions, and follow-up migration work for the repository.
 
@@ -240,6 +240,14 @@ Search connections and blobs should continue to be drawn exactly as they are now
 - No duplicate point glyphs are created for search neighbors.
 - Search connections still terminate at the same point coordinates.
 - Search labels and blobs remain visually unchanged.
+
+### Phase 3 implementation notes
+
+- `DatasetPoints.svelte` resolves each base point color by its stable point ID in both cached and culled rendering modes.
+- `Search.svelte` retains blobs, connections, and labels but no longer creates duplicate neighbor crosses.
+- When a point belongs to multiple searches, the latest rendered search determines its color.
+- Base-group caches are invalidated when search display colors change so cached points do not remain stale.
+- The focused Playwright rendering suite verifies recoloring and duplicate suppression in cached mode, as well as the existing overlay and culling behavior.
 
 ## Phase 4: Move the dataset-entry card into HTML
 

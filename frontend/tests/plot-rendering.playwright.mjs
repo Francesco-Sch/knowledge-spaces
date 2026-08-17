@@ -608,6 +608,24 @@ test('plot rendering scenarios in Chromium', async (t) => {
 				await page.waitForTimeout(1_500);
 				await waitForRenderMode(page, 'cached');
 
+				const searchPointStrokes = await page.evaluate(
+					(pointIds) => {
+						const stage = window.Konva?.stages?.at(-1);
+						const pointNodes = stage?.find('Shape') || [];
+						return pointIds.map((pointId) =>
+							pointNodes
+								.filter((node) => node.getAttr('pointId') === pointId)
+								.map((node) => node.getAttr('stroke'))
+						);
+					},
+					searchFixture.neighbors.map((neighbor) => neighbor.corpus_id)
+				);
+				assert.deepEqual(
+					searchPointStrokes,
+					searchFixture.neighbors.map(() => [searchFixture.color]),
+					'search neighbors should recolor their existing base points without duplicate glyphs'
+				);
+
 				// Move through the cached mode and back into culling, matching the
 				// transition where the overlay draw order previously became inverted.
 				await dispatchWheel(page, 500, 5);

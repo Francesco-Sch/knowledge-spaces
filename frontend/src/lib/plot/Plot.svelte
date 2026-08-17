@@ -326,6 +326,13 @@
 		cacheBaseGroup();
 	}
 
+	$: if (pointDisplayColors && crossGroup) {
+		// Recolored points must be reflected in the cached base bitmap as well as
+		// in the Konva nodes. Rebuild it after Svelte applies the new colors.
+		clearBaseGroupCache();
+		if (!cullingEnabled) cacheBaseGroup();
+	}
+
 	// ----- Event Handlers -----
 	function hideCard() {
 		if (!NodeCardConfig.display) return;
@@ -479,6 +486,7 @@
 			{visibleMappedEmbeddings}
 			{cullingEnabled}
 			{baseGroupMounted}
+			{pointDisplayColors}
 		/>
 
 		{#if $searches}

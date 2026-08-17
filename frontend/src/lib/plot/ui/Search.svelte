@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Label, Tag, Text } from 'svelte-konva';
 	import type { MappedSearch } from '../plot-data';
-	import Cross from './Cross.svelte';
 	import SearchBlob from './SearchBlob.svelte';
 	import SearchConnection from './SearchConnection.svelte';
 
@@ -19,8 +18,6 @@
 	{#if search.searchPoint}
 		<SearchConnection searchPoint={search.searchPoint} {cross} color={search.color} />
 	{/if}
-
-	<Cross x={cross.x} y={cross.y} pointId={cross.id} color={search.color} />
 {/each}
 
 <!-- Search label -->

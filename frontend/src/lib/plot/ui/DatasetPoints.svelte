@@ -9,6 +9,7 @@
 	export let visibleMappedEmbeddings: Point[] = [];
 	export let cullingEnabled = false;
 	export let baseGroupMounted = false;
+	export let pointDisplayColors: ReadonlyMap<number, string> = new Map();
 
 	// ----- Canvas Objects -----
 	export let crossGroup: KonvaGroup | undefined;
@@ -31,7 +32,12 @@
 >
 	{#if baseGroupMounted}
 		{#each mappedEmbeddings as cross (cross.id)}
-			<Cross x={cross.x} y={cross.y} pointId={cross.id} color={'black'} />
+			<Cross
+				x={cross.x}
+				y={cross.y}
+				pointId={cross.id}
+				color={pointDisplayColors.get(cross.id) ?? 'black'}
+			/>
 		{/each}
 	{/if}
 </Group>
@@ -46,7 +52,12 @@
 >
 	{#if cullingEnabled}
 		{#each visibleMappedEmbeddings as cross (cross.id)}
-			<Cross x={cross.x} y={cross.y} pointId={cross.id} color={'black'} />
+			<Cross
+				x={cross.x}
+				y={cross.y}
+				pointId={cross.id}
+				color={pointDisplayColors.get(cross.id) ?? 'black'}
+			/>
 		{/each}
 	{/if}
 </Group>
