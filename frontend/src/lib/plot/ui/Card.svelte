@@ -118,9 +118,9 @@
 
 {#if display}
 	<Group>
-		<Rect bind:config={rectConfig} on:click={handleClick} />
-		<Rect bind:config={coloredRectConfig} on:click={handleClick} />
-		<Text bind:config={coordinatesConfig} on:click={handleClick} />
-		<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} />
+		<Rect bind:config={rectConfig} on:click={handleClick} on:tap={handleClick} />
+		<Rect bind:config={coloredRectConfig} on:click={handleClick} on:tap={handleClick} />
+		<Text bind:config={coordinatesConfig} on:click={handleClick} on:tap={handleClick} />
+		<Text bind:config={textConfig} bind:handle={text} on:click={handleClick} on:tap={handleClick} />
 	</Group>
 {/if}
