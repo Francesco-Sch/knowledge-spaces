@@ -3,9 +3,14 @@
 	import type { Container as KonvaContainer } from 'konva/lib/Container';
 	import type { Node as KonvaNode } from 'konva/lib/Node';
 	import type { Stage as KonvaStage } from 'konva/lib/Stage';
-	import { createPlotProfiler, type PlotProfilerSnapshot } from './plotProfiler';
+	import {
+		createPlotProfiler,
+		type PlotProfilerSnapshot,
+		type PlotRenderMode
+	} from './plotProfiler';
 
 	export let stageHandle: KonvaStage | undefined;
+	export let getRenderMode: () => PlotRenderMode = () => 'adaptive-culling';
 
 	type RecordedSnapshot = PlotProfilerSnapshot & {
 		recordedAt: string;
@@ -15,6 +20,7 @@
 
 	let profiler: ReturnType<typeof createPlotProfiler>;
 	let snapshot: PlotProfilerSnapshot | null = null;
+	let currentRenderMode: PlotRenderMode = 'adaptive-culling';
 	let recordedSnapshots: RecordedSnapshot[] = [];
 	let sessionStartedAt: string;
 	let scenario = 'unspecified';
@@ -40,11 +46,12 @@
 
 		scenario = params.get('plotScenario') || 'unspecified';
 		cullEnabled = params.get('plotCull') === '1';
-		hybridEnabled = params.get('plotHybrid') === '1';
+		hybridEnabled = !cullEnabled && params.get('plotHybrid') !== '0';
 		cacheEnabled = params.get('plotCache') !== '0' && !cullEnabled && !hybridEnabled;
 		sessionStartedAt = new Date().toISOString();
 		profiler = createPlotProfiler({
 			onSnapshot: (nextSnapshot) => {
+				currentRenderMode = getRenderMode();
 				snapshot = nextSnapshot;
 				recordedSnapshots = [
 					...recordedSnapshots.slice(-(MAX_RECORDED_SAMPLES - 1)),
@@ -88,6 +95,7 @@
 				cacheEnabled,
 				cullEnabled,
 				hybridEnabled,
+				renderMode: getRenderMode(),
 				sessionStartedAt,
 				exportedAt: exportedAt.toISOString(),
 				url: window.location.href,
@@ -130,6 +138,7 @@
 			Input: {snapshot.averageInputLatency.toFixed(1)} ms avg /
 			{snapshot.p95InputLatency.toFixed(1)} ms p95
 		</div>
+		<div>Mode: {currentRenderMode}</div>
 		<div>Pointer: {snapshot.pointerEvents} · Wheel: {snapshot.wheelEvents}</div>
 		<div>Blobs: {snapshot.blobCount} · {snapshot.blobTime.toFixed(1)} ms</div>
 		<div>Konva nodes: {snapshot.konvaNodeCount}</div>

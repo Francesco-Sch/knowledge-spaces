@@ -42,9 +42,9 @@ Introduce a stable point model that carries identity explicitly:
 
 ```ts
 type Point = {
-	id: number;
-	x: number;
-	y: number;
+  id: number;
+  x: number;
+  y: number;
 };
 ```
 
@@ -63,17 +63,20 @@ Each point should be able to derive:
 The target should use separate visual responsibilities:
 
 1. **Base point surface**
+
    - Draw all dataset crosses.
    - Recolor or highlight points that belong to searches.
    - Do not draw duplicate search-result crosses.
 
 2. **Search overlay surface**
+
    - Draw each search blob once.
    - Draw each connection line once.
    - Draw search labels.
    - Disable interaction processing for purely visual elements.
 
 3. **Interaction overlay**
+
    - Draw only the currently hovered or selected cross if a visual overlay is needed.
    - Maintain the exact current hover appearance without mutating thousands of point objects.
 
@@ -137,6 +140,19 @@ Apply improvements that do not change the renderer or visual output:
 - Search blob geometry is calculated once per search.
 - The number of interactive Konva nodes is reduced or clearly measured.
 - The benchmark shows whether these changes are sufficient by themselves.
+
+### Phase 1 rendering decision
+
+The automated Run 06 comparison selected an adaptive culling strategy for the current Konva renderer:
+
+- Use vector viewport culling at normal and high zoom.
+- Switch to the cached base group only at very low zoom.
+- Use scale `0.8` as the culling-entry threshold and scale `0.7` as the culling-exit threshold, with the existing delayed mode transition.
+- Keep `plotHybrid=0` as the cache-only comparison baseline.
+- Keep `plotHybrid=0&plotCache=0&plotCull=1` as the forced-culling diagnostic mode.
+- Do not mount the full base group during initial culling; after the first cache build, retain it hidden and non-listening so repeated transitions reuse the cache.
+
+Run 06 showed forced culling leading most interaction scenarios, while minimum zoom was its primary regression. Run 07 confirmed that removing the hidden base group reduced active culling from approximately 13,927 to 2,612 Konva nodes in the initial view. A later adaptive wheel-zoom recording showed repeated cache reconstruction could grow heap usage to approximately 930 MB and produce frame p95 values above 1,000 ms, so the first cache is now retained for reuse. The visual screenshots and search overlays remained intact. Minimum-zoom transition cost and larger multi-search workloads remain follow-up measurements.
 
 ## Phase 2: Introduce nearest-point interaction
 

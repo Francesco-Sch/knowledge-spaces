@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import { chromium } from 'playwright-core';
 
@@ -9,6 +10,40 @@ const ARTIFACT_DIR =
 const VIEWPORT = {
 	width: Number(process.env.PLOT_TEST_WIDTH || 1280),
 	height: Number(process.env.PLOT_TEST_HEIGHT || 800)
+};
+const PROFILE_RECORDINGS_ENABLED = process.env.PLOT_TEST_PROFILES !== '0';
+const PROFILE_WARMUP_MS = getDuration(process.env.PLOT_TEST_PROFILE_WARMUP_MS, 1_500);
+const PROFILE_SETTLE_MS = getDuration(process.env.PLOT_TEST_PROFILE_SETTLE_MS, 1_000);
+const PROFILE_MODES = parseList(process.env.PLOT_TEST_PROFILE_MODES, ['cache', 'hybrid', 'cull']);
+const PROFILE_SCENARIO_NAMES = parseList(process.env.PLOT_TEST_PROFILE_SCENARIOS, [
+	'initial-view',
+	'panning',
+	'wheel-zoom',
+	'pointer-movement',
+	'search-results',
+	'hover-and-selection',
+	'window-resizing',
+	'zoom-min',
+	'zoom-max'
+]);
+
+// These are the only mode-specific details in the suite. The interaction
+// scenarios below are deliberately identical for every URL configuration.
+const PROFILE_MODE_CONFIG = {
+	cache: {
+		query: [['plotHybrid', '0']]
+	},
+	// The selected adaptive mode is the normal URL; plotHybrid=1 remains its explicit alias.
+	hybrid: {
+		query: []
+	},
+	cull: {
+		query: [
+			['plotHybrid', '0'],
+			['plotCache', '0'],
+			['plotCull', '1']
+		]
+	}
 };
 
 const searchFixture = {
@@ -23,6 +58,57 @@ const searchFixture = {
 	color: '#00aa55'
 };
 
+const profileSearchFixtures = [
+	{
+		dataset: '20newsgroups',
+		query: 'playwright-test-one',
+		searchPoint: { x: 0.36, y: 0.36 },
+		neighbors: [
+			{ corpus_id: 0, x: 0.33, y: 0.33 },
+			{ corpus_id: 1, x: 0.35, y: 0.36 },
+			{ corpus_id: 2, x: 0.37, y: 0.34 },
+			{ corpus_id: 3, x: 0.34, y: 0.38 },
+			{ corpus_id: 4, x: 0.38, y: 0.37 }
+		],
+		color: '#00aa55'
+	},
+	{
+		dataset: '20newsgroups',
+		query: 'playwright-test-two',
+		searchPoint: { x: 0.42, y: 0.42 },
+		neighbors: [
+			{ corpus_id: 5, x: 0.39, y: 0.4 },
+			{ corpus_id: 6, x: 0.41, y: 0.43 },
+			{ corpus_id: 7, x: 0.43, y: 0.41 },
+			{ corpus_id: 8, x: 0.4, y: 0.44 },
+			{ corpus_id: 9, x: 0.44, y: 0.43 }
+		],
+		color: '#0055cc'
+	},
+	{
+		dataset: '20newsgroups',
+		query: 'playwright-test-three',
+		searchPoint: { x: 0.45, y: 0.45 },
+		neighbors: [
+			{ corpus_id: 10, x: 0.42, y: 0.43 },
+			{ corpus_id: 11, x: 0.44, y: 0.46 },
+			{ corpus_id: 12, x: 0.46, y: 0.44 },
+			{ corpus_id: 13, x: 0.43, y: 0.47 },
+			{ corpus_id: 14, x: 0.47, y: 0.45 }
+		],
+		color: '#cc5500'
+	}
+];
+
+function getDuration(value, fallback) {
+	const duration = Number(value);
+	return Number.isFinite(duration) && duration >= 0 ? duration : fallback;
+}
+
+function parseList(value, fallback) {
+	return (value ? value.split(',') : fallback).map((item) => item.trim()).filter(Boolean);
+}
+
 async function preparePage(page, query = '') {
 	await page.goto(`${APP_URL}/`);
 	await page.evaluate(() => {
@@ -34,13 +120,21 @@ async function preparePage(page, query = '') {
 	await page.waitForTimeout(1_200);
 }
 
-async function seedSearch(page) {
+async function seedSearches(page, seededSearches) {
 	await page.goto(`${APP_URL}/`);
-	await page.evaluate((search) => {
-		localStorage.setItem('searches', JSON.stringify([search]));
+	await page.evaluate((searches) => {
+		localStorage.setItem('searches', JSON.stringify(searches));
 		localStorage.setItem('selectedDataset', '20newsgroups');
-	}, searchFixture);
+	}, seededSearches);
 	await page.goto('about:blank');
+}
+
+async function seedSearch(page) {
+	await seedSearches(page, [searchFixture]);
+}
+
+async function seedProfileSearches(page) {
+	await seedSearches(page, profileSearchFixtures);
 }
 
 async function canvasStats(page) {
@@ -64,6 +158,34 @@ async function canvasStats(page) {
 			})
 		};
 	});
+}
+
+async function waitForPlot(page) {
+	await page.locator('canvas').first().waitFor({ state: 'attached' });
+}
+
+async function waitForRenderMode(page, expectedMode) {
+	await page.waitForFunction(
+		(mode) => document.querySelector('.plot-profiler')?.textContent?.includes(`Mode: ${mode}`),
+		expectedMode,
+		{ timeout: 10_000 }
+	);
+}
+
+function getExpectedInitialRenderMode(mode) {
+	if (mode === 'cache') return 'cached';
+	if (mode === 'cull') return 'forced-culling';
+	return 'adaptive-culling';
+}
+
+function getExpectedFinalRenderMode(mode, scenario) {
+	if (mode === 'cache') return 'cached';
+	if (mode === 'cull') return 'forced-culling';
+	return scenario === 'zoom-min' ? 'cached' : 'adaptive-culling';
+}
+
+function getPageViewport(page) {
+	return page.viewportSize() || VIEWPORT;
 }
 
 async function startFrameRecorder(page) {
@@ -106,7 +228,9 @@ async function dispatchWheel(page, deltaY, count = 1) {
 }
 
 async function runHoverBenchmark(page) {
-	await page.goto(`${APP_URL}/?plotDebug=1&plotCache=1&plotScenario=playwright-hover-benchmark`);
+	await page.goto(
+		`${APP_URL}/?plotDebug=1&plotHybrid=0&plotCache=1&plotScenario=playwright-hover-benchmark`
+	);
 	await page.waitForTimeout(1_200);
 	const points = await findDarkCanvasPoints(page);
 	assert.ok(points.length >= 10, `expected at least 10 hover points, found ${points.length}`);
@@ -153,27 +277,200 @@ async function findDarkCanvasPoints(page) {
 	});
 }
 
-async function findDarkCanvasPoint(page) {
-	return page.evaluate(() => {
-		const canvas = document.querySelector('canvas');
-		if (!canvas) return null;
-		const context = canvas.getContext('2d');
-		const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-		for (let y = 180; y < canvas.height - 20; y += 3) {
-			for (let x = 300; x < canvas.width - 20; x += 3) {
-				const index = (y * canvas.width + x) * 4;
-				if (
-					data[index + 3] > 100 &&
-					data[index] < 50 &&
-					data[index + 1] < 50 &&
-					data[index + 2] < 50
-				) {
-					return { x, y };
-				}
+async function findHoverableDarkCanvasPoint(page) {
+	const candidates = await findDarkCanvasPoints(page);
+	for (const candidate of candidates) {
+		await page.mouse.move(candidate.x, candidate.y);
+		await page.waitForTimeout(50);
+		if ((await page.evaluate(() => document.body.style.cursor)) === 'pointer') {
+			return candidate;
+		}
+	}
+	return null;
+}
+
+const PROFILE_SCENARIOS = {
+	'initial-view': {
+		needsSearch: false,
+		run: async () => {}
+	},
+	panning: {
+		needsSearch: false,
+		run: async (page) => {
+			const { width, height } = getPageViewport(page);
+			const start = { x: width * 0.55, y: height * 0.65 };
+			await page.mouse.move(start.x, start.y);
+			await page.mouse.down();
+			for (let index = 0; index < 80; index += 1) {
+				const progress = index / 79;
+				await page.mouse.move(start.x - 260 + progress * 520, start.y - 120 + progress * 240);
+				await page.waitForTimeout(20);
+			}
+			await page.mouse.up();
+		}
+	},
+	'wheel-zoom': {
+		needsSearch: false,
+		run: async (page) => {
+			const { width, height } = getPageViewport(page);
+			await page.mouse.move(width / 2, height / 2);
+			await dispatchWheel(page, -500, 8);
+			await dispatchWheel(page, 500, 8);
+		}
+	},
+	'pointer-movement': {
+		needsSearch: false,
+		run: async (page) => {
+			const { width, height } = getPageViewport(page);
+			for (let index = 0; index < 100; index += 1) {
+				const progress = (index % 50) / 49;
+				const direction = Math.floor(index / 50) % 2 === 0 ? 1 : -1;
+				await page.mouse.move(
+					300 + progress * (width - 400),
+					180 + ((1 - progress) * 0.65 + (direction === 1 ? 0 : 0.2)) * (height - 220)
+				);
+				await page.waitForTimeout(20);
 			}
 		}
-		return null;
-	});
+	},
+	'search-results': {
+		needsSearch: true,
+		run: async () => {}
+	},
+	'hover-and-selection': {
+		needsSearch: true,
+		run: async (page) => {
+			const points = await findDarkCanvasPoints(page);
+			assert.ok(points.length >= 10, `expected at least 10 hover points, found ${points.length}`);
+			const target = await findHoverableDarkCanvasPoint(page);
+			assert.ok(target, 'could not find an interactive point candidate for selection');
+			for (const point of points.slice(0, 40)) {
+				await page.mouse.move(point.x, point.y);
+				await page.waitForTimeout(25);
+			}
+			await page.mouse.click(target.x, target.y);
+			await page.waitForTimeout(500);
+		}
+	},
+	'window-resizing': {
+		needsSearch: false,
+		run: async (page) => {
+			const { width, height } = getPageViewport(page);
+			const sizes = [
+				{
+					width: Math.max(640, Math.round(width * 0.8)),
+					height: Math.max(480, Math.round(height * 0.8))
+				},
+				{
+					width: Math.max(640, Math.round(width * 0.65)),
+					height: Math.max(480, Math.round(height * 0.65))
+				},
+				{ width, height }
+			];
+			for (const size of sizes) {
+				await page.setViewportSize(size);
+				await page.waitForTimeout(350);
+			}
+		}
+	},
+	'zoom-min': {
+		needsSearch: false,
+		run: async (page) => {
+			const { width, height } = getPageViewport(page);
+			await page.mouse.move(width / 2, height / 2);
+			await dispatchWheel(page, 500, 24);
+		}
+	},
+	'zoom-max': {
+		needsSearch: false,
+		run: async (page) => {
+			const { width, height } = getPageViewport(page);
+			await page.mouse.move(width / 2, height / 2);
+			await dispatchWheel(page, -500, 18);
+		}
+	}
+};
+
+function getProfileUrl(mode, scenario) {
+	const modeConfig = PROFILE_MODE_CONFIG[mode];
+	assert.ok(modeConfig, `unknown plot profile mode: ${mode}`);
+	const query = new URLSearchParams([
+		['plotDebug', '1'],
+		...modeConfig.query,
+		['plotScenario', scenario]
+	]);
+	return `${APP_URL}/?${query}`;
+}
+
+async function openProfileScenario(page, mode, scenario) {
+	const scenarioConfig = PROFILE_SCENARIOS[scenario];
+	assert.ok(scenarioConfig, `unknown plot profile scenario: ${scenario}`);
+	if (scenarioConfig.needsSearch) {
+		await seedProfileSearches(page);
+	} else {
+		await preparePage(page);
+	}
+	await page.goto(getProfileUrl(mode, scenario));
+	await waitForPlot(page);
+	await page.waitForTimeout(PROFILE_WARMUP_MS);
+	await waitForRenderMode(page, getExpectedInitialRenderMode(mode));
+}
+
+async function saveProfilerRecording(page, mode, scenario) {
+	const profileDirectory = join(ARTIFACT_DIR, 'profiles', mode);
+	const recordingPath = join(profileDirectory, `${scenario}.json`);
+	await mkdir(profileDirectory, { recursive: true });
+
+	const saveButton = page.locator('.plot-profiler button');
+	await saveButton.waitFor({ state: 'visible', timeout: 15_000 });
+	const [download] = await Promise.all([page.waitForEvent('download'), saveButton.click()]);
+	await download.saveAs(recordingPath);
+
+	const recording = JSON.parse(await readFile(recordingPath, 'utf8'));
+	assert.equal(recording.metadata.scenario, scenario, `${mode}/${scenario}: scenario metadata`);
+	assert.equal(
+		recording.metadata.cacheEnabled,
+		mode === 'cache',
+		`${mode}/${scenario}: cache metadata`
+	);
+	assert.equal(
+		recording.metadata.hybridEnabled,
+		mode === 'hybrid',
+		`${mode}/${scenario}: hybrid metadata`
+	);
+	assert.equal(
+		recording.metadata.cullEnabled,
+		mode === 'cull',
+		`${mode}/${scenario}: cull metadata`
+	);
+	assert.equal(
+		recording.metadata.renderMode,
+		getExpectedFinalRenderMode(mode, scenario),
+		`${mode}/${scenario}: render mode metadata`
+	);
+	assert.ok(
+		Array.isArray(recording.samples) && recording.samples.length > 0,
+		`${mode}/${scenario}: profiler did not record samples`
+	);
+
+	return {
+		mode,
+		scenario,
+		path: recordingPath,
+		sampleCount: recording.samples.length,
+		metadata: recording.metadata
+	};
+}
+
+async function runProfileScenario(page, mode, scenario, errors) {
+	await openProfileScenario(page, mode, scenario);
+	await PROFILE_SCENARIOS[scenario].run(page);
+	await page.waitForTimeout(PROFILE_SETTLE_MS);
+	await waitForRenderMode(page, getExpectedFinalRenderMode(mode, scenario));
+	const recording = await saveProfilerRecording(page, mode, scenario);
+	const stats = await canvasStats(page);
+	assertHealthy(stats, errors, `${mode}/${scenario}`);
+	return recording;
 }
 
 function assertHealthy(stats, errors, label) {
@@ -193,7 +490,10 @@ test('plot rendering scenarios in Chromium', async (t) => {
 		headless: true,
 		args: ['--no-sandbox']
 	});
-	const context = await browser.newContext({ viewport: VIEWPORT });
+	const context = await browser.newContext({
+		viewport: VIEWPORT,
+		acceptDownloads: true
+	});
 	const errors = { console: [], page: [] };
 	const resetErrors = () => {
 		errors.console.length = 0;
@@ -209,6 +509,7 @@ test('plot rendering scenarios in Chromium', async (t) => {
 		return nextPage;
 	};
 	let page = await createPage();
+	const profileRecordings = [];
 	const resetPage = async () => {
 		await page.close();
 		page = await createPage();
@@ -218,7 +519,7 @@ test('plot rendering scenarios in Chromium', async (t) => {
 	try {
 		await t.test('initial cached render is nonblank', async () => {
 			await resetPage();
-			await preparePage(page, '?plotDebug=1&plotScenario=playwright-initial');
+			await preparePage(page, '?plotDebug=1&plotHybrid=0&plotScenario=playwright-initial');
 			const stats = await canvasStats(page);
 			assertHealthy(stats, errors, 'initial render');
 			await page.screenshot({ path: `${ARTIFACT_DIR}/initial.png` });
@@ -243,6 +544,27 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			await page.screenshot({ path: `${ARTIFACT_DIR}/hybrid-zoomed-out.png` });
 		});
 
+		await t.test('adaptive mode caches only at very low zoom', async () => {
+			await resetPage();
+			await preparePage(page, '?plotDebug=1&plotScenario=playwright-adaptive');
+			await waitForRenderMode(page, 'adaptive-culling');
+			await page.mouse.move(VIEWPORT.width / 2, VIEWPORT.height / 2);
+
+			await dispatchWheel(page, 500, 24);
+			await page.waitForTimeout(700);
+			await waitForRenderMode(page, 'cached');
+			const lowZoomStats = await canvasStats(page);
+			assertHealthy(lowZoomStats, errors, 'adaptive low zoom');
+			await page.screenshot({ path: `${ARTIFACT_DIR}/adaptive-low-zoom.png` });
+
+			await dispatchWheel(page, -500, 18);
+			await page.waitForTimeout(700);
+			await waitForRenderMode(page, 'adaptive-culling');
+			const normalZoomStats = await canvasStats(page);
+			assertHealthy(normalZoomStats, errors, 'adaptive normal zoom');
+			await page.screenshot({ path: `${ARTIFACT_DIR}/adaptive-normal-zoom.png` });
+		});
+
 		await t.test('forced culling keeps search overlays visible after a search jump', async () => {
 			await resetPage();
 			await seedSearch(page);
@@ -261,11 +583,12 @@ test('plot rendering scenarios in Chromium', async (t) => {
 
 		await t.test('hover reports pointer targeting and keeps the canvas healthy', async () => {
 			await resetPage();
-			await preparePage(page, '?plotDebug=1&plotCache=0&plotScenario=playwright-hover');
-			const point = await findDarkCanvasPoint(page);
+			await preparePage(
+				page,
+				'?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=playwright-hover'
+			);
+			const point = await findHoverableDarkCanvasPoint(page);
 			assert.ok(point, 'could not find a point candidate for hover testing');
-			await page.mouse.move(point.x, point.y);
-			await page.waitForTimeout(100);
 			const cursor = await page.evaluate(() => document.body.style.cursor);
 			const stats = await canvasStats(page);
 			assertHealthy(stats, errors, 'hover');
@@ -296,6 +619,44 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			assert.equal(stats.canvases[0].height, 700, 'canvas height did not follow resize');
 			await page.screenshot({ path: `${ARTIFACT_DIR}/resize.png` });
 		});
+
+		if (PROFILE_RECORDINGS_ENABLED) {
+			const unknownModes = PROFILE_MODES.filter((mode) => !PROFILE_MODE_CONFIG[mode]);
+			const unknownScenarios = PROFILE_SCENARIO_NAMES.filter(
+				(scenario) => !PROFILE_SCENARIOS[scenario]
+			);
+			assert.deepEqual(unknownModes, [], `unknown profile modes: ${unknownModes.join(', ')}`);
+			assert.deepEqual(
+				unknownScenarios,
+				[],
+				`unknown profile scenarios: ${unknownScenarios.join(', ')}`
+			);
+
+			for (const mode of PROFILE_MODES) {
+				for (const scenario of PROFILE_SCENARIO_NAMES) {
+					await t.test(`records ${scenario} in ${mode} mode`, async () => {
+						await resetPage();
+						profileRecordings.push(await runProfileScenario(page, mode, scenario, errors));
+					});
+				}
+			}
+		}
+
+		await writeFile(
+			join(ARTIFACT_DIR, 'profiles.json'),
+			JSON.stringify(
+				{
+					enabled: PROFILE_RECORDINGS_ENABLED,
+					modes: PROFILE_MODES,
+					scenarios: PROFILE_SCENARIO_NAMES,
+					warmupMs: PROFILE_WARMUP_MS,
+					settleMs: PROFILE_SETTLE_MS,
+					recordings: profileRecordings
+				},
+				null,
+				2
+			)
+		);
 
 		await writeFile(
 			`${ARTIFACT_DIR}/summary.json`,
