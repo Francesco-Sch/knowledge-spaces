@@ -1,6 +1,6 @@
 # Rendering migration
 
-> **Status:** Phase 3 search-point recoloring is complete and its exit validation has been recorded.
+> **Status:** Phase 4 HTML dataset-card migration is complete and its exit validation has been recorded.
 > **Origin:** This roadmap originated from [Issue #19: Rework dataset rendering for performance](https://github.com/Francesco-Sch/knowledge-spaces/issues/19).
 > **Scope:** This document records the rendering architecture, completed decisions, and follow-up migration work for the repository.
 
@@ -294,10 +294,27 @@ Motion should feel snappy, natural, and responsive. Remove or reduce it if it ma
 1. Add a slight card entry animation that opens from the point at the card's top border.
 2. Defer line-by-line text animation until a later phase.
 
+### Phase 4 implementation notes
+
+- `Card.svelte` is a single structured HTML component. Its data loading, visual states, and event behavior remain
+  together.
+- The card is positioned from the selected point's world coordinates and the current stage transform.
+- Placement prefers the right side of the point, then tries the left, bottom, and top sides before clamping to the
+  viewport.
+- The card preserves its current `325px` base width and scales with the stage between `0.6` and `1.7`.
+- Dataset entries are fetched immediately, but `Loading...` appears only after `500ms` if the request is still pending.
+- Active requests are aborted when the selection or dataset changes. Successful entries are cached by dataset and
+  point ID.
+- Failed requests display a readable error and a typographic `Retry` button.
+- The card uses a short top-border entry animation and a simple content reveal. Line-by-line text animation remains
+  deferred.
+- The focused Playwright suite covers HTML-card anchoring, zoom scaling, replacement selection, delayed loading,
+  retry, and caching.
+
 ### Exit criteria
 
 - The card follows the selected point during pan and zoom.
-- The card shrinks and grows in between the defined range.
+- The card shrinks and grows between the defined scale range.
 - The card does not disappear off-screen unnecessarily.
 - Text can be selected with the pointer.
 - Repeated selection does not create stale or racing requests.
