@@ -25,6 +25,7 @@ const RENDER_MODE_SWITCH_DELAY = 180;
 const SCALE_BY = 1.15;
 const MAX_SCALE = 5;
 const MIN_SCALE = 0.2;
+const MIN_INTERACTION_SCALE = 0.8;
 
 function getCullingMode(
 	stageScale: number,
@@ -49,6 +50,29 @@ function getRenderMode(
 	return cacheRequested ? 'cached' : 'vector';
 }
 
+function getZoomTransformForScale(
+	oldScale: number,
+	stagePosition: StagePosition,
+	pointer: PointerPosition | null,
+	targetScale: number
+): ZoomTransform | undefined {
+	if (!pointer || !Number.isFinite(oldScale) || oldScale <= 0 || !Number.isFinite(targetScale)) {
+		return;
+	}
+
+	const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, targetScale));
+	const mousePointTo = {
+		x: (pointer.x - stagePosition.x) / oldScale,
+		y: (pointer.y - stagePosition.y) / oldScale
+	};
+
+	return {
+		x: pointer.x - mousePointTo.x * newScale,
+		y: pointer.y - mousePointTo.y * newScale,
+		scale: newScale
+	};
+}
+
 function getZoomTransform(
 	oldScale: number,
 	stagePosition: StagePosition,
@@ -64,35 +88,20 @@ function getZoomTransform(
 	// direction so pinch gestures zoom in and out as expected.
 	if (ctrlKey) direction = -direction;
 
-	let newScale = direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
-
-	// Limit the scale to MAX_SCALE and MIN_SCALE.
-	if (newScale > MAX_SCALE) {
-		newScale = MAX_SCALE;
-	} else if (newScale < MIN_SCALE) {
-		newScale = MIN_SCALE;
-	}
-
-	const mousePointTo = {
-		x: (pointer.x - stagePosition.x) / oldScale,
-		y: (pointer.y - stagePosition.y) / oldScale
-	};
-
-	return {
-		x: pointer.x - mousePointTo.x * newScale,
-		y: pointer.y - mousePointTo.y * newScale,
-		scale: newScale
-	};
+	const newScale = direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
+	return getZoomTransformForScale(oldScale, stagePosition, pointer, newScale);
 }
 
 export {
 	CULLING_ENTER_SCALE,
 	CULLING_EXIT_SCALE,
 	MAX_SCALE,
+	MIN_INTERACTION_SCALE,
 	MIN_SCALE,
 	RENDER_MODE_SWITCH_DELAY,
 	SCALE_BY,
 	getCullingMode,
 	getRenderMode,
-	getZoomTransform
+	getZoomTransform,
+	getZoomTransformForScale
 };
