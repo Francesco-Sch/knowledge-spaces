@@ -11,7 +11,8 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
 		"test:plot": "node --test tests/plot-rendering.playwright.mjs",
-		"test:plot-index": "node --experimental-strip-types --test tests/plot-spatial-index.test.mjs"
+		"test:plot-index": "node --experimental-strip-types --test tests/plot-spatial-index.test.mjs",
+		"test:plot-hit-tracking": "node --experimental-strip-types --test tests/point-hit-tracking.test.mjs"
 	},
 	"dependencies": {
 		"clipper-lib": "^6.4.2",
