@@ -1,3 +1,5 @@
+export type PlotRenderMode = 'cached' | 'vector' | 'adaptive-culling' | 'forced-culling';
+
 export type PlotProfilerSnapshot = {
 	fps: number;
 	averageFrameTime: number;

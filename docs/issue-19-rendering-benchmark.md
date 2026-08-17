@@ -1,48 +1,77 @@
 # Issue #19 rendering benchmark
 
-This document records the Phase 0 profiling procedure for the current Konva renderer. The profiler is disabled by default so normal rendering is unchanged.
+This document records the Phase 0 profiling procedure and the selected adaptive Konva rendering mode. The profiler UI is disabled by default so normal rendering is unchanged.
 
 ## Enable profiling
 
-Start the frontend and open the plot with the `plotDebug` query parameter. Add `plotScenario` to label the exported session:
+Start the frontend and open the plot with the `plotDebug` query parameter. The normal URL now uses the selected adaptive mode: vector culling at normal and high zoom, with the cached base group reserved for very low zoom. Add `plotScenario` to label the exported session:
 
 ```text
 http://localhost:8080/?plotDebug=1&plotScenario=panning
 ```
 
+Use `plotHybrid=0` for the cache-only comparison baseline:
+
+```text
+http://localhost:8080/?plotDebug=1&plotHybrid=0&plotScenario=panning
+```
+
 The debug panel appears in the top-left corner. The **Save JSON** button downloads all 500 ms samples collected during the current session. Use a separate scenario value for each test, such as `initial`, `panning`, `wheel-zoom`, or `search-result`.
+
+For repeatable recordings, use the Playwright suite instead of manually clicking **Save JSON**. It drives the same debug URLs, performs the reference interactions, and saves each download under a deterministic artifact path:
+
+```bash
+cd frontend
+PLOT_TEST_WIDTH=2556 \
+PLOT_TEST_HEIGHT=1296 \
+PLOT_TEST_ARTIFACTS=/tmp/plot-profiles \
+pnpm test:plot
+```
+
+The default automated matrix records `cache`, `hybrid`, and `cull` modes. Select a smaller matrix while investigating a change:
+
+```bash
+PLOT_TEST_PROFILE_MODES=hybrid \
+PLOT_TEST_PROFILE_SCENARIOS=panning,wheel-zoom,hover-and-selection \
+PLOT_TEST_ARTIFACTS=/tmp/plot-hybrid \
+pnpm test:plot
+```
+
+The automated test remains agnostic about renderer behavior: the scenario action is shared by every mode, and the mode only changes the URL flags. See [issue-19-rendering-tests.md](issue-19-rendering-tests.md) for the complete artifact layout and environment-variable reference.
 
 ## Compare the base-group cache
 
-The base point group cache is enabled by default. Add `plotCache=0` to disable it for a comparison run:
+The selected default uses adaptive culling. Add `plotHybrid=0` to disable adaptive mode, then use `plotCache=0` to disable the cache for a vector-rendering comparison:
 
 ```text
-http://localhost:8080/?plotDebug=1&plotScenario=panning&plotCache=0
+http://localhost:8080/?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=panning
 ```
 
-Run the same scenario once with the default URL and once with `plotCache=0`. Keep the browser, viewport, dataset, interaction duration, and warm-up procedure the same. Compare frame time, input latency, heap usage, and visual correctness after resizing. The cache toggle is temporary and should remain available until the comparison is complete.
+Run the same scenario with `plotHybrid=0` and with `plotHybrid=0&plotCache=0`. Keep the browser, viewport, dataset, interaction duration, and warm-up procedure the same. Compare frame time, input latency, heap usage, and visual correctness after resizing. The cache toggle remains available as a baseline while adaptive culling is evaluated.
 
 ## Compare viewport culling
 
 Viewport culling is an experimental mode. Enable it with `plotCull=1` and disable the base-group cache for a valid comparison:
 
 ```text
-http://localhost:8080/?plotDebug=1&plotScenario=panning&plotCache=0&plotCull=1
+http://localhost:8080/?plotDebug=1&plotHybrid=0&plotScenario=panning&plotCache=0&plotCull=1
 ```
 
-Culling converts the screen viewport into world-space bounds and renders only base points that can be visible, with a small margin for the cross stroke. The current one-time base-group cache is bypassed in this mode because its bitmap would otherwise become stale as points enter and leave the viewport.
+Culling converts the screen viewport into world-space bounds and renders only base points that can be visible, with a small margin for the cross stroke. The full base group is not mounted in this mode, so its bitmap cannot become stale as points enter and leave the viewport. The cache-only baseline remains available with `plotHybrid=0`.
 
 Profiler filenames include `cache-enabled|disabled|hybrid` and `cull-enabled|disabled|hybrid` so the exported runs can be compared safely.
 
 ## Test adaptive cache and culling
 
-Enable the hybrid mode with `plotHybrid=1`:
+The adaptive mode is enabled by default and can be selected explicitly with `plotHybrid=1`:
 
 ```text
-http://localhost:8080/?plotDebug=1&plotScenario=wheel-zoom&plotHybrid=1
+http://localhost:8080/?plotDebug=1&plotHybrid=1&plotScenario=wheel-zoom
 ```
 
-Hybrid mode uses the cache while the stage scale is below `2`, switches to vector culling at scale `2` or higher, and returns to cached mode at scale `1.5` or lower. The gap prevents rapid mode switching around the threshold. Mode transitions are delayed until 180 ms after the last zoom transform so continuous scrolling is not interrupted. Use `plotCache=0&plotHybrid=1` to test the same mode transitions without rebuilding the cache when returning to the zoomed-out mode.
+Adaptive mode uses vector culling at scale `0.8` and higher, and switches to cached rendering at scale `0.7` or lower. The gap prevents rapid mode switching around the threshold. Mode transitions are delayed until 180 ms after the last zoom transform so continuous scrolling is not interrupted. Wheel zoom also synchronizes the Konva transform with `stageConfig` so the Svelte binding does not restore a stale scale during redraws. Use `plotHybrid=0` for a cache-only baseline. Forced culling remains available with `plotHybrid=0&plotCache=0&plotCull=1`.
+
+While culling is active initially, the full base group is not mounted. This avoids retaining a hidden duplicate scene of all 11,314 points during normal interaction. After adaptive mode first crosses into the very-low-zoom range, the base group is retained hidden and non-listening so later transitions reuse the existing cache instead of rebuilding the scene.
 
 ## Metrics
 
@@ -263,3 +292,84 @@ The comparison should focus on:
 - blob-generation call count and accumulated time.
 
 Do not move to nearest-point interaction or a custom Canvas 2D renderer until these changes have been measured. The existing profiler can be enabled with `?plotDebug=1&plotScenario=<name>`, and the **Save JSON** button exports the samples for comparison.
+
+## Run 06 findings: automated rendering-mode comparison
+
+Run 06 used the automated Playwright profiler matrix and replaced the manual JSON-download step. It recorded all nine reference scenarios in cache-only, adaptive hybrid, and forced-culling modes.
+
+### Environment
+
+- Browser: Headless Chrome 151
+- Viewport: `2556 × 1296`
+- Device pixel ratio: `1`
+- Dataset: 20 Newsgroups
+- Dataset point count: `11,314`
+- Artifacts: `/tmp/plot-run-06`
+- Recordings: `27`
+
+The values below use the median of the recorded 500 ms intervals after discarding the first three warm-up samples. Each frame p95 value is the median interval value; the raw JSON files also contain the worst interval.
+
+| Scenario            | Cache-only FPS / frame p95 | Adaptive hybrid FPS / frame p95 | Forced culling FPS / frame p95 |
+| ------------------- | -------------------------: | ------------------------------: | -----------------------------: |
+| Initial view        |             60.0 / 17.2 ms |                  60.0 / 17.1 ms |                 60.0 / 17.1 ms |
+| Panning             |             40.5 / 47.8 ms |                  38.4 / 48.0 ms |                 44.8 / 43.6 ms |
+| Wheel zoom          |             23.2 / 90.2 ms |                  36.7 / 78.2 ms |                 45.5 / 58.1 ms |
+| Pointer movement    |             35.8 / 98.1 ms |                 34.4 / 103.2 ms |                 48.7 / 59.6 ms |
+| Search results      |             60.0 / 17.0 ms |                  60.0 / 17.3 ms |                 60.0 / 17.0 ms |
+| Hover and selection |             14.7 / 86.5 ms |                  14.6 / 89.4 ms |                 60.0 / 19.8 ms |
+| Window resizing     |             55.6 / 18.6 ms |                  60.0 / 20.6 ms |                 59.9 / 17.3 ms |
+| Minimum zoom        |             38.8 / 46.4 ms |                 27.7 / 124.2 ms |                 27.5 / 98.5 ms |
+| Maximum zoom        |             31.7 / 87.5 ms |                  48.0 / 63.4 ms |                 56.6 / 33.7 ms |
+
+### Findings
+
+- Forced culling was the strongest interaction mode in this run. It led panning, wheel zoom, pointer movement, hover/selection, and maximum zoom.
+- Adaptive hybrid improved maximum zoom over cache-only rendering, but did not consistently beat forced culling while the hidden base group remained mounted.
+- Minimum zoom was the main culling regression. At the smallest scale, culling approached the full dataset and reached approximately `20,200` median nodes and `305 MB` median heap in the forced-culling recording.
+- Initial rendering and search-result settling were close to 60 FPS in all modes.
+- Search blob generation was recorded once per search at approximately `5–6 ms`. The automated search fixture is intentionally deterministic and contains one small search overlay, so its blob and overlay costs should not be treated as a multi-search production workload.
+- The screenshot and correctness assertions retained the search blob, connections, label, highlighted crosses, hover behavior, and resize behavior.
+
+The cache-only and adaptive recordings should primarily be compared within the same matrix run. Absolute FPS varied between Run 06 and subsequent runs because each complete headless matrix took several minutes and system/browser state affected the measurements.
+
+## Run 07 findings: adaptive culling without the hidden base group
+
+Run 07 applied the selected strategy and removed the full base group from the scene while culling was active. The adaptive thresholds are now:
+
+- enter culling at scale `0.8` or higher;
+- leave culling for cached rendering at scale `0.7` or lower;
+- delay adaptive mode changes by `180 ms` after the last transform.
+
+The same `2556 × 1296` automated matrix passed all `34` tests and generated `27` recordings. Visual screenshots continued to pass, including the forced-culling search overlay check.
+
+### Hidden-group result
+
+Before this change, initial forced-culling recordings reported approximately `13,927` Konva nodes and `198 MB` median heap because the hidden 11,314-point base group remained mounted alongside the visible culling group. After the change, initial culling reported approximately `2,612` nodes and `44 MB` median heap. The same reduction appeared during panning and pointer movement.
+
+The full base group is initially mounted only for cached or uncached full-scene vector rendering. After the first adaptive transition into very-low zoom, it remains mounted but hidden and non-listening during later culling periods. This keeps normal culling lightweight before the first cache build while avoiding repeated scene reconstruction afterward.
+
+### Decision
+
+Adopt the adaptive strategy as the normal rendering mode:
+
+1. The normal URL uses vector culling at normal and high zoom.
+2. Cached rendering is used only at or below scale `0.7`.
+3. `plotHybrid=0` remains the explicit cache-only baseline for performance comparisons.
+4. `plotHybrid=0&plotCache=0&plotCull=1` remains the forced-culling diagnostic mode.
+5. The hidden base group is not mounted during initial culling; after the first cache build it is retained hidden and non-listening to prevent repeated transition churn.
+6. Minimum-zoom transition cost, cache reuse, and future multi-search workloads remain follow-up measurements.
+
+## Adaptive wheel-zoom follow-up
+
+The manual recording `plot-profile-wheel-zoom-cache-hybrid-cull-hybrid-2026-08-17T10-39-19-348Z.json` exposed repeated transition churn in adaptive mode at the representative `2556 × 1296` viewport.
+
+- The session ended in `cached` mode after repeated adaptive zoom transitions.
+- Heap usage grew from approximately `270 MB` to `930 MB`.
+- The worst frame p95 reached `1,074 ms`.
+- The worst input p95 reached `90.3 ms`.
+- Konva node counts repeatedly moved between approximately `850` and `11,361`.
+- Blob generation was not the cause; the initial three search overlays were generated once in approximately `6 ms`.
+
+The node-count oscillation and heap growth indicate that repeatedly mounting, caching, and destroying the full base group creates substantial allocation and garbage-collection pressure. The renderer now creates the base group on the first low-zoom transition and retains it hidden and non-listening during later culling periods. This preserves the selected adaptive behavior while reusing the cache instead of reconstructing 11,319 point nodes on every threshold crossing.
+
+The finishing Playwright run added direct mode assertions and passed all `26` tests at `2556 × 1296`. Its adaptive wheel-zoom recording had a median frame p95 of `37.2 ms`, a worst frame p95 of `51.8 ms`, and a maximum observed heap of approximately `116 MB`, without the repeated 11,319-node rebuild pattern.

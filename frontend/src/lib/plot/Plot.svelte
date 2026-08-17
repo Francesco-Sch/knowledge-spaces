@@ -11,6 +11,7 @@
 	import Blob from './Blob.svelte';
 	import NodeCard from './NodeCard.svelte';
 	import PlotProfiler from '../utils/PlotProfiler.svelte';
+	import type { PlotRenderMode } from '../utils/plotProfiler';
 
 	import { searches, stageConfig } from '../../stores/store';
 	import {
@@ -26,19 +27,23 @@
 		scale: number;
 	};
 
-	const CULLING_ENTER_SCALE = 1.5;
-	const CULLING_EXIT_SCALE = 1.25;
+	// Keep vector culling active at normal and high zoom. Only use the cached
+	// base group at very low zoom, where most of the dataset is visible anyway.
+	const CULLING_ENTER_SCALE = 0.8;
+	const CULLING_EXIT_SCALE = 0.7;
 	const RENDER_MODE_SWITCH_DELAY = 180;
 
 	let windowWidth: number, windowHeight: number;
-	export let embeddings: Array<Array<number>>;
 	let cullingEnabled = false;
 	let forcedCulling = false;
 	let hybridEnabled = false;
 	let cacheRequested = true;
 	let baseGroupCached = false;
+	let baseGroupMounted = false;
 	let renderModeTimer: number | undefined;
 	let viewport: Viewport = { x: 0, y: 0, scale: 1 };
+
+	export let embeddings: Array<Array<number>>;
 
 	$: mappedEmbeddings = mapEmbeddingsToWindowSize(embeddings, windowWidth, windowHeight).map(
 		([x, y], id): Point => ({ id, x, y })
@@ -98,12 +103,15 @@
 	onMount(() => {
 		const params = new URLSearchParams(window.location.search);
 		forcedCulling = params.get('plotCull') === '1';
-		hybridEnabled = params.get('plotHybrid') === '1';
+		hybridEnabled = !forcedCulling && params.get('plotHybrid') !== '0';
 		cacheRequested = params.get('plotCache') !== '0';
 		cullingEnabled = getCullingMode(stageHandle?.scaleX() ?? $stageConfig.scaleX);
 
 		if (stageHandle) updateViewport(stageHandle);
-		if (!cullingEnabled) cacheBaseGroup();
+		if (!cullingEnabled) {
+			baseGroupMounted = true;
+			cacheBaseGroup();
+		}
 	});
 
 	function handlePointerMove() {
@@ -168,6 +176,12 @@
 		return cullingEnabled ? stageScale > CULLING_EXIT_SCALE : stageScale >= CULLING_ENTER_SCALE;
 	}
 
+	function getRenderMode(): PlotRenderMode {
+		if (forcedCulling) return 'forced-culling';
+		if (cullingEnabled) return 'adaptive-culling';
+		return cacheRequested ? 'cached' : 'vector';
+	}
+
 	function clearBaseGroupCache() {
 		if (!baseGroupCached || !crossGroup) return;
 		crossGroup.clearCache();
@@ -193,6 +207,7 @@
 	function applyRenderMode(nextCullingMode: boolean) {
 		if (nextCullingMode === cullingEnabled) return;
 
+		if (!nextCullingMode) baseGroupMounted = true;
 		cullingEnabled = nextCullingMode;
 		if (!cullingEnabled) cacheBaseGroup();
 	}
@@ -255,6 +270,13 @@
 		if (!cullingEnabled) cacheBaseGroup();
 	}
 
+	// The full base group is mounted for cache-only rendering and on the first
+	// culling-to-cache transition. It remains hidden and non-listening during
+	// later culling periods so repeated zoom transitions reuse the same cache.
+	$: if (!cullingEnabled && cacheRequested && crossGroup && !baseGroupCached) {
+		cacheBaseGroup();
+	}
+
 	// Zooming
 	let scale = 1;
 	let scaleBy = 1.15;
@@ -305,6 +327,13 @@
 			y: pointer.y - mousePointTo.y * newScale
 		};
 		stage.position(newPos);
+		stageConfig.update((config) => ({
+			...config,
+			x: newPos.x,
+			y: newPos.y,
+			scaleX: newScale,
+			scaleY: newScale
+		}));
 		updateViewport(stage);
 	}
 
@@ -392,19 +421,27 @@
 
 	<Layer>
 		<!-- Embeddings -->
-		<Group config={{ visible: !cullingEnabled }} bind:handle={crossGroup}>
-			{#each mappedEmbeddings as cross (cross.id)}
-				<Cross
-					x={cross.x}
-					y={cross.y}
-					pointId={cross.id}
-					color={'black'}
-					on:cross-clicked={handleCrossClick}
-					on:cross-hovered={handleCrossHover}
-					on:cross-unhovered={handleCrossUnhover}
-				/>
-			{/each}
-		</Group>
+		{#if !cullingEnabled || baseGroupMounted}
+			<Group
+				config={{
+					visible: !cullingEnabled,
+					listening: !cullingEnabled
+				}}
+				bind:handle={crossGroup}
+			>
+				{#each mappedEmbeddings as cross (cross.id)}
+					<Cross
+						x={cross.x}
+						y={cross.y}
+						pointId={cross.id}
+						color={'black'}
+						on:cross-clicked={handleCrossClick}
+						on:cross-hovered={handleCrossHover}
+						on:cross-unhovered={handleCrossUnhover}
+					/>
+				{/each}
+			</Group>
+		{/if}
 
 		{#if cullingEnabled}
 			<Group>
@@ -496,6 +533,6 @@
 	</Layer>
 </Stage>
 
-<PlotProfiler bind:this={plotProfiler} {stageHandle} />
+<PlotProfiler bind:this={plotProfiler} {stageHandle} {getRenderMode} />
 
 <style></style>

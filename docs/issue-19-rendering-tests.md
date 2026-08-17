@@ -22,32 +22,70 @@ From `frontend/`, run:
 pnpm test:plot
 ```
 
-The suite writes screenshots and a summary JSON file to a temporary directory under `/tmp`. Set `PLOT_TEST_ARTIFACTS` to retain artifacts at a specific path:
+The suite writes screenshots, profiler recordings, and summary JSON files to a temporary directory under `/tmp`. Set `PLOT_TEST_ARTIFACTS` to retain artifacts at a specific path:
 
 ```bash
 PLOT_TEST_ARTIFACTS=/tmp/plot-rendering-run pnpm test:plot
 ```
 
+Profiler recordings are enabled by default. The Playwright runner opens each configured URL, performs the same scenario interactions for every mode, clicks **Save JSON**, waits for the browser download, and saves the recording with a deterministic name. Each recording includes the final `metadata.renderMode`, and the debug panel displays the current mode while the scenario is running.
+
+The selected default application mode is adaptive: normal URLs use vector culling and switch to cached rendering only at very low zoom. The matrix also keeps an explicit cache-only baseline (`plotHybrid=0`) and forced-culling diagnostic mode for comparison. Its output includes:
+
+```text
+/tmp/plot-rendering-run/profiles/cache/initial-view.json
+/tmp/plot-rendering-run/profiles/hybrid/wheel-zoom.json
+/tmp/plot-rendering-run/profiles/cull/search-results.json
+/tmp/plot-rendering-run/adaptive-low-zoom.png
+/tmp/plot-rendering-run/adaptive-normal-zoom.png
+/tmp/plot-rendering-run/profiles.json
+```
+
+Run only one mode and a subset of scenarios when iterating:
+
+```bash
+PLOT_TEST_PROFILE_MODES=hybrid \
+PLOT_TEST_PROFILE_SCENARIOS=initial-view,panning,wheel-zoom \
+PLOT_TEST_ARTIFACTS=/tmp/plot-hybrid \
+pnpm test:plot
+```
+
+Run the screenshot and correctness checks without the profiling matrix:
+
+```bash
+PLOT_TEST_PROFILES=0 PLOT_TEST_ARTIFACTS=/tmp/plot-screenshots pnpm test:plot
+```
+
 Useful environment variables:
 
-| Variable              | Default                     | Purpose                         |
-| --------------------- | --------------------------- | ------------------------------- |
-| `CHROMIUM_EXECUTABLE` | `/usr/bin/chromium-browser` | Chromium executable             |
-| `PLOT_TEST_URL`       | `http://localhost:8080`     | Frontend URL to test            |
-| `PLOT_TEST_WIDTH`     | `1280`                      | Test viewport width             |
-| `PLOT_TEST_HEIGHT`    | `800`                       | Test viewport height            |
-| `PLOT_TEST_ARTIFACTS` | Temporary `/tmp` directory  | Screenshot and report directory |
+| Variable                      | Default                     | Purpose                                |
+| ----------------------------- | --------------------------- | -------------------------------------- |
+| `CHROMIUM_EXECUTABLE`         | `/usr/bin/chromium-browser` | Chromium executable                    |
+| `PLOT_TEST_URL`               | `http://localhost:8080`     | Frontend URL to test                   |
+| `PLOT_TEST_WIDTH`             | `1280`                      | Test viewport width                    |
+| `PLOT_TEST_HEIGHT`            | `800`                       | Test viewport height                   |
+| `PLOT_TEST_ARTIFACTS`         | Temporary `/tmp` directory  | Screenshot and report directory        |
+| `PLOT_TEST_PROFILES`          | `1`                         | Set to `0` to skip profiler recordings |
+| `PLOT_TEST_PROFILE_MODES`     | `cache,hybrid,cull`         | Comma-separated URL-configured modes   |
+| `PLOT_TEST_PROFILE_SCENARIOS` | All reference scenarios     | Comma-separated scenarios to record    |
+| `PLOT_TEST_PROFILE_WARMUP_MS` | `1500`                      | Initial settling time per recording    |
+| `PLOT_TEST_PROFILE_SETTLE_MS` | `1000`                      | Settling time after scenario actions   |
 
 ## Covered scenarios
 
 - Initial nonblank rendering.
-- Hybrid cache and vector-culling transitions.
+- Adaptive cache and vector-culling transitions.
+- Direct render-mode assertions at normal zoom, very low zoom, and maximum zoom.
 - Search-result jumps with forced culling.
 - Search overlay rendering after a jump.
 - Hover targeting and pointer cursor behavior.
 - Hover pointer-sweep performance metrics.
 - Viewport resizing and canvas dimensions.
 - Basic animation-frame and canvas health checks.
+- JSON profiler recordings for the selected mode/scenario matrix.
+- Deterministic multi-search profiler fixtures for overlay and selection workloads.
+
+The scenario actions are renderer-agnostic. Cache, adaptive, and forced-culling behavior is selected only by the URL query parameters, so changing the final implementation requires changing the mode mapping rather than duplicating scenario tests.
 
 ## Run an A/B comparison
 
