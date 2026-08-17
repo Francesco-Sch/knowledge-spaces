@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { MIN_INTERACTION_SCALE } from '../src/lib/plot/plot-behaviour.ts';
 import { chromium } from 'playwright-core';
 
 const APP_URL = process.env.PLOT_TEST_URL || 'http://localhost:8080';
@@ -715,8 +716,8 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			const interactionZoomState = await getPlotInteractionState(page);
 			assert.ok(interactionZoomState, 'plot stage was not available after interaction zoom');
 			assert.ok(
-				interactionZoomState.scale >= 0.99,
-				'first low-zoom click did not reach the minimum interaction scale'
+				interactionZoomState.scale >= MIN_INTERACTION_SCALE - 0.01,
+				`first low-zoom click did not reach the minimum interaction scale of ${MIN_INTERACTION_SCALE}`
 			);
 			assert.equal(
 				interactionZoomState.cardNodeCount,
