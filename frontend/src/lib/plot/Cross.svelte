@@ -9,6 +9,8 @@
 	export let y: number;
 	export let pointId: number;
 	export let color: string;
+	export let interactive: boolean = true;
+	export let hovered: boolean = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -57,43 +59,23 @@
 		context.fillStrokeShape(shape);
 	}
 
-	function handleClick(ctx: { detail: any }) {
+	const handleClick = (ctx: { detail: any }) => {
 		dispatch('cross-clicked', ctx);
-	}
+	};
 
-	function handleMouseEnter(ctx: { detail: { target: any } }) {
-		document.body.style.cursor = 'pointer';
-		let cross = ctx.detail.target;
+	const handleMouseEnter = (ctx: { detail: { target: any } }) => {
+		dispatch('cross-hovered', ctx);
+	};
 
-		// Add backdrop shadow to cross
-		cross.shadowColor(color);
-		cross.shadowBlur(2);
-		cross.shadowOffset({ x: 0, y: 0 });
-		cross.shadowOpacity(1);
-
-		// Redraw parent layer
-		cross.draw();
-	}
-
-	function handleMouseLeave(ctx: { detail: { target: any } }) {
-		document.body.style.cursor = 'default';
-		let cross = ctx.detail.target;
-
-		// Remove backdrop shadow from cross
-		cross.shadowColor(undefined);
-		cross.shadowBlur(0);
-		cross.shadowOffset({ x: 0, y: 0 });
-		cross.shadowOpacity(0);
-
-		// Redraw parent layer
-		cross.draw();
-	}
+	const handleMouseLeave = (ctx: { detail: { target: any } }) => {
+		dispatch('cross-unhovered', ctx);
+	};
 </script>
 
 <Shape
-	on:mouseenter={handleMouseEnter}
-	on:mouseleave={handleMouseLeave}
-	on:click={handleClick}
+	on:mouseenter={interactive ? handleMouseEnter : undefined}
+	on:mouseleave={interactive ? handleMouseLeave : undefined}
+	on:click={interactive ? handleClick : undefined}
 	config={{
 		sceneFunc: renderCross,
 		hitFunc: hitRegion,
@@ -103,6 +85,11 @@
 		width: 5,
 		height: 5,
 		stroke: color,
-		strokeWidth: 1.5
+		strokeWidth: 1.5,
+		listening: interactive,
+		shadowColor: hovered ? color : undefined,
+		shadowBlur: hovered ? 2 : 0,
+		shadowOffset: { x: 0, y: 0 },
+		shadowOpacity: hovered ? 1 : 0
 	}}
 />

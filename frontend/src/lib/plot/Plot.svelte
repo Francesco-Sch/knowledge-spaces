@@ -81,6 +81,15 @@
 		query?: string;
 	};
 
+	type HoveredPoint = {
+		id: number;
+		x: number;
+		y: number;
+		color: string;
+	};
+
+	let hoveredPoint: HoveredPoint | undefined;
+
 	// Cross group
 	let crossGroup: KonvaGroup | undefined;
 	let stageHandle: KonvaStage | undefined;
@@ -100,6 +109,30 @@
 	function handlePointerMove() {
 		plotProfiler?.recordPointerEvent();
 	}
+
+	const handleCrossHover = (event: { detail: { detail: { target: any } } }) => {
+		const target = event.detail.detail.target;
+		hoveredPoint = {
+			id: target.attrs.pointId,
+			x: target.attrs.x,
+			y: target.attrs.y,
+			color: target.attrs.stroke
+		};
+		document.body.style.cursor = 'pointer';
+	};
+
+	const handleCrossUnhover = (event: { detail: { detail: { target: any } } }) => {
+		const target = event.detail.detail.target;
+		const currentHoveredPoint = hoveredPoint;
+		if (
+			currentHoveredPoint &&
+			currentHoveredPoint.id === target.attrs.pointId &&
+			currentHoveredPoint.color === target.attrs.stroke
+		) {
+			hoveredPoint = undefined;
+			document.body.style.cursor = 'default';
+		}
+	};
 
 	function getBlobPoints(search: MappedSearch) {
 		return (
@@ -367,6 +400,8 @@
 					pointId={cross.id}
 					color={'black'}
 					on:cross-clicked={handleCrossClick}
+					on:cross-hovered={handleCrossHover}
+					on:cross-unhovered={handleCrossUnhover}
 				/>
 			{/each}
 		</Group>
@@ -380,6 +415,8 @@
 						pointId={cross.id}
 						color={'black'}
 						on:cross-clicked={handleCrossClick}
+						on:cross-hovered={handleCrossHover}
+						on:cross-unhovered={handleCrossUnhover}
 					/>
 				{/each}
 			</Group>
@@ -401,6 +438,8 @@
 						pointId={cross.id}
 						color={search.color}
 						on:cross-clicked={handleCrossClick}
+						on:cross-hovered={handleCrossHover}
+						on:cross-unhovered={handleCrossUnhover}
 					/>
 				{/each}
 
@@ -432,6 +471,17 @@
 					</Label>
 				{/if}
 			{/each}
+		{/if}
+
+		{#if hoveredPoint}
+			<Cross
+				x={hoveredPoint.x}
+				y={hoveredPoint.y}
+				pointId={hoveredPoint.id}
+				color={hoveredPoint.color}
+				hovered={true}
+				interactive={false}
+			/>
 		{/if}
 	</Layer>
 
