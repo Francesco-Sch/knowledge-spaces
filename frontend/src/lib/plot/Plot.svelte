@@ -35,6 +35,7 @@
 	import Search from './ui/Search.svelte';
 	import PlotProfiler from '../utils/PlotProfiler.svelte';
 	import { generateBlobPointsForSearch, zoomToSearchPoint } from '../../utils';
+	import { findNearestPoint } from './point-hit-tracking';
 	import { PointSpatialIndex } from './point-spatial-index';
 
 	// Set to true to re-introduce the optional grid layer.
@@ -115,19 +116,15 @@
 	let isDragging = false;
 	let ignoreNextClick = false;
 
-	const POINTER_HIT_RADIUS_PX = 16;
-
-	function getNearestPoint(stage: KonvaStage): HoveredPoint | undefined {
-		const pointer = stage.getPointerPosition();
-		const scale = stage.scaleX();
-		if (!pointer || !Number.isFinite(scale) || scale <= 0) return;
-
-		const point = pointSpatialIndex.findNearest(
+	function getHoveredPoint(stage: KonvaStage): HoveredPoint | undefined {
+		const point = findNearestPoint(
+			stage.getPointerPosition(),
 			{
-				x: (pointer.x - stage.x()) / scale,
-				y: (pointer.y - stage.y()) / scale
+				x: stage.x(),
+				y: stage.y(),
+				scale: stage.scaleX()
 			},
-			POINTER_HIT_RADIUS_PX / scale
+			pointSpatialIndex
 		);
 		if (!point) return;
 
@@ -156,7 +153,7 @@
 		if (isDragging) return;
 
 		const stage = event.detail.target.getStage();
-		if (stage) setHoveredPoint(getNearestPoint(stage));
+		if (stage) setHoveredPoint(getHoveredPoint(stage));
 	}
 
 	function handlePointerLeave() {
@@ -181,7 +178,7 @@
 		if (!stage) return;
 
 		updateViewport(stage);
-		setHoveredPoint(getNearestPoint(stage));
+		setHoveredPoint(getHoveredPoint(stage));
 	}
 
 	function handleStageTransform(event: StageTransformEvent) {
@@ -206,16 +203,7 @@
 		};
 		updateRenderMode(viewport.scale);
 
-		if (cullingEnabled) {
-			visibleMappedEmbeddings = getVisiblePoints(
-				mappedEmbeddings,
-				viewport,
-				windowWidth,
-				windowHeight
-			);
-		}
-
-		if (stageHandle && !isDragging) setHoveredPoint(getNearestPoint(stageHandle));
+		if (stageHandle && !isDragging) setHoveredPoint(getHoveredPoint(stageHandle));
 	}
 
 	$: visibleMappedEmbeddings = cullingEnabled
@@ -289,7 +277,7 @@
 			scaleY: transform.scale
 		}));
 		updateViewport(stage);
-		setHoveredPoint(getNearestPoint(stage));
+		setHoveredPoint(getHoveredPoint(stage));
 	}
 
 	// ----- Canvas Objects -----
@@ -364,7 +352,7 @@
 			scaleY: transform.scale
 		}));
 		updateViewport(stage);
-		setHoveredPoint(getNearestPoint(stage));
+		setHoveredPoint(getHoveredPoint(stage));
 		return true;
 	}
 
@@ -405,7 +393,7 @@
 			return;
 		}
 
-		const point = getNearestPoint(stage);
+		const point = getHoveredPoint(stage);
 		if (point) {
 			selectPoint(point);
 		} else {
