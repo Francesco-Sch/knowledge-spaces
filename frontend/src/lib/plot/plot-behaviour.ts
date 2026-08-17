@@ -1,0 +1,98 @@
+export type PlotRenderMode = 'cached' | 'vector' | 'adaptive-culling' | 'forced-culling';
+
+export type PointerPosition = {
+	x: number;
+	y: number;
+};
+
+export type ZoomTransform = {
+	x: number;
+	y: number;
+	scale: number;
+};
+
+export type StagePosition = {
+	x: number;
+	y: number;
+};
+
+// Keep vector culling active at normal and high zoom. Only use the cached
+// base group at very low zoom, where most of the dataset is visible anyway.
+const CULLING_ENTER_SCALE = 1.1;
+const CULLING_EXIT_SCALE = 1;
+const RENDER_MODE_SWITCH_DELAY = 180;
+
+const SCALE_BY = 1.15;
+const MAX_SCALE = 5;
+const MIN_SCALE = 0.2;
+
+function getCullingMode(
+	stageScale: number,
+	cullingEnabled: boolean,
+	forcedCulling: boolean,
+	hybridEnabled: boolean
+): boolean {
+	if (forcedCulling) return true;
+	if (!hybridEnabled) return false;
+
+	return cullingEnabled ? stageScale > CULLING_EXIT_SCALE : stageScale >= CULLING_ENTER_SCALE;
+}
+
+function getRenderMode(
+	cullingEnabled: boolean,
+	forcedCulling: boolean,
+	cacheRequested: boolean
+): PlotRenderMode {
+	if (forcedCulling) return 'forced-culling';
+	if (cullingEnabled) return 'adaptive-culling';
+
+	return cacheRequested ? 'cached' : 'vector';
+}
+
+function getZoomTransform(
+	oldScale: number,
+	stagePosition: StagePosition,
+	pointer: PointerPosition | null,
+	deltaY: number,
+	ctrlKey: boolean
+): ZoomTransform | undefined {
+	if (!pointer) return;
+
+	let direction = deltaY > 0 ? -1 : 1;
+
+	// When we zoom on a trackpad, evt.ctrlKey is true. In that case, revert the
+	// direction so pinch gestures zoom in and out as expected.
+	if (ctrlKey) direction = -direction;
+
+	let newScale = direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
+
+	// Limit the scale to MAX_SCALE and MIN_SCALE.
+	if (newScale > MAX_SCALE) {
+		newScale = MAX_SCALE;
+	} else if (newScale < MIN_SCALE) {
+		newScale = MIN_SCALE;
+	}
+
+	const mousePointTo = {
+		x: (pointer.x - stagePosition.x) / oldScale,
+		y: (pointer.y - stagePosition.y) / oldScale
+	};
+
+	return {
+		x: pointer.x - mousePointTo.x * newScale,
+		y: pointer.y - mousePointTo.y * newScale,
+		scale: newScale
+	};
+}
+
+export {
+	CULLING_ENTER_SCALE,
+	CULLING_EXIT_SCALE,
+	MAX_SCALE,
+	MIN_SCALE,
+	RENDER_MODE_SWITCH_DELAY,
+	SCALE_BY,
+	getCullingMode,
+	getRenderMode,
+	getZoomTransform
+};

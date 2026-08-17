@@ -1,10 +1,14 @@
-# Issue #19 rendering benchmark
+# Rendering performance
 
-This document records the Phase 0 profiling procedure and the selected adaptive Konva rendering mode. The profiler UI is disabled by default so normal rendering is unchanged.
+> **Status:** Historical benchmark record and current profiling reference for the Konva renderer.
+> **Origin:** The benchmark was created during [Issue #19: Rework dataset rendering for performance](https://github.com/Francesco-Sch/knowledge-spaces/issues/19).
+> **Scope:** Keep measured results, profiling procedures, and current render-mode decisions available after the issue is closed.
+
+This document records the Phase 0 profiling procedure, Phase 1 validation results, and the selected adaptive Konva rendering mode. The profiler UI is disabled by default so normal rendering is unchanged.
 
 ## Enable profiling
 
-Start the frontend and open the plot with the `plotDebug` query parameter. The normal URL now uses the selected adaptive mode: vector culling at normal and high zoom, with the cached base group reserved for very low zoom. Add `plotScenario` to label the exported session:
+Start the frontend and open the plot with the `plotDebug` query parameter. The normal URL uses the selected adaptive mode: cached rendering at the initial scale, vector culling after the culling-entry threshold, and cached rendering again at the culling-exit threshold. Add `plotScenario` to label the exported session:
 
 ```text
 http://localhost:8080/?plotDebug=1&plotScenario=panning
@@ -37,7 +41,7 @@ PLOT_TEST_ARTIFACTS=/tmp/plot-hybrid \
 pnpm test:plot
 ```
 
-The automated test remains agnostic about renderer behavior: the scenario action is shared by every mode, and the mode only changes the URL flags. See [issue-19-rendering-tests.md](issue-19-rendering-tests.md) for the complete artifact layout and environment-variable reference.
+The automated test remains agnostic about renderer behavior: the scenario action is shared by every mode, and the mode only changes the URL flags. See [Rendering test playbook](rendering-test-playbook.md) for the complete artifact layout and environment-variable reference.
 
 ## Compare the base-group cache
 
@@ -69,9 +73,9 @@ The adaptive mode is enabled by default and can be selected explicitly with `plo
 http://localhost:8080/?plotDebug=1&plotHybrid=1&plotScenario=wheel-zoom
 ```
 
-Adaptive mode uses vector culling at scale `0.8` and higher, and switches to cached rendering at scale `0.7` or lower. The gap prevents rapid mode switching around the threshold. Mode transitions are delayed until 180 ms after the last zoom transform so continuous scrolling is not interrupted. Wheel zoom also synchronizes the Konva transform with `stageConfig` so the Svelte binding does not restore a stale scale during redraws. Use `plotHybrid=0` for a cache-only baseline. Forced culling remains available with `plotHybrid=0&plotCache=0&plotCull=1`.
+Adaptive mode enters vector culling at scale `1.1` or higher and switches to cached rendering at scale `1.0` or lower. The gap prevents rapid mode switching around the threshold. Mode transitions are delayed until `180 ms` after the last zoom transform so continuous scrolling is not interrupted. Wheel zoom also synchronizes the Konva transform with `stageConfig` so the Svelte binding does not restore a stale scale during redraws. Use `plotHybrid=0` for a cache-only baseline. Forced culling remains available with `plotHybrid=0&plotCache=0&plotCull=1`.
 
-While culling is active initially, the full base group is not mounted. This avoids retaining a hidden duplicate scene of all 11,314 points during normal interaction. After adaptive mode first crosses into the very-low-zoom range, the base group is retained hidden and non-listening so later transitions reuse the existing cache instead of rebuilding the scene.
+At the initial scale of `1.0`, the renderer starts in cached mode. When adaptive mode first enters culling, the full base group is not mounted. This avoids retaining a hidden duplicate scene of all 11,314 points during normal interaction. After the first cache build, the base group is retained hidden and non-listening so later transitions reuse the existing cache instead of rebuilding the scene.
 
 ## Metrics
 
@@ -334,11 +338,13 @@ The cache-only and adaptive recordings should primarily be compared within the s
 
 ## Run 07 findings: adaptive culling without the hidden base group
 
-Run 07 applied the selected strategy and removed the full base group from the scene while culling was active. The adaptive thresholds are now:
+Run 07 applied the selected strategy and removed the full base group from the scene while culling was active. The Run 07 recording used the then-current thresholds:
 
 - enter culling at scale `0.8` or higher;
 - leave culling for cached rendering at scale `0.7` or lower;
 - delay adaptive mode changes by `180 ms` after the last transform.
+
+The current Phase 1 implementation supersedes those thresholds with `1.1` for culling entry and `1.0` for culling exit.
 
 The same `2556 × 1296` automated matrix passed all `34` tests and generated `27` recordings. Visual screenshots continued to pass, including the forced-culling search overlay check.
 
@@ -352,8 +358,8 @@ The full base group is initially mounted only for cached or uncached full-scene 
 
 Adopt the adaptive strategy as the normal rendering mode:
 
-1. The normal URL uses vector culling at normal and high zoom.
-2. Cached rendering is used only at or below scale `0.7`.
+1. The normal URL starts in cached rendering at scale `1.0`.
+2. Vector culling begins at scale `1.1` and returns to cached rendering at scale `1.0` or lower.
 3. `plotHybrid=0` remains the explicit cache-only baseline for performance comparisons.
 4. `plotHybrid=0&plotCache=0&plotCull=1` remains the forced-culling diagnostic mode.
 5. The hidden base group is not mounted during initial culling; after the first cache build it is retained hidden and non-listening to prevent repeated transition churn.

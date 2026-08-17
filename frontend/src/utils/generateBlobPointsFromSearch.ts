@@ -3,28 +3,31 @@ import Offset from 'polygon-offset';
 import simplify from 'simplify-js';
 import type { Point } from '$lib/types';
 
-function generateBlobPointsForSearch(search) {
+type BlobSearch = {
+	neighbors: Point[];
+	searchPoint?: [number, number];
+};
+
+function generateBlobPointsForSearch(search: BlobSearch): number[] {
+	if (!search.searchPoint) return [];
+
 	const neighborCoordinates = search.neighbors.map((neighbor: Point) => [neighbor.x, neighbor.y]);
 	const hull = concaveman(neighborCoordinates.concat([search.searchPoint]), 1, 1);
 
 	const offset = new Offset();
 	const offsetAmount = 50;
-	const ofsettedHull = offset.data(hull).margin(offsetAmount);
+	const offsettedHull = offset.data(hull).margin(offsetAmount);
 
-	// Transform the array in offsettedHull[0] to an array of objects with x and y properties
-	const ofsettedHullPoints = ofsettedHull[0].map((point) => {
+	// Transform the first offset polygon into objects with x and y properties.
+	const offsettedHullPoints = offsettedHull[0].map((point: number[]) => {
 		return { x: point[0], y: point[1] };
 	});
 
-	// Simplify the offsetted hull
-	const simplifiedHullPoints = simplify(ofsettedHullPoints, 5, true);
+	// Simplify the offset polygon.
+	const simplifiedHullPoints = simplify(offsettedHullPoints, 5, true);
 
-	// Transform the array of objects with x and y properties back to an array of arrays
-	const simplifiedHull = simplifiedHullPoints.map((point) => {
-		return [point.x, point.y];
-	});
-
-	return simplifiedHull.flat();
+	// Transform the simplified points back into a flat array for Konva.
+	return simplifiedHullPoints.flatMap((point) => [point.x, point.y]);
 }
 
 export { generateBlobPointsForSearch };

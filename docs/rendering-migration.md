@@ -1,9 +1,12 @@
-# Issue #19: Rendering migration plan
+# Rendering migration
 
-This plan addresses [Issue #19](https://github.com/Francesco-Sch/knowledge-spaces/issues/19) while preserving the existing visual appearance exactly.
+> **Status:** Phase 1 is complete and its exit validation has been recorded.
+> **Origin:** This roadmap originated from [Issue #19: Rework dataset rendering for performance](https://github.com/Francesco-Sch/knowledge-spaces/issues/19).
+> **Scope:** This document records the rendering architecture, completed decisions, and follow-up migration work for the repository.
 
 The migration is intentionally incremental. We should not replace Konva with a new renderer before measuring the current bottlenecks and validating the visual output.
-The current implementation can be found in ../1.0.1/dataset-rendering-on-canvas-using-konva.md
+The historical v1.0.1 implementation is documented in [Dataset rendering on canvas using Konva](1.0.1/dataset-rendering-on-canvas-using-konva.md).
+The current Phase 1 implementation is composed from `frontend/src/lib/plot/Plot.svelte`, `plot-data.ts`, `plot-behaviour.ts`, and the components in `frontend/src/lib/plot/ui/`.
 
 ## Goals
 
@@ -143,16 +146,17 @@ Apply improvements that do not change the renderer or visual output:
 
 ### Phase 1 rendering decision
 
-The automated Run 06 comparison selected an adaptive culling strategy for the current Konva renderer:
+The automated comparison selected an adaptive culling strategy for the current Konva renderer. The authoritative values are defined in `frontend/src/lib/plot/plot-behaviour.ts`:
 
-- Use vector viewport culling at normal and high zoom.
-- Switch to the cached base group only at very low zoom.
-- Use scale `0.8` as the culling-entry threshold and scale `0.7` as the culling-exit threshold, with the existing delayed mode transition.
+- Start in cached rendering at the initial scale of `1.0`.
+- Enter vector viewport culling at scale `1.1` or higher.
+- Leave culling for cached rendering at scale `1.0` or lower.
+- Delay adaptive mode changes by `180 ms` after the last transform.
 - Keep `plotHybrid=0` as the cache-only comparison baseline.
 - Keep `plotHybrid=0&plotCache=0&plotCull=1` as the forced-culling diagnostic mode.
-- Do not mount the full base group during initial culling; after the first cache build, retain it hidden and non-listening so repeated transitions reuse the cache.
+- Do not mount the full base group during the initial culling period; after the first cache build, retain it hidden and non-listening so repeated transitions reuse the cache.
 
-Run 06 showed forced culling leading most interaction scenarios, while minimum zoom was its primary regression. Run 07 confirmed that removing the hidden base group reduced active culling from approximately 13,927 to 2,612 Konva nodes in the initial view. A later adaptive wheel-zoom recording showed repeated cache reconstruction could grow heap usage to approximately 930 MB and produce frame p95 values above 1,000 ms, so the first cache is now retained for reuse. The visual screenshots and search overlays remained intact. Minimum-zoom transition cost and larger multi-search workloads remain follow-up measurements.
+The earlier Run 06 and Run 07 recordings used the then-current `0.8 / 0.7` thresholds. The later Phase 1 follow-up changed those values to `1.1 / 1.0` to switch to culling later. The visual screenshots and search overlays remained intact. Minimum-zoom transition cost and larger multi-search workloads remain follow-up measurements.
 
 ## Phase 2: Introduce nearest-point interaction
 

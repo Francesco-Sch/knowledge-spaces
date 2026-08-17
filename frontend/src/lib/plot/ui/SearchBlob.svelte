@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Line } from 'svelte-konva';
 
-	export let points = [];
+	export let points: number[] = [];
 	export let color = 'black';
 </script>
 

@@ -33,7 +33,6 @@
 
 <Line
 	config={{
-		// @ts-ignore
 		points: [searchPoint[0], searchPoint[1], bowedPoint.midX, bowedPoint.midY, cross.x, cross.y],
 		stroke: color,
 		strokeWidth: 2,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Layer as KonvaLayer } from 'konva/lib/Layer';
 	import { Layer, Line } from 'svelte-konva';
 
 	export let scale: number;
@@ -6,21 +7,18 @@
 	export let windowWidth: number;
 	export let windowHeight: number;
 
-	let color: string = '#dbdbdb';
+	let color = '#dbdbdb';
 	let dash: Array<number> = [5, 5];
-	let grid: Layer;
+	let grid: KonvaLayer | undefined;
 
 	$: size = Math.max(windowWidth, windowHeight) * (1 / scale);
-
-	function handleLayerCreate(event: CustomEvent<Layer>) {
-		grid = event.detail;
-
-		// Set z-index
+	$: if (grid) {
+		// Set z-index.
 		grid.zIndex(0);
 	}
 </script>
 
-<Layer on:created={handleLayerCreate}>
+<Layer bind:handle={grid}>
 	<!-- Vertical lines -->
 	{#each Array.from({ length: strokes + 1 }, (_, i) => i) as i}
 		<Line
