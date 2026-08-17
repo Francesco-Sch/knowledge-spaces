@@ -11,6 +11,7 @@
 	export let color: string;
 	export let interactive: boolean = true;
 	export let hovered: boolean = false;
+	export let visible: boolean = true;
 
 	const dispatch = createEventDispatcher();
 
@@ -87,6 +88,7 @@
 		stroke: color,
 		strokeWidth: 1.5,
 		listening: interactive,
+		visible: visible,
 		shadowColor: hovered ? color : undefined,
 		shadowBlur: hovered ? 2 : 0,
 		shadowOffset: { x: 0, y: 0 },

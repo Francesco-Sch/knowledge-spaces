@@ -29,6 +29,7 @@ async function preparePage(page, query = '') {
 		localStorage.removeItem('searches');
 		localStorage.setItem('selectedDataset', '20newsgroups');
 	});
+	await page.goto('about:blank');
 	await page.goto(`${APP_URL}/${query}`);
 	await page.waitForTimeout(1_200);
 }
@@ -39,6 +40,7 @@ async function seedSearch(page) {
 		localStorage.setItem('searches', JSON.stringify([search]));
 		localStorage.setItem('selectedDataset', '20newsgroups');
 	}, searchFixture);
+	await page.goto('about:blank');
 }
 
 async function canvasStats(page) {
@@ -101,6 +103,54 @@ async function dispatchWheel(page, deltaY, count = 1) {
 		await page.mouse.wheel(0, deltaY);
 		await page.waitForTimeout(50);
 	}
+}
+
+async function runHoverBenchmark(page) {
+	await page.goto(`${APP_URL}/?plotDebug=1&plotCache=1&plotScenario=playwright-hover-benchmark`);
+	await page.waitForTimeout(1_200);
+	const points = await findDarkCanvasPoints(page);
+	assert.ok(points.length >= 10, `expected at least 10 hover points, found ${points.length}`);
+	await startFrameRecorder(page);
+
+	for (const point of points.slice(0, 80)) {
+		await page.mouse.move(point.x, point.y);
+		await page.waitForTimeout(20);
+	}
+	await page.waitForTimeout(500);
+
+	return {
+		frames: await frameStats(page),
+		canvas: await canvasStats(page),
+		profiler: (await page.locator('.plot-profiler').count())
+			? await page.locator('.plot-profiler').innerText()
+			: ''
+	};
+}
+
+async function findDarkCanvasPoints(page) {
+	return page.evaluate(() => {
+		const canvas = document.querySelector('canvas');
+		if (!canvas) return [];
+		const context = canvas.getContext('2d');
+		const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+		const points = [];
+		for (let y = 180; y < canvas.height - 20; y += 3) {
+			for (let x = 300; x < canvas.width - 20; x += 3) {
+				const index = (y * canvas.width + x) * 4;
+				if (
+					data[index + 3] > 100 &&
+					data[index] < 50 &&
+					data[index + 1] < 50 &&
+					data[index + 2] < 50 &&
+					points.every((point) => Math.abs(point.x - x) > 18 || Math.abs(point.y - y) > 18)
+				) {
+					points.push({ x, y });
+					if (points.length >= 120) return points;
+				}
+			}
+		}
+		return points;
+	});
 }
 
 async function findDarkCanvasPoint(page) {
@@ -222,6 +272,17 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			assert.equal(cursor, 'pointer', 'hover did not set the pointer cursor');
 			await page.screenshot({ path: `${ARTIFACT_DIR}/hover.png` });
 			await page.mouse.move(VIEWPORT.width - 10, VIEWPORT.height - 10);
+		});
+
+		await t.test('hover performance is recorded', async () => {
+			await resetPage();
+			const performance = await runHoverBenchmark(page);
+			assertHealthy(performance.canvas, errors, 'hover performance');
+			assert.ok(performance.frames.max < 2_000, 'hover benchmark exceeded 2 seconds per frame');
+			await writeFile(
+				`${ARTIFACT_DIR}/hover-performance.json`,
+				JSON.stringify(performance, null, 2)
+			);
 		});
 
 		await t.test('resizing keeps the renderer mounted and nonblank', async () => {
