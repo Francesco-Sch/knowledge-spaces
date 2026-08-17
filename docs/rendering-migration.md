@@ -262,10 +262,11 @@ do not split it into additional components unless a later change makes that nece
 
 1. Store the selected point ID and its world coordinates.
 2. Convert the point to screen coordinates using the current pan and zoom transform.
-3. Position the card relative to that screen coordinate.
-4. Recalculate its position whenever the view changes.
+3. On selection, position the card relative to that screen coordinate.
+4. When the view changes, update the card from the point-relative offset rather than clamping it again.
 5. Keep a small offset from the point, matching the current visual placement.
-6. Use viewport-aware placement to choose the best side when the preferred position would leave the viewport.
+6. Use viewport-aware placement on selection to choose the best side when the preferred position would leave the viewport.
+7. Allow the card to leave the viewport during later panning or zooming; it must remain attached to its cross.
 7. Make the card responsive to stage zoom. Preserve its current dimensions and scale it with the stage between a
    minimum scale of `0.6` and a maximum scale of `1.7`. Apply a maximum width only as an edge-case safeguard for
    unusually large content.
@@ -299,8 +300,8 @@ Motion should feel snappy, natural, and responsive. Remove or reduce it if it ma
 - `Card.svelte` is a single structured HTML component. Its data loading, visual states, and event behavior remain
   together.
 - The card is positioned from the selected point's world coordinates and the current stage transform.
-- Placement prefers the right side of the point, then tries the left, bottom, and top sides before clamping to the
-  viewport.
+- Initial placement prefers the right side of the point, then tries the left, bottom, and top sides before clamping
+  to the viewport. Later pan and zoom updates preserve the chosen point-relative offset, even outside the viewport.
 - The card preserves its current `325px` base width and scales with the stage between `0.6` and `1.7`.
 - Dataset entries are fetched immediately, but `Loading...` appears only after `500ms` if the request is still pending.
 - Active requests are aborted when the selection or dataset changes. Successful entries are cached by dataset and
@@ -315,7 +316,7 @@ Motion should feel snappy, natural, and responsive. Remove or reduce it if it ma
 
 - The card follows the selected point during pan and zoom.
 - The card shrinks and grows between the defined scale range.
-- The card does not disappear off-screen unnecessarily.
+- Initial placement keeps the card inside the viewport when practical; later pan and zoom may carry it off-screen while it remains attached.
 - Text can be selected with the pointer.
 - Repeated selection does not create stale or racing requests.
 

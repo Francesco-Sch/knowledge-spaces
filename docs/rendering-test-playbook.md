@@ -93,6 +93,7 @@ Useful environment variables:
 - Hover targeting and pointer cursor behavior.
 - Stage-level nearest-point selection without point listeners.
 - HTML dataset-card selection, anchoring, zoom scaling, and replacement.
+- HTML card movement with its cross beyond the viewport during panning.
 - Delayed loading, retry behavior, and dataset-entry caching.
 - Low-zoom two-step selection behavior.
 - Hover pointer-sweep performance metrics.

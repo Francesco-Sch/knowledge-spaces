@@ -106,7 +106,7 @@ export function getCardPosition(
 		width: Math.max(0, finiteOr(viewport.width, 0)),
 		height: Math.max(0, finiteOr(viewport.height, 0))
 	};
-	const scaledOffset = Math.max(0, finiteOr(offset, CARD_OFFSET)) * scale;
+	const scaledOffset = Math.max(0, finiteOr(offset, CARD_OFFSET)) * finiteOr(stageScale, 1);
 
 	const candidates = [
 		{ x: safePoint.x + scaledOffset, y: safePoint.y },

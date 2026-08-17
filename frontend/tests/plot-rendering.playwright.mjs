@@ -800,7 +800,19 @@ test('plot rendering scenarios in Chromium', async (t) => {
 				initialState.cardPointId,
 				'selecting a second point did not replace the HTML card'
 			);
-			assertHealthy(await canvasStats(page), errors, 'HTML card zoom and replacement');
+
+			await page.mouse.move(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(-400, -300, { steps: 8 });
+			await page.mouse.up();
+			await page.waitForTimeout(250);
+			const pannedState = await getPlotInteractionState(page);
+			assert.ok(pannedState?.cardRect, 'HTML card disappeared during panning');
+			assert.ok(
+				pannedState.cardRect.left < 0 || pannedState.cardRect.top < 0,
+				'HTML card was clamped to the viewport instead of following its cross'
+			);
+			assertHealthy(await canvasStats(page), errors, 'HTML card zoom, replacement, and panning');
 		});
 
 		await t.test('HTML card delays loading text and supports retry', async () => {
