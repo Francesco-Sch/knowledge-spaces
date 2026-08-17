@@ -253,6 +253,11 @@ Search connections and blobs should continue to be drawn exactly as they are now
 
 Keep the card logically attached to a world-space point, but render its text in an HTML overlay.
 
+### Code standards
+
+`Plot.svelte` separates data, behavior, and UI responsibilities. Keep the HTML card component well structured as it grows;
+do not split it into additional components unless a later change makes that necessary.
+
 ### Positioning
 
 1. Store the selected point ID and its world coordinates.
@@ -261,21 +266,38 @@ Keep the card logically attached to a world-space point, but render its text in 
 4. Recalculate its position whenever the view changes.
 5. Keep a small offset from the point, matching the current visual placement.
 6. Use viewport-aware placement to choose the best side when the preferred position would leave the viewport.
+7. Make the card responsive to stage zoom. Preserve its current dimensions and scale it with the stage between a
+   minimum scale of `0.6` and a maximum scale of `1.7`. Apply a maximum width only as an edge-case safeguard for
+   unusually large content.
 
 The card remains anchored to the point even when the stage moves. It should not become a fixed viewport dialog.
 
 ### Content behavior
 
-- Render `Loading...` immediately.
+- Start loading immediately, but keep the card completely blank and white for `0.5 seconds` before displaying `Loading...`.
 - Use an `AbortController` for stale requests.
 - Cache dataset entries by dataset and point ID.
 - Display a readable error state if the request fails.
 - Keep text selectable.
 - Preserve the existing card colors, typography, padding, and overall visual dimensions.
 
+### Interaction behavior
+
+1. When a card is open and a new cross is clicked, replace the old card with the new card.
+2. When the selected dataset changes, close the card and abort any active request.
+3. Include a typographic retry button in the error state.
+
+### Motion behavior
+
+Motion should feel snappy, natural, and responsive. Remove or reduce it if it makes the application feel slower.
+
+1. Add a slight card entry animation that opens from the point at the card's top border.
+2. Defer line-by-line text animation until a later phase.
+
 ### Exit criteria
 
 - The card follows the selected point during pan and zoom.
+- The card shrinks and grows in between the defined range.
 - The card does not disappear off-screen unnecessarily.
 - Text can be selected with the pointer.
 - Repeated selection does not create stale or racing requests.
