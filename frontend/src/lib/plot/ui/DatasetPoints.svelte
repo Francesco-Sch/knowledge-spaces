@@ -25,21 +25,13 @@
 <Group
 	config={{
 		visible: !cullingEnabled,
-		listening: !cullingEnabled
+		listening: false
 	}}
 	bind:handle={crossGroup}
 >
 	{#if baseGroupMounted}
 		{#each mappedEmbeddings as cross (cross.id)}
-			<Cross
-				x={cross.x}
-				y={cross.y}
-				pointId={cross.id}
-				color={'black'}
-				on:cross-clicked
-				on:cross-hovered
-				on:cross-unhovered
-			/>
+			<Cross x={cross.x} y={cross.y} pointId={cross.id} color={'black'} />
 		{/each}
 	{/if}
 </Group>
@@ -49,20 +41,12 @@
 <Group
 	config={{
 		visible: cullingEnabled,
-		listening: cullingEnabled
+		listening: false
 	}}
 >
 	{#if cullingEnabled}
 		{#each visibleMappedEmbeddings as cross (cross.id)}
-			<Cross
-				x={cross.x}
-				y={cross.y}
-				pointId={cross.id}
-				color={'black'}
-				on:cross-clicked
-				on:cross-hovered
-				on:cross-unhovered
-			/>
+			<Cross x={cross.x} y={cross.y} pointId={cross.id} color={'black'} />
 		{/each}
 	{/if}
 </Group>

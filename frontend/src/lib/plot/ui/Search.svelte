@@ -20,15 +20,7 @@
 		<SearchConnection searchPoint={search.searchPoint} {cross} color={search.color} />
 	{/if}
 
-	<Cross
-		x={cross.x}
-		y={cross.y}
-		pointId={cross.id}
-		color={search.color}
-		on:cross-clicked
-		on:cross-hovered
-		on:cross-unhovered
-	/>
+	<Cross x={cross.x} y={cross.y} pointId={cross.id} color={search.color} />
 {/each}
 
 <!-- Search label -->

@@ -203,6 +203,24 @@ function getPageViewport(page) {
 	return page.viewportSize() || VIEWPORT;
 }
 
+async function getPlotInteractionState(page) {
+	return page.evaluate(() => {
+		const stage = window.Konva?.stages?.at(-1);
+		if (!stage) return null;
+
+		const pointNodes = stage
+			.find('Shape')
+			.filter((node) => Number.isInteger(node.getAttr('pointId')) && node.getAttr('pointId') >= 0);
+		const layers = stage.getChildren();
+		return {
+			scale: stage.scaleX(),
+			cardNodeCount: layers.at(-1)?.getChildren().length || 0,
+			pointNodeCount: pointNodes.length,
+			pointNodeListening: pointNodes.map((node) => node.isListening())
+		};
+	});
+}
+
 async function startFrameRecorder(page) {
 	await page.evaluate(() => {
 		window.__plotTestStop?.();
@@ -653,6 +671,66 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			assert.equal(cursor, 'pointer', 'hover did not set the pointer cursor');
 			await page.screenshot({ path: `${ARTIFACT_DIR}/hover.png` });
 			await page.mouse.move(VIEWPORT.width - 10, VIEWPORT.height - 10);
+		});
+
+		await t.test('stage interaction selects a point without point listeners', async () => {
+			await resetPage();
+			await preparePage(
+				page,
+				'?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=playwright-selection'
+			);
+			const point = await findHoverableDarkCanvasPoint(page);
+			assert.ok(point, 'could not find a point candidate for selection');
+
+			await page.mouse.click(point.x, point.y);
+			await page.waitForTimeout(400);
+
+			const state = await getPlotInteractionState(page);
+			assert.ok(state, 'plot stage was not available');
+			assert.ok(state.cardNodeCount > 0, 'nearest-point selection did not open the card');
+			assert.ok(state.pointNodeCount > 0, 'plot did not contain point nodes');
+			assert.ok(
+				state.pointNodeListening.every((listening) => !listening),
+				'point nodes still participate in Konva hit testing'
+			);
+			assertHealthy(await canvasStats(page), errors, 'stage selection');
+		});
+
+		await t.test('low-zoom selection zooms first and selects on the next click', async () => {
+			await resetPage();
+			await preparePage(
+				page,
+				'?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=playwright-low-zoom-selection'
+			);
+			await page.mouse.move(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await dispatchWheel(page, 500, 24);
+			await page.waitForTimeout(300);
+
+			const lowZoomState = await getPlotInteractionState(page);
+			assert.ok(lowZoomState, 'plot stage was not available at low zoom');
+			assert.ok(lowZoomState.scale < 0.21, 'test did not reach the minimum zoom');
+
+			await page.mouse.click(VIEWPORT.width / 2, VIEWPORT.height / 2);
+			await page.waitForTimeout(300);
+			const interactionZoomState = await getPlotInteractionState(page);
+			assert.ok(interactionZoomState, 'plot stage was not available after interaction zoom');
+			assert.ok(
+				interactionZoomState.scale >= 0.99,
+				'first low-zoom click did not reach the minimum interaction scale'
+			);
+			assert.equal(
+				interactionZoomState.cardNodeCount,
+				0,
+				'first low-zoom click selected a point before the user could confirm it'
+			);
+
+			const point = await findHoverableDarkCanvasPoint(page);
+			assert.ok(point, 'could not find a point after zooming to the interaction scale');
+			await page.mouse.click(point.x, point.y);
+			await page.waitForTimeout(400);
+			const selectedState = await getPlotInteractionState(page);
+			assert.ok(selectedState?.cardNodeCount > 0, 'second click did not select a point');
+			assertHealthy(await canvasStats(page), errors, 'low-zoom selection');
 		});
 
 		await t.test('hover performance is recorded', async () => {

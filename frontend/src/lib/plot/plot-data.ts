@@ -97,8 +97,23 @@ function getSearchForPoint(searches: Search[] | null | undefined, pointId: numbe
 	);
 }
 
+function getPointDisplayColors(mappedSearches: MappedSearch[]): Map<number, string> {
+	const colors = new Map<number, string>();
+
+	// Later overlays are drawn above earlier overlays, so iterate in render order
+	// and let the last matching search determine the visible point color.
+	for (const search of mappedSearches) {
+		for (const neighbor of search.neighbors) {
+			colors.set(neighbor.id, search.color);
+		}
+	}
+
+	return colors;
+}
+
 export {
 	getMappedSearches,
+	getPointDisplayColors,
 	getSearchForPoint,
 	getSearchKey,
 	getVisiblePoints,

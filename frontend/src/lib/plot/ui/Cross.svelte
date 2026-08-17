@@ -1,20 +1,15 @@
 <script lang="ts">
 	import type { Context } from 'konva/lib/Context';
-	import type { Node as KonvaNode } from 'konva/lib/Node';
 	import type { Shape as KonvaShape } from 'konva/lib/Shape';
 	import { Shape } from 'svelte-konva';
-	import { createEventDispatcher } from 'svelte';
 
 	// ----- Data -----
 	export let x: number;
 	export let y: number;
 	export let pointId: number;
 	export let color: string;
-	export let interactive = true;
 	export let hovered = false;
 	export let visible = true;
-
-	const dispatch = createEventDispatcher();
 
 	// Function to draw a cross
 	function renderCross(context: Context, shape: KonvaShape): void {
@@ -44,49 +39,11 @@
 
 		context.fillStrokeShape(shape);
 	}
-
-	// Define hit function
-	const padding = 1;
-	function hitRegion(context: Context, shape: KonvaShape): void {
-		let width = shape.getAttr('width');
-		let height = shape.getAttr('height');
-		context.beginPath();
-		context.rect(
-			-width - padding,
-			-height - padding,
-			2 * width + 2 * padding,
-			2 * height + 2 * padding
-		);
-		context.closePath();
-		context.fillStrokeShape(shape);
-	}
-
-	type CrossEvent = {
-		detail: {
-			target: KonvaNode;
-		};
-	};
-
-	const handleClick = (ctx: CrossEvent) => {
-		dispatch('cross-clicked', ctx);
-	};
-
-	const handleMouseEnter = (ctx: CrossEvent) => {
-		dispatch('cross-hovered', ctx);
-	};
-
-	const handleMouseLeave = (ctx: CrossEvent) => {
-		dispatch('cross-unhovered', ctx);
-	};
 </script>
 
 <Shape
-	on:mouseenter={interactive ? handleMouseEnter : undefined}
-	on:mouseleave={interactive ? handleMouseLeave : undefined}
-	on:click={interactive ? handleClick : undefined}
 	config={{
 		sceneFunc: renderCross,
-		hitFunc: hitRegion,
 		x: x,
 		y: y,
 		pointId: pointId,
@@ -94,7 +51,7 @@
 		height: 5,
 		stroke: color,
 		strokeWidth: 1.5,
-		listening: interactive,
+		listening: false,
 		visible: visible,
 		shadowColor: hovered ? color : undefined,
 		shadowBlur: hovered ? 2 : 0,
