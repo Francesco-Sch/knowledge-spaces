@@ -379,3 +379,37 @@ The manual recording `plot-profile-wheel-zoom-cache-hybrid-cull-hybrid-2026-08-1
 The node-count oscillation and heap growth indicate that repeatedly mounting, caching, and destroying the full base group creates substantial allocation and garbage-collection pressure. The renderer now creates the base group on the first low-zoom transition and retains it hidden and non-listening during later culling periods. This preserves the selected adaptive behavior while reusing the cache instead of reconstructing 11,319 point nodes on every threshold crossing.
 
 The finishing Playwright run added direct mode assertions and passed all `26` tests at `2556 × 1296`. Its adaptive wheel-zoom recording had a median frame p95 of `37.2 ms`, a worst frame p95 of `51.8 ms`, and a maximum observed heap of approximately `116 MB`, without the repeated 11,319-node rebuild pattern.
+
+## Phase 2 nearest-point interaction validation
+
+The Phase 2 interaction matrix was run after replacing per-point Konva listeners with the uniform-grid stage controller.
+
+### Environment
+
+- Browser: Headless Chrome 151
+- Viewport: `1280 × 800`
+- Device pixel ratio: `1`
+- Dataset: 20 Newsgroups
+- Dataset point count: `11,314`
+- Modes: cache-only, adaptive hybrid, and forced culling
+- Scenarios: pointer movement, hover and selection, minimum zoom, and maximum zoom
+- Artifacts: `/tmp/knowledge-spaces-phase2-profiles`
+
+The values below are median samples after discarding the first three warm-up samples. This is a focused Phase 2 validation run at a different viewport from Runs 06 and 07, so it should not be treated as a direct absolute comparison with those runs.
+
+| Scenario            | Cache-only FPS / frame p95 | Adaptive hybrid FPS / frame p95 | Forced culling FPS / frame p95 |
+| ------------------- | -------------------------: | ------------------------------: | -----------------------------: |
+| Pointer movement    |             60.0 / 18.0 ms |                  60.0 / 17.8 ms |                 60.0 / 18.1 ms |
+| Hover and selection |             60.0 / 17.5 ms |                  60.0 / 17.2 ms |                 60.0 / 18.1 ms |
+| Minimum zoom        |             60.0 / 17.6 ms |                  60.0 / 17.3 ms |                 57.9 / 54.1 ms |
+| Maximum zoom        |             60.0 / 17.8 ms |                  60.0 / 17.6 ms |                 60.0 / 18.6 ms |
+
+### Findings
+
+- All 23 focused Playwright tests passed, including the existing visual and render-mode checks.
+- Point nodes and dataset groups no longer participate in Konva hit testing.
+- Stage-level selection opened the existing dataset card using the nearest indexed point.
+- A low-zoom click moved the stage to scale `1.0` without selecting; the next click selected successfully.
+- Pointer movement and hover/selection remained at approximately 60 FPS in all three modes during this run.
+- Forced culling still shows a minimum-zoom transition cost, which is a rendering-mode concern rather than a nearest-point lookup regression.
+- The focused index suite passed all five cases with `pnpm test:plot-index`.
