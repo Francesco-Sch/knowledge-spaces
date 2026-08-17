@@ -473,16 +473,15 @@
 			{/each}
 		{/if}
 
-		{#if hoveredPoint}
-			<Cross
-				x={hoveredPoint.x}
-				y={hoveredPoint.y}
-				pointId={hoveredPoint.id}
-				color={hoveredPoint.color}
-				hovered={true}
-				interactive={false}
-			/>
-		{/if}
+		<Cross
+			x={hoveredPoint?.x ?? 0}
+			y={hoveredPoint?.y ?? 0}
+			pointId={hoveredPoint?.id ?? -1}
+			color={hoveredPoint?.color ?? 'black'}
+			hovered={hoveredPoint !== undefined}
+			interactive={false}
+			visible={hoveredPoint !== undefined}
+		/>
 	</Layer>
 
 	<Layer bind:handle={CardLayer}>
