@@ -212,14 +212,42 @@ async function getPlotInteractionState(page) {
 		const pointNodes = stage
 			.find('Shape')
 			.filter((node) => Number.isInteger(node.getAttr('pointId')) && node.getAttr('pointId') >= 0);
-		const layers = stage.getChildren();
+		const card = document.querySelector('[data-testid="dataset-entry-card"]');
+		const cardRect = card?.getBoundingClientRect();
 		return {
 			scale: stage.scaleX(),
-			cardNodeCount: layers.at(-1)?.getChildren().length || 0,
+			cardNodeCount: card ? 1 : 0,
+			cardPointId: card?.getAttribute('data-point-id') ?? null,
+			cardRect: cardRect
+				? {
+						left: cardRect.left,
+						top: cardRect.top,
+						width: cardRect.width,
+						height: cardRect.height
+				  }
+				: null,
 			pointNodeCount: pointNodes.length,
 			pointNodeListening: pointNodes.map((node) => node.isListening())
 		};
 	});
+}
+
+async function stubDatasetEntry(page, body = 'Playwright dataset entry', delayMs = 0) {
+	let requestCount = 0;
+	await page.route('**/api/dataset-entry**', async (route) => {
+		requestCount += 1;
+		if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify(body)
+		});
+	});
+	return () => requestCount;
+}
+
+async function getCardText(page) {
+	return page.locator('[data-testid="dataset-entry-card"]').innerText();
 }
 
 async function startFrameRecorder(page) {
@@ -713,6 +741,131 @@ test('plot rendering scenarios in Chromium', async (t) => {
 				'point nodes still participate in Konva hit testing'
 			);
 			assertHealthy(await canvasStats(page), errors, 'stage selection');
+		});
+
+		await t.test('HTML card follows zoom and replaces the selected point', async () => {
+			await resetPage();
+			await stubDatasetEntry(page);
+			await preparePage(
+				page,
+				'?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=playwright-html-card'
+			);
+			const point = await findHoverableDarkCanvasPoint(page);
+			assert.ok(point, 'could not find a point candidate for HTML card testing');
+
+			await page.mouse.click(point.x, point.y);
+			await page.locator('[data-testid="dataset-entry-card"]').waitFor();
+			const initialState = await getPlotInteractionState(page);
+			assert.ok(initialState?.cardRect, 'HTML card did not expose a measurable rectangle');
+			assert.equal(initialState.cardPointId !== null, true, 'HTML card has no selected point ID');
+
+			await dispatchWheel(page, -500, 1);
+			await page.waitForTimeout(250);
+			const zoomedState = await getPlotInteractionState(page);
+			assert.ok(zoomedState?.cardRect, 'HTML card disappeared during zoom');
+			assert.equal(zoomedState.cardPointId, initialState.cardPointId);
+			assert.ok(
+				zoomedState.cardRect.width > initialState.cardRect.width,
+				'HTML card did not scale with stage zoom'
+			);
+
+			await dispatchWheel(page, 500, 1);
+			await page.waitForTimeout(250);
+			const zoomedOutState = await getPlotInteractionState(page);
+			assert.ok(zoomedOutState?.cardRect, 'HTML card disappeared while zooming out');
+			assert.ok(
+				zoomedOutState.cardRect.width < zoomedState.cardRect.width,
+				'HTML card did not shrink while zooming out'
+			);
+
+			const candidates = await findDarkCanvasPoints(page);
+			let replacementPoint;
+			for (const candidate of candidates) {
+				if (candidate.x === point.x && candidate.y === point.y) continue;
+				await page.mouse.move(candidate.x, candidate.y);
+				await page.waitForTimeout(30);
+				if ((await page.evaluate(() => document.body.style.cursor)) === 'pointer') {
+					replacementPoint = candidate;
+					break;
+				}
+			}
+			assert.ok(replacementPoint, 'could not find a second point for replacement testing');
+
+			await page.mouse.click(replacementPoint.x, replacementPoint.y);
+			await page.waitForTimeout(250);
+			const replacementState = await getPlotInteractionState(page);
+			assert.ok(replacementState?.cardNodeCount > 0, 'replacement selection closed the HTML card');
+			assert.notEqual(
+				replacementState.cardPointId,
+				initialState.cardPointId,
+				'selecting a second point did not replace the HTML card'
+			);
+			assertHealthy(await canvasStats(page), errors, 'HTML card zoom and replacement');
+		});
+
+		await t.test('HTML card delays loading text and supports retry', async () => {
+			await resetPage();
+			let requestCount = 0;
+			await page.route('**/api/dataset-entry**', async (route) => {
+				requestCount += 1;
+				if (requestCount === 1) {
+					await new Promise((resolve) => setTimeout(resolve, 700));
+					await route.fulfill({
+						status: 500,
+						contentType: 'application/json',
+						body: JSON.stringify({ detail: 'test failure' })
+					});
+					return;
+				}
+				await route.fulfill({
+					status: 200,
+					contentType: 'application/json',
+					body: JSON.stringify('retried dataset entry')
+				});
+			});
+			await preparePage(
+				page,
+				'?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=playwright-html-card-error'
+			);
+			const point = await findHoverableDarkCanvasPoint(page);
+			assert.ok(point, 'could not find a point candidate for loading test');
+
+			await page.mouse.click(point.x, point.y);
+			const card = page.locator('[data-testid="dataset-entry-card"]');
+			await card.waitFor();
+			await page.waitForTimeout(100);
+			assert.equal((await getCardText(page)).includes('Loading...'), false);
+			await page.waitForTimeout(500);
+			assert.equal((await getCardText(page)).includes('Loading...'), true);
+			await page.waitForTimeout(300);
+			assert.equal((await getCardText(page)).includes('could not be loaded'), true);
+
+			await card.getByRole('button', { name: 'Retry' }).click();
+			await page.waitForTimeout(150);
+			assert.equal((await getCardText(page)).includes('retried dataset entry'), true);
+			assert.equal(requestCount, 2, 'retry did not issue exactly one replacement request');
+		});
+
+		await t.test('HTML card keeps successful entries cached between selections', async () => {
+			await resetPage();
+			const getRequestCount = await stubDatasetEntry(page, 'cached dataset entry');
+			await preparePage(
+				page,
+				'?plotDebug=1&plotHybrid=0&plotCache=0&plotScenario=playwright-html-card-cache'
+			);
+			const point = await findHoverableDarkCanvasPoint(page);
+			assert.ok(point, 'could not find a point candidate for cache testing');
+
+			await page.mouse.click(point.x, point.y);
+			await page.waitForTimeout(200);
+			assert.equal(getRequestCount(), 1);
+			await page.mouse.click(VIEWPORT.width - 10, VIEWPORT.height - 10);
+			await page.waitForTimeout(100);
+			assert.equal((await getPlotInteractionState(page)).cardNodeCount, 0);
+			await page.mouse.click(point.x, point.y);
+			await page.waitForTimeout(200);
+			assert.equal(getRequestCount(), 1, 'cached card selection issued a second request');
+			assert.equal((await getCardText(page)).includes('cached dataset entry'), true);
 		});
 
 		await t.test('low-zoom selection zooms first and selects on the next click', async () => {
