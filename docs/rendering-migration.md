@@ -198,7 +198,7 @@ When the user attempts to select while the current scale is below the interactio
 3. Re-run nearest-point selection.
 4. Allow the next click to select the nearest point.
 
-The implementation uses `MIN_INTERACTION_SCALE = 1` and a `16px` CSS hit radius. The first click below the interaction threshold zooms around the pointer without selecting a point; the next click performs the selection. This avoids selecting an ambiguous nearby point at the minimum stage scale.
+The implementation uses `MIN_INTERACTION_SCALE = 0.8` and a `16px` CSS hit radius. The first click below the interaction threshold zooms around the pointer without selecting a point; the next click performs the selection. This avoids selecting an ambiguous nearby point at the minimum stage scale.
 
 ### Phase 2 implementation notes
 
