@@ -209,6 +209,41 @@ The disabled wheel-zoom run used a narrower viewport, so that comparison is dire
 - The cache should remain enabled by default for now because the interaction-performance improvement is decisive.
 - The `plotCache=0` toggle should remain available while an adaptive or higher-quality caching strategy is investigated.
 
+## Run 05 findings: adaptive cache and culling
+
+Run 05 tested `plotHybrid=1` with the cache/culling thresholds at scale `2` and `1.25`.
+
+### Environment
+
+- Browser: Chrome 151
+- Viewport: `2556 × 1296`
+- Device pixel ratio: `1`
+- Dataset: 20 Newsgroups
+- Dataset point count: `11,314`
+
+The values below use the median of the recorded 500 ms intervals after discarding the first three warm-up samples. The frame p95 column shows the median interval value followed by the worst interval value.
+
+| Scenario            | Median FPS | Frame p95       | Input p95     | Median heap |
+| ------------------- | ---------: | --------------- | ------------- | ----------: |
+| Initial view        |       60.0 | 17.2 / 75.6 ms  | 0.0 / 0.2 ms  |    171.2 MB |
+| Panning             |       57.4 | 27.7 / 204.6 ms | 0.1 / 36.3 ms |    492.8 MB |
+| Pointer movement    |       40.1 | 71.5 / 95.4 ms  | 0.2 / 23.7 ms |    701.6 MB |
+| Wheel zoom          |       58.4 | 27.8 / 240.7 ms | 0.3 / 45.7 ms |    587.1 MB |
+| Search results      |       60.0 | 17.0 / 80.1 ms  | 0.0 / 7.2 ms  |    158.4 MB |
+| Hover and selection |       45.4 | 73.3 / 145.8 ms | 0.2 / 46.2 ms |    184.5 MB |
+| Window resizing     |       60.0 | 17.5 / 500.7 ms | 0.0 / 50.2 ms |    184.3 MB |
+| Minimum zoom        |       48.2 | 47.4 / 134.0 ms | 0.1 / 34.7 ms |    186.4 MB |
+| Maximum zoom        |       60.0 | 17.5 / 76.5 ms  | 0.2 / 17.2 ms |    259.2 MB |
+
+### Findings
+
+- Hybrid mode keeps panning and wheel zoom close to cached performance while retaining vector rendering at high zoom.
+- The hidden cached base group remains part of the Konva scene. This avoids rebuilding 11,318 base nodes during transitions but increases memory and scene traversal costs.
+- Pointer movement and hover/selection remain substantially slower than the cache-only Run 03 results.
+- Heap usage rises sharply during pointer movement, wheel zoom, and panning, reaching `701.6 MB` median during pointer movement.
+- Window resizing still contains a long-frame outlier, consistent with rebuilding the cache after dimensions change.
+- The hybrid mode is promising for zoom quality and basic navigation, but it should not yet replace the cache-only default without addressing the duplicated scene memory and interaction overhead.
+
 ### Phase 1 handoff
 
 The next agent should begin with the low-risk Konva optimizations from the migration plan:
