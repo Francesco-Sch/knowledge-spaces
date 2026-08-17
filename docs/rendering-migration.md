@@ -1,12 +1,12 @@
 # Rendering migration
 
-> **Status:** Phase 1 is complete and its exit validation has been recorded.
+> **Status:** Phase 2 nearest-point interaction is complete and its exit validation has been recorded.
 > **Origin:** This roadmap originated from [Issue #19: Rework dataset rendering for performance](https://github.com/Francesco-Sch/knowledge-spaces/issues/19).
 > **Scope:** This document records the rendering architecture, completed decisions, and follow-up migration work for the repository.
 
 The migration is intentionally incremental. We should not replace Konva with a new renderer before measuring the current bottlenecks and validating the visual output.
 The historical v1.0.1 implementation is documented in [Dataset rendering on canvas using Konva](1.0.1/dataset-rendering-on-canvas-using-konva.md).
-The current Phase 1 implementation is composed from `frontend/src/lib/plot/Plot.svelte`, `plot-data.ts`, `plot-behaviour.ts`, and the components in `frontend/src/lib/plot/ui/`.
+The current Phase 1 and Phase 2 implementation is composed from `frontend/src/lib/plot/Plot.svelte`, `plot-data.ts`, `plot-behaviour.ts`, `point-spatial-index.ts`, and the components in `frontend/src/lib/plot/ui/`.
 
 ## Goals
 
@@ -173,6 +173,8 @@ Build a spatial index suitable for the expected point count. A uniform grid is a
 
 A more general spatial index can be introduced if future datasets require it.
 
+The Phase 2 implementation uses `frontend/src/lib/plot/point-spatial-index.ts`. The index is rebuilt when mapped dataset coordinates change and is reused across stage pan and zoom operations.
+
 ### Pointer behavior
 
 On pointer movement:
@@ -183,7 +185,7 @@ On pointer movement:
 4. Update the single hovered point.
 5. Update the cursor and highlight overlay.
 
-The interaction radius should be defined in CSS pixels rather than world units so it remains usable at every zoom level. A tentative target is a 12–20 pixel effective hit area, subject to testing with the actual laptop pointer behavior.
+The interaction radius is defined in CSS pixels rather than world units so it remains usable at every zoom level. The current effective hit area is `16px`.
 
 ### Minimum interactive zoom
 
@@ -196,7 +198,16 @@ When the user attempts to select while the current scale is below the interactio
 3. Re-run nearest-point selection.
 4. Allow the next click to select the nearest point.
 
-The threshold and whether the first click should both zoom and select require an interaction decision during implementation. The safest initial behavior is to zoom first and avoid selecting an unintended nearby point until the user clicks again.
+The implementation uses `MIN_INTERACTION_SCALE = 1` and a `16px` CSS hit radius. The first click below the interaction threshold zooms around the pointer without selecting a point; the next click performs the selection. This avoids selecting an ambiguous nearby point at the minimum stage scale.
+
+### Phase 2 implementation notes
+
+- `Plot.svelte` owns stage-level mouse and touch interaction instead of individual point events.
+- The uniform grid indexes all mapped dataset points, while viewport culling remains responsible only for drawing.
+- Base and search-result crosses are visual-only with `listening: false`; duplicate search crosses remain temporarily for Phase 3.
+- The single hover highlight is rendered in its own Konva layer.
+- Search point colors are resolved by point ID using the topmost search overlay color.
+- The existing Konva dataset card remains unchanged apart from touch event propagation; moving it to HTML remains Phase 4 work.
 
 ### Exit criteria
 
@@ -204,6 +215,8 @@ The threshold and whether the first click should both zoom and select require an
 - Point targeting remains usable when zoomed out.
 - No per-point pointer listener is required.
 - Pointer movement does not cause broad scene redraws.
+
+The Phase 2 Playwright validation covers stage-level selection, non-listening point nodes, low-zoom two-step selection, cached rendering, adaptive culling, forced culling, resizing, search overlays, and hover performance. The focused spatial-index suite is available as `pnpm test:plot-index` from `frontend/`.
 
 ## Phase 3: Recolor search points instead of duplicating them
 

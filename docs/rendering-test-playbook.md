@@ -60,6 +60,12 @@ Run the screenshot and correctness checks without the profiling matrix:
 PLOT_TEST_PROFILES=0 PLOT_TEST_ARTIFACTS=/tmp/plot-screenshots pnpm test:plot
 ```
 
+Run the focused uniform-grid lookup tests without starting the application:
+
+```bash
+pnpm test:plot-index
+```
+
 Useful environment variables:
 
 | Variable                      | Default                     | Purpose                                |
@@ -83,6 +89,8 @@ Useful environment variables:
 - Search-result jumps with forced culling.
 - Search overlay rendering after a jump.
 - Hover targeting and pointer cursor behavior.
+- Stage-level nearest-point selection without point listeners.
+- Low-zoom two-step selection behavior.
 - Hover pointer-sweep performance metrics.
 - Viewport resizing and canvas dimensions.
 - Basic animation-frame and canvas health checks.
