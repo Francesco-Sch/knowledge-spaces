@@ -13,6 +13,5 @@
 	pointId={point?.id ?? -1}
 	color={point?.color ?? 'black'}
 	hovered={point !== undefined}
-	interactive={false}
 	visible={point !== undefined}
 />

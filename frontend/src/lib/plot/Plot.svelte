@@ -11,11 +11,14 @@
 		getCullingMode,
 		getRenderMode as getPlotRenderMode,
 		getZoomTransform,
+		getZoomTransformForScale,
+		MIN_INTERACTION_SCALE,
 		RENDER_MODE_SWITCH_DELAY,
 		type PlotRenderMode
 	} from './plot-behaviour';
 	import {
 		getMappedSearches,
+		getPointDisplayColors,
 		getSearchForPoint,
 		getVisiblePoints,
 		mapEmbeddingsToPoints,
@@ -32,6 +35,7 @@
 	import Search from './ui/Search.svelte';
 	import PlotProfiler from '../utils/PlotProfiler.svelte';
 	import { generateBlobPointsForSearch, zoomToSearchPoint } from '../../utils';
+	import { PointSpatialIndex } from './point-spatial-index';
 
 	// Set to true to re-introduce the optional grid layer.
 	const GRID_ENABLED = false;
@@ -43,11 +47,15 @@
 	let windowHeight: number;
 	let mappedEmbeddings: Point[] = [];
 	let mappedSearches: MappedSearch[] = [];
+	let pointDisplayColors = new Map<number, string>();
+	const pointSpatialIndex = new PointSpatialIndex();
 	type SearchOverlay = MappedSearch & { blobPoints: number[] };
 	let searchOverlays: SearchOverlay[] = [];
 
 	$: mappedEmbeddings = mapEmbeddingsToPoints(embeddings, windowWidth, windowHeight);
+	$: pointSpatialIndex.rebuild(mappedEmbeddings);
 	$: mappedSearches = $searches ? getMappedSearches(windowWidth, windowHeight) : [];
+	$: pointDisplayColors = getPointDisplayColors(mappedSearches);
 	$: searchOverlays = mappedSearches.map((search) => ({
 		...search,
 		blobPoints: getBlobPoints(search)
@@ -78,21 +86,9 @@
 		measureBlobGeneration: <T>(callback: () => T) => T;
 	};
 
-	type CrossTarget = {
-		attrs: {
-			pointId: number;
-			x: number;
-			y: number;
-			stroke: string;
-		};
-	};
-
-	type CrossEvent = CustomEvent<{
-		detail: {
-			target: CrossTarget;
-			cancelBubble: boolean;
-		};
-	}>;
+	type StagePointerEvent = CustomEvent<
+		Konva.KonvaEventObject<MouseEvent | PointerEvent | TouchEvent>
+	>;
 
 	type StageTransformEvent = CustomEvent<
 		Konva.KonvaEventObject<MouseEvent | PointerEvent | TouchEvent>
@@ -115,9 +111,77 @@
 	let renderModeTimer: number | undefined;
 	let viewport: Viewport = { x: 0, y: 0, scale: 1 };
 	let visibleMappedEmbeddings: Point[] = [];
+	let hoveredPoint: HoveredPoint | undefined;
+	let isDragging = false;
+	let ignoreNextClick = false;
 
-	function handlePointerMove() {
+	const POINTER_HIT_RADIUS_PX = 16;
+
+	function getNearestPoint(stage: KonvaStage): HoveredPoint | undefined {
+		const pointer = stage.getPointerPosition();
+		const scale = stage.scaleX();
+		if (!pointer || !Number.isFinite(scale) || scale <= 0) return;
+
+		const point = pointSpatialIndex.findNearest(
+			{
+				x: (pointer.x - stage.x()) / scale,
+				y: (pointer.y - stage.y()) / scale
+			},
+			POINTER_HIT_RADIUS_PX / scale
+		);
+		if (!point) return;
+
+		return {
+			...point,
+			color: pointDisplayColors.get(point.id) ?? 'black'
+		};
+	}
+
+	function setHoveredPoint(point: HoveredPoint | undefined) {
+		const unchanged =
+			hoveredPoint?.id === point?.id &&
+			hoveredPoint?.x === point?.x &&
+			hoveredPoint?.y === point?.y &&
+			hoveredPoint?.color === point?.color;
+		if (unchanged) return;
+
+		hoveredPoint = point;
+		if (typeof document !== 'undefined') {
+			document.body.style.cursor = point ? 'pointer' : 'default';
+		}
+	}
+
+	function handlePointerMove(event: StagePointerEvent) {
 		plotProfiler?.recordPointerEvent();
+		if (isDragging) return;
+
+		const stage = event.detail.target.getStage();
+		if (stage) setHoveredPoint(getNearestPoint(stage));
+	}
+
+	function handlePointerLeave() {
+		setHoveredPoint(undefined);
+	}
+
+	function handlePointerDown() {
+		// A new pointer sequence is eligible for selection. A drag will set this
+		// again in handleStageDragStart before the click/tap can be dispatched.
+		ignoreNextClick = false;
+	}
+
+	function handleStageDragStart() {
+		isDragging = true;
+		ignoreNextClick = true;
+		setHoveredPoint(undefined);
+	}
+
+	function handleStageDragEnd(event: StageTransformEvent) {
+		isDragging = false;
+		const stage = event.detail.target.getStage();
+		if (!stage) return;
+
+		updateViewport(stage);
+		setHoveredPoint(getNearestPoint(stage));
 	}
 
 	function handleStageTransform(event: StageTransformEvent) {
@@ -150,6 +214,8 @@
 				windowHeight
 			);
 		}
+
+		if (stageHandle && !isDragging) setHoveredPoint(getNearestPoint(stageHandle));
 	}
 
 	$: visibleMappedEmbeddings = cullingEnabled
@@ -223,6 +289,7 @@
 			scaleY: transform.scale
 		}));
 		updateViewport(stage);
+		setHoveredPoint(getNearestPoint(stage));
 	}
 
 	// ----- Canvas Objects -----
@@ -272,65 +339,78 @@
 	}
 
 	// ----- Event Handlers -----
-	let hoveredPoint: HoveredPoint | undefined;
-
-	function handleCrossHover(event: CrossEvent) {
-		const target = event.detail.detail.target;
-		hoveredPoint = {
-			id: target.attrs.pointId,
-			x: target.attrs.x,
-			y: target.attrs.y,
-			color: target.attrs.stroke
-		};
-		document.body.style.cursor = 'pointer';
-	}
-
-	function handleCrossUnhover(event: CrossEvent) {
-		const target = event.detail.detail.target;
-		if (
-			hoveredPoint &&
-			hoveredPoint.id === target.attrs.pointId &&
-			hoveredPoint.color === target.attrs.stroke
-		) {
-			hoveredPoint = undefined;
-			document.body.style.cursor = 'default';
-		}
-	}
-
-	function handleCrossClick(event: CrossEvent) {
-		// Prevent bubbling.
-		event.detail.detail.cancelBubble = true;
-
-		const cross = event.detail.detail;
-		const mappedEntryIndex = cross.target.attrs.pointId;
-		const embedding = embeddings[mappedEntryIndex];
-
-		if (mappedEntryIndex == null || !embedding) return;
-
-		// Get the coordinates of the cross.
-		const crossX = cross.target.attrs.x + 20;
-		const crossY = cross.target.attrs.y;
-		const search = getSearchForPoint($searches as StoredSearch[] | null, mappedEntryIndex);
-
-		if (!NodeCardConfig.display) {
-			// Set the NodeCardConfig.
-			NodeCardConfig.display = true;
-			NodeCardConfig.x = crossX;
-			NodeCardConfig.y = crossY;
-			NodeCardConfig.color = cross.target.attrs.stroke;
-			NodeCardConfig.embedding.id = mappedEntryIndex;
-			NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
-			NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
-			NodeCardConfig.search = search;
-
-			// Redraw the layer.
-			cardLayer?.draw();
-		}
-	}
-
-	function handleStageClick() {
+	function hideCard() {
+		if (!NodeCardConfig.display) return;
 		NodeCardConfig.display = false;
 		cardLayer?.draw();
+	}
+
+	function zoomToMinimumInteractionScale(stage: KonvaStage): boolean {
+		const transform = getZoomTransformForScale(
+			stage.scaleX(),
+			{ x: stage.x(), y: stage.y() },
+			stage.getPointerPosition(),
+			MIN_INTERACTION_SCALE
+		);
+		if (!transform) return false;
+
+		stage.scale({ x: transform.scale, y: transform.scale });
+		stage.position({ x: transform.x, y: transform.y });
+		stageConfig.update((config) => ({
+			...config,
+			x: transform.x,
+			y: transform.y,
+			scaleX: transform.scale,
+			scaleY: transform.scale
+		}));
+		updateViewport(stage);
+		setHoveredPoint(getNearestPoint(stage));
+		return true;
+	}
+
+	function selectPoint(point: HoveredPoint) {
+		const mappedEntryIndex = point.id;
+		const embedding = embeddings[mappedEntryIndex];
+		if (!embedding) return;
+
+		const search = getSearchForPoint($searches as StoredSearch[] | null, mappedEntryIndex);
+		if (NodeCardConfig.display) return;
+
+		NodeCardConfig.display = true;
+		NodeCardConfig.x = point.x + 20;
+		NodeCardConfig.y = point.y;
+		NodeCardConfig.color = point.color;
+		NodeCardConfig.embedding.id = mappedEntryIndex;
+		NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
+		NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
+		NodeCardConfig.search = search;
+
+		// Redraw the layer.
+		cardLayer?.draw();
+	}
+
+	function handleStageClick(event: StagePointerEvent) {
+		if (ignoreNextClick) {
+			ignoreNextClick = false;
+			return;
+		}
+		if (isDragging) return;
+
+		const stage = event.detail.target.getStage();
+		if (!stage) return;
+
+		if (stage.scaleX() < MIN_INTERACTION_SCALE) {
+			zoomToMinimumInteractionScale(stage);
+			hideCard();
+			return;
+		}
+
+		const point = getNearestPoint(stage);
+		if (point) {
+			selectPoint(point);
+		} else {
+			hideCard();
+		}
 	}
 
 	function stopPropagation(event: CardEvent) {
@@ -389,8 +469,15 @@
 	bind:handle={stageHandle}
 	on:wheel={scaleShape}
 	on:mousemove={handlePointerMove}
+	on:touchmove={handlePointerMove}
+	on:mouseleave={handlePointerLeave}
+	on:mousedown={handlePointerDown}
+	on:touchstart={handlePointerDown}
+	on:dragstart={handleStageDragStart}
 	on:dragmove={handleStageTransform}
+	on:dragend={handleStageDragEnd}
 	on:click={handleStageClick}
+	on:tap={handleStageClick}
 >
 	<!-- Optional grid layer. It is disabled to preserve the current rendering. -->
 	{#if GRID_ENABLED}
@@ -404,25 +491,17 @@
 			{visibleMappedEmbeddings}
 			{cullingEnabled}
 			{baseGroupMounted}
-			on:cross-clicked={handleCrossClick}
-			on:cross-hovered={handleCrossHover}
-			on:cross-unhovered={handleCrossUnhover}
 		/>
 
 		{#if $searches}
 			{#each searchOverlays as search (search.key)}
-				<Search
-					{search}
-					blobPoints={search.blobPoints}
-					{cullingEnabled}
-					{hybridEnabled}
-					on:cross-clicked={handleCrossClick}
-					on:cross-hovered={handleCrossHover}
-					on:cross-unhovered={handleCrossUnhover}
-				/>
+				<Search {search} blobPoints={search.blobPoints} {cullingEnabled} {hybridEnabled} />
 			{/each}
 		{/if}
+	</Layer>
 
+	<!-- Pointer movement updates only this single highlight layer. -->
+	<Layer>
 		<Hover point={hoveredPoint} />
 	</Layer>
 
