@@ -2,10 +2,9 @@
 	import { onDestroy, onMount, tick } from 'svelte';
 	import type Konva from 'konva';
 	import type { Group as KonvaGroup } from 'konva/lib/Group';
-	import type { Layer as KonvaLayer } from 'konva/lib/Layer';
 	import type { Stage as KonvaStage } from 'konva/lib/Stage';
 	import { Layer, Stage } from 'svelte-konva';
-	import { searches, stageConfig } from '../../stores/store';
+	import { searches, selectedDataset, stageConfig } from '../../stores/store';
 	import type { Point } from '$lib/types';
 	import {
 		getCullingMode,
@@ -22,7 +21,7 @@
 		getSearchForPoint,
 		getVisiblePoints,
 		mapEmbeddingsToPoints,
-		type CardConfig,
+		type CardEmbedding,
 		type HoveredPoint,
 		type MappedSearch,
 		type Search as StoredSearch,
@@ -37,6 +36,14 @@
 	import { generateBlobPointsForSearch, zoomToSearchPoint } from '../../utils';
 	import { findNearestPoint } from './point-hit-tracking';
 	import { PointSpatialIndex } from './point-spatial-index';
+	import {
+		CARD_DEFAULT_HEIGHT,
+		CARD_DEFAULT_WIDTH,
+		CARD_OFFSET,
+		getCardPosition,
+		getCardScale,
+		getCardScreenPoint
+	} from './card-position';
 
 	// Set to true to re-introduce the optional grid layer.
 	const GRID_ENABLED = false;
@@ -52,6 +59,20 @@
 	const pointSpatialIndex = new PointSpatialIndex();
 	type SearchOverlay = MappedSearch & { blobPoints: number[] };
 	let searchOverlays: SearchOverlay[] = [];
+	type SelectedCard = {
+		pointId: number;
+		worldPoint: Point;
+		color: string;
+		embedding: CardEmbedding;
+		search: StoredSearch | null;
+	};
+	let selectedCard: SelectedCard | undefined;
+	let cardSelectionKey = 0;
+	let cardSize = { width: CARD_DEFAULT_WIDTH, height: CARD_DEFAULT_HEIGHT };
+	let cardPosition = { x: 0, y: 0, scale: 1 };
+	let cardWorldOffset = { x: CARD_OFFSET, y: 0 };
+	let cardSelectionViewport = { x: 0, y: 0, scale: 1 };
+	let previousDataset: string | undefined;
 
 	$: mappedEmbeddings = mapEmbeddingsToPoints(embeddings, windowWidth, windowHeight);
 	$: pointSpatialIndex.rebuild(mappedEmbeddings);
@@ -96,12 +117,6 @@
 	>;
 
 	type KonvaWheelEvent = CustomEvent<Konva.KonvaEventObject<WheelEvent>>;
-
-	type CardEvent = CustomEvent<{
-		detail: {
-			cancelBubble: boolean;
-		};
-	}>;
 
 	let cullingEnabled = false;
 	let forcedCulling = false;
@@ -210,6 +225,26 @@
 		? getVisiblePoints(mappedEmbeddings, viewport, windowWidth, windowHeight)
 		: mappedEmbeddings;
 
+	$: if (selectedCard) {
+		const selectedPoint = mappedEmbeddings[selectedCard.pointId] ?? selectedCard.worldPoint;
+		if (selectedPoint) {
+			const screenPoint = getCardScreenPoint(selectedPoint, viewport);
+			const stageScale = getStageScale();
+			cardPosition = {
+				x: screenPoint.x + cardWorldOffset.x * stageScale,
+				y: screenPoint.y + cardWorldOffset.y * stageScale,
+				scale: getCardScale(stageScale)
+			};
+		}
+	}
+
+	$: if (previousDataset === undefined) {
+		previousDataset = $selectedDataset;
+	} else if (previousDataset !== $selectedDataset) {
+		previousDataset = $selectedDataset;
+		hideCard();
+	}
+
 	function updateRenderMode(stageScale: number) {
 		const nextCullingMode = getCullingMode(
 			stageScale,
@@ -282,7 +317,6 @@
 
 	// ----- Canvas Objects -----
 	let crossGroup: KonvaGroup | undefined;
-	let cardLayer: KonvaLayer | undefined;
 	let plotProfiler: PlotProfilerHandle | undefined;
 
 	function getBlobPoints(search: MappedSearch): number[] {
@@ -335,9 +369,39 @@
 
 	// ----- Event Handlers -----
 	function hideCard() {
-		if (!NodeCardConfig.display) return;
-		NodeCardConfig.display = false;
-		cardLayer?.draw();
+		selectedCard = undefined;
+	}
+
+	function getStageScale(): number {
+		return Number.isFinite(viewport.scale) && viewport.scale > 0 ? viewport.scale : 1;
+	}
+
+	function setCardAnchorPlacement(point: Point, size = cardSize) {
+		const screenPoint = getCardScreenPoint(point, viewport);
+		const stageScale = getStageScale();
+		const initialPosition = getCardPosition(
+			screenPoint,
+			size,
+			{ width: windowWidth, height: windowHeight },
+			stageScale
+		);
+
+		cardWorldOffset = {
+			x: (initialPosition.x - screenPoint.x) / stageScale,
+			y: (initialPosition.y - screenPoint.y) / stageScale
+		};
+	}
+
+	function handleCardResize(event: CustomEvent<{ width: number; height: number }>) {
+		cardSize = event.detail;
+		const selectedPoint = selectedCard
+			? mappedEmbeddings[selectedCard.pointId] ?? selectedCard.worldPoint
+			: undefined;
+		const hasViewportMoved =
+			viewport.x !== cardSelectionViewport.x ||
+			viewport.y !== cardSelectionViewport.y ||
+			viewport.scale !== cardSelectionViewport.scale;
+		if (selectedPoint && !hasViewportMoved) setCardAnchorPlacement(selectedPoint, cardSize);
 	}
 
 	function zoomToMinimumInteractionScale(stage: KonvaStage): boolean {
@@ -364,24 +428,26 @@
 	}
 
 	function selectPoint(point: HoveredPoint) {
-		const mappedEntryIndex = point.id;
-		const embedding = embeddings[mappedEntryIndex];
+		const pointId = point.id;
+		const embedding = embeddings[pointId];
 		if (!embedding) return;
 
-		const search = getSearchForPoint($searches as StoredSearch[] | null, mappedEntryIndex);
-		if (NodeCardConfig.display) return;
-
-		NodeCardConfig.display = true;
-		NodeCardConfig.x = point.x + 20;
-		NodeCardConfig.y = point.y;
-		NodeCardConfig.color = point.color;
-		NodeCardConfig.embedding.id = mappedEntryIndex;
-		NodeCardConfig.embedding.x = parseFloat(embedding[0].toFixed(6));
-		NodeCardConfig.embedding.y = parseFloat(embedding[1].toFixed(6));
-		NodeCardConfig.search = search;
-
-		// Redraw the layer.
-		cardLayer?.draw();
+		const search = getSearchForPoint($searches as StoredSearch[] | null, pointId);
+		cardSize = { width: CARD_DEFAULT_WIDTH, height: CARD_DEFAULT_HEIGHT };
+		cardSelectionViewport = { ...viewport };
+		setCardAnchorPlacement(point);
+		selectedCard = {
+			pointId,
+			worldPoint: { id: point.id, x: point.x, y: point.y },
+			color: point.color,
+			embedding: {
+				id: pointId,
+				x: parseFloat(embedding[0].toFixed(6)),
+				y: parseFloat(embedding[1].toFixed(6))
+			},
+			search
+		};
+		cardSelectionKey += 1;
 	}
 
 	function handleStageClick(event: StagePointerEvent) {
@@ -407,24 +473,6 @@
 			hideCard();
 		}
 	}
-
-	function stopPropagation(event: CardEvent) {
-		// Prevent bubbling.
-		event.detail.detail.cancelBubble = true;
-	}
-
-	let NodeCardConfig: CardConfig = {
-		display: false,
-		x: 0,
-		y: 0,
-		color: 'black',
-		embedding: {
-			id: 0,
-			x: 0,
-			y: 0
-		},
-		search: null
-	};
 
 	onMount(() => {
 		const params = new URLSearchParams(window.location.search);
@@ -459,60 +507,70 @@
 	on:resize={handleWindowResize}
 />
 
-<Stage
-	bind:config={$stageConfig}
-	bind:handle={stageHandle}
-	on:wheel={scaleShape}
-	on:mousemove={handlePointerMove}
-	on:touchmove={handlePointerMove}
-	on:mouseleave={handlePointerLeave}
-	on:mousedown={handlePointerDown}
-	on:touchstart={handlePointerDown}
-	on:dragstart={handleStageDragStart}
-	on:dragmove={handleStageTransform}
-	on:dragend={handleStageDragEnd}
-	on:click={handleStageClick}
-	on:tap={handleStageClick}
->
-	<!-- Optional grid layer. It is disabled to preserve the current rendering. -->
-	{#if GRID_ENABLED}
-		<Grid scale={viewport.scale} strokes={20} {windowWidth} {windowHeight} />
-	{/if}
-
-	<Layer>
-		<DatasetPoints
-			bind:crossGroup
-			{mappedEmbeddings}
-			{visibleMappedEmbeddings}
-			{cullingEnabled}
-			{baseGroupMounted}
-			{pointDisplayColors}
-		/>
-
-		{#if $searches}
-			{#each searchOverlays as search (search.key)}
-				<Search {search} blobPoints={search.blobPoints} {cullingEnabled} {hybridEnabled} />
-			{/each}
+<div class="plot-shell">
+	<Stage
+		bind:config={$stageConfig}
+		bind:handle={stageHandle}
+		on:wheel={scaleShape}
+		on:mousemove={handlePointerMove}
+		on:touchmove={handlePointerMove}
+		on:mouseleave={handlePointerLeave}
+		on:mousedown={handlePointerDown}
+		on:touchstart={handlePointerDown}
+		on:dragstart={handleStageDragStart}
+		on:dragmove={handleStageTransform}
+		on:dragend={handleStageDragEnd}
+		on:click={handleStageClick}
+		on:tap={handleStageClick}
+	>
+		<!-- Optional grid layer. It is disabled to preserve the current rendering. -->
+		{#if GRID_ENABLED}
+			<Grid scale={viewport.scale} strokes={20} {windowWidth} {windowHeight} />
 		{/if}
-	</Layer>
 
-	<!-- Pointer movement updates only this single highlight layer. -->
-	<Layer>
-		<Hover point={hoveredPoint} />
-	</Layer>
+		<Layer>
+			<DatasetPoints
+				bind:crossGroup
+				{mappedEmbeddings}
+				{visibleMappedEmbeddings}
+				{cullingEnabled}
+				{baseGroupMounted}
+				{pointDisplayColors}
+			/>
 
-	<Layer bind:handle={cardLayer}>
-		<Card
-			display={NodeCardConfig.display}
-			x={NodeCardConfig.x}
-			y={NodeCardConfig.y}
-			color={NodeCardConfig.color}
-			embedding={NodeCardConfig.embedding}
-			on:card-click={stopPropagation}
-		/>
-	</Layer>
-</Stage>
+			{#if $searches}
+				{#each searchOverlays as search (search.key)}
+					<Search {search} blobPoints={search.blobPoints} {cullingEnabled} {hybridEnabled} />
+				{/each}
+			{/if}
+		</Layer>
+
+		<!-- Pointer movement updates only this single highlight layer. -->
+		<Layer>
+			<Hover point={hoveredPoint} />
+		</Layer>
+	</Stage>
+
+	{#if selectedCard}
+		{#key cardSelectionKey}
+			<Card
+				x={cardPosition.x}
+				y={cardPosition.y}
+				scale={cardPosition.scale}
+				color={selectedCard.color}
+				embedding={selectedCard.embedding}
+				on:resize={handleCardResize}
+			/>
+		{/key}
+	{/if}
+</div>
 
 <PlotProfiler bind:this={plotProfiler} {stageHandle} {getRenderMode} />
 
-<style></style>
+<style>
+	.plot-shell {
+		position: relative;
+		width: 100vw;
+		height: 100vh;
+	}
+</style>

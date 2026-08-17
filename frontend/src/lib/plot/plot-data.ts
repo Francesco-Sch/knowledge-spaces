@@ -40,15 +40,6 @@ export type CardEmbedding = {
 	y: number;
 };
 
-export type CardConfig = {
-	display: boolean;
-	x: number;
-	y: number;
-	color: string;
-	embedding: CardEmbedding;
-	search: Search | null;
-};
-
 function mapEmbeddingsToPoints(
 	embeddings: Array<Array<number>>,
 	windowWidth: number,

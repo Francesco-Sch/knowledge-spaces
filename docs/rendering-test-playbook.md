@@ -60,10 +60,12 @@ Run the screenshot and correctness checks without the profiling matrix:
 PLOT_TEST_PROFILES=0 PLOT_TEST_ARTIFACTS=/tmp/plot-screenshots pnpm test:plot
 ```
 
-Run the focused uniform-grid lookup tests without starting the application:
+Run the focused plot logic tests without starting the application:
 
 ```bash
 pnpm test:plot-index
+pnpm test:plot-hit-tracking
+pnpm test:plot-card
 ```
 
 Useful environment variables:
@@ -90,6 +92,9 @@ Useful environment variables:
 - Search overlay rendering after a jump.
 - Hover targeting and pointer cursor behavior.
 - Stage-level nearest-point selection without point listeners.
+- HTML dataset-card selection, anchoring, zoom scaling, and replacement.
+- HTML card movement with its cross beyond the viewport during panning.
+- Delayed loading, retry behavior, and dataset-entry caching.
 - Low-zoom two-step selection behavior.
 - Hover pointer-sweep performance metrics.
 - Viewport resizing and canvas dimensions.

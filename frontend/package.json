@@ -12,7 +12,8 @@
 		"format": "prettier --plugin-search-dir . --write .",
 		"test:plot": "node --experimental-strip-types --test tests/plot-rendering.playwright.mjs",
 		"test:plot-index": "node --experimental-strip-types --test tests/plot-spatial-index.test.mjs",
-		"test:plot-hit-tracking": "node --experimental-strip-types --test tests/point-hit-tracking.test.mjs"
+		"test:plot-hit-tracking": "node --experimental-strip-types --test tests/point-hit-tracking.test.mjs",
+		"test:plot-card": "node --experimental-strip-types --test tests/card-position.test.mjs"
 	},
 	"dependencies": {
 		"clipper-lib": "^6.4.2",
