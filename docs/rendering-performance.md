@@ -409,7 +409,8 @@ The values below are median samples after discarding the first three warm-up sam
 - All 23 focused Playwright tests passed, including the existing visual and render-mode checks.
 - Point nodes and dataset groups no longer participate in Konva hit testing.
 - Stage-level selection opened the existing dataset card using the nearest indexed point.
-- A low-zoom click moved the stage to scale `1.0` without selecting; the next click selected successfully.
+- The historical low-zoom validation used a two-step interaction: the first click moved the stage to scale `1.0`, and
+  the next click selected successfully. Current low-zoom selection no longer changes the zoom on click.
 - Pointer movement and hover/selection remained at approximately 60 FPS in all three modes during this run.
 - Forced culling still shows a minimum-zoom transition cost, which is a rendering-mode concern rather than a nearest-point lookup regression.
 - The focused index suite passed all five cases with `pnpm test:plot-index`.

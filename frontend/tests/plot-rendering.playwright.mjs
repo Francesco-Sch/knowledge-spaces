@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { MIN_INTERACTION_SCALE } from '../src/lib/plot/plot-behaviour.ts';
 import { chromium } from 'playwright-core';
 
 const APP_URL = process.env.PLOT_TEST_URL || 'http://localhost:8080';
@@ -880,7 +879,7 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			assert.equal((await getCardText(page)).includes('cached dataset entry'), true);
 		});
 
-		await t.test('low-zoom selection zooms first and selects on the next click', async () => {
+		await t.test('low-zoom selection does not zoom on click', async () => {
 			await resetPage();
 			await preparePage(
 				page,
@@ -894,26 +893,16 @@ test('plot rendering scenarios in Chromium', async (t) => {
 			assert.ok(lowZoomState, 'plot stage was not available at low zoom');
 			assert.ok(lowZoomState.scale < 0.21, 'test did not reach the minimum zoom');
 
-			await page.mouse.click(VIEWPORT.width / 2, VIEWPORT.height / 2);
-			await page.waitForTimeout(300);
-			const interactionZoomState = await getPlotInteractionState(page);
-			assert.ok(interactionZoomState, 'plot stage was not available after interaction zoom');
-			assert.ok(
-				interactionZoomState.scale >= MIN_INTERACTION_SCALE - 0.01,
-				`first low-zoom click did not reach the minimum interaction scale of ${MIN_INTERACTION_SCALE}`
-			);
-			assert.equal(
-				interactionZoomState.cardNodeCount,
-				0,
-				'first low-zoom click selected a point before the user could confirm it'
-			);
-
 			const point = await findHoverableDarkCanvasPoint(page);
-			assert.ok(point, 'could not find a point after zooming to the interaction scale');
+			assert.ok(point, 'could not find a point at low zoom');
 			await page.mouse.click(point.x, point.y);
 			await page.waitForTimeout(400);
 			const selectedState = await getPlotInteractionState(page);
-			assert.ok(selectedState?.cardNodeCount > 0, 'second click did not select a point');
+			assert.ok(selectedState?.cardNodeCount > 0, 'low-zoom click did not select a point');
+			assert.ok(
+				Math.abs(selectedState.scale - lowZoomState.scale) < 0.01,
+				'clicking a point unexpectedly changed the zoom'
+			);
 			assertHealthy(await canvasStats(page), errors, 'low-zoom selection');
 		});
 

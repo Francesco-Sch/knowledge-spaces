@@ -95,7 +95,7 @@ Useful environment variables:
 - HTML dataset-card selection, anchoring, zoom scaling, and replacement.
 - HTML card movement with its cross beyond the viewport during panning.
 - Delayed loading, retry behavior, and dataset-entry caching.
-- Low-zoom two-step selection behavior.
+- Low-zoom selection without click-triggered zoom.
 - Hover pointer-sweep performance metrics.
 - Viewport resizing and canvas dimensions.
 - Basic animation-frame and canvas health checks.

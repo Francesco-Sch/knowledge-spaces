@@ -10,8 +10,6 @@
 		getCullingMode,
 		getRenderMode as getPlotRenderMode,
 		getZoomTransform,
-		getZoomTransformForScale,
-		MIN_INTERACTION_SCALE,
 		RENDER_MODE_SWITCH_DELAY,
 		type PlotRenderMode
 	} from './plot-behaviour';
@@ -39,10 +37,11 @@
 	import {
 		CARD_DEFAULT_HEIGHT,
 		CARD_DEFAULT_WIDTH,
-		CARD_OFFSET,
-		getCardPosition,
-		getCardScale,
-		getCardScreenPoint
+		canFitCardBelow,
+		getCardAnchor,
+		getCardPositionForAnchor,
+		getCardScreenPoint,
+		type CardAnchor
 	} from './card-position';
 
 	// Set to true to re-introduce the optional grid layer.
@@ -70,8 +69,8 @@
 	let cardSelectionKey = 0;
 	let cardSize = { width: CARD_DEFAULT_WIDTH, height: CARD_DEFAULT_HEIGHT };
 	let cardPosition = { x: 0, y: 0, scale: 1 };
-	let cardWorldOffset = { x: CARD_OFFSET, y: 0 };
-	let cardSelectionViewport = { x: 0, y: 0, scale: 1 };
+	let cardAnchor: CardAnchor | undefined;
+	let cardSelectionViewport = { x: 0, y: 0, scale: 1, width: 0, height: 0 };
 	let previousDataset: string | undefined;
 
 	$: mappedEmbeddings = mapEmbeddingsToPoints(embeddings, windowWidth, windowHeight);
@@ -225,16 +224,25 @@
 		? getVisiblePoints(mappedEmbeddings, viewport, windowWidth, windowHeight)
 		: mappedEmbeddings;
 
-	$: if (selectedCard) {
+	$: if (selectedCard && cardAnchor) {
 		const selectedPoint = mappedEmbeddings[selectedCard.pointId] ?? selectedCard.worldPoint;
 		if (selectedPoint) {
 			const screenPoint = getCardScreenPoint(selectedPoint, viewport);
+			const cardViewport = { width: windowWidth, height: windowHeight };
 			const stageScale = getStageScale();
-			cardPosition = {
-				x: screenPoint.x + cardWorldOffset.x * stageScale,
-				y: screenPoint.y + cardWorldOffset.y * stageScale,
-				scale: getCardScale(stageScale)
-			};
+
+			// A card that initially opened upward may switch to its permanent
+			// downward anchor once the viewport gives it enough room. Top-anchored
+			// cards never switch back, so later movement can carry them off-screen.
+			if (
+				cardAnchor.vertical === 'bottom' &&
+				hasCardViewportChanged() &&
+				canFitCardBelow(screenPoint, cardSize, cardViewport, stageScale)
+			) {
+				cardAnchor = { ...cardAnchor, vertical: 'top' };
+			}
+
+			cardPosition = getCardPositionForAnchor(screenPoint, cardSize, stageScale, cardAnchor);
 		}
 	}
 
@@ -370,26 +378,31 @@
 	// ----- Event Handlers -----
 	function hideCard() {
 		selectedCard = undefined;
+		cardAnchor = undefined;
 	}
 
 	function getStageScale(): number {
 		return Number.isFinite(viewport.scale) && viewport.scale > 0 ? viewport.scale : 1;
 	}
 
+	function hasCardViewportChanged(): boolean {
+		return (
+			viewport.x !== cardSelectionViewport.x ||
+			viewport.y !== cardSelectionViewport.y ||
+			viewport.scale !== cardSelectionViewport.scale ||
+			windowWidth !== cardSelectionViewport.width ||
+			windowHeight !== cardSelectionViewport.height
+		);
+	}
+
 	function setCardAnchorPlacement(point: Point, size = cardSize) {
 		const screenPoint = getCardScreenPoint(point, viewport);
-		const stageScale = getStageScale();
-		const initialPosition = getCardPosition(
+		cardAnchor = getCardAnchor(
 			screenPoint,
 			size,
 			{ width: windowWidth, height: windowHeight },
-			stageScale
+			getStageScale()
 		);
-
-		cardWorldOffset = {
-			x: (initialPosition.x - screenPoint.x) / stageScale,
-			y: (initialPosition.y - screenPoint.y) / stageScale
-		};
 	}
 
 	function handleCardResize(event: CustomEvent<{ width: number; height: number }>) {
@@ -397,34 +410,9 @@
 		const selectedPoint = selectedCard
 			? mappedEmbeddings[selectedCard.pointId] ?? selectedCard.worldPoint
 			: undefined;
-		const hasViewportMoved =
-			viewport.x !== cardSelectionViewport.x ||
-			viewport.y !== cardSelectionViewport.y ||
-			viewport.scale !== cardSelectionViewport.scale;
-		if (selectedPoint && !hasViewportMoved) setCardAnchorPlacement(selectedPoint, cardSize);
-	}
-
-	function zoomToMinimumInteractionScale(stage: KonvaStage): boolean {
-		const transform = getZoomTransformForScale(
-			stage.scaleX(),
-			{ x: stage.x(), y: stage.y() },
-			stage.getPointerPosition(),
-			MIN_INTERACTION_SCALE
-		);
-		if (!transform) return false;
-
-		stage.scale({ x: transform.scale, y: transform.scale });
-		stage.position({ x: transform.x, y: transform.y });
-		stageConfig.update((config) => ({
-			...config,
-			x: transform.x,
-			y: transform.y,
-			scaleX: transform.scale,
-			scaleY: transform.scale
-		}));
-		updateViewport(stage);
-		setHoveredPoint(getHoveredPoint(stage));
-		return true;
+		if (selectedPoint && !hasCardViewportChanged()) {
+			setCardAnchorPlacement(selectedPoint, cardSize);
+		}
 	}
 
 	function selectPoint(point: HoveredPoint) {
@@ -434,7 +422,11 @@
 
 		const search = getSearchForPoint($searches as StoredSearch[] | null, pointId);
 		cardSize = { width: CARD_DEFAULT_WIDTH, height: CARD_DEFAULT_HEIGHT };
-		cardSelectionViewport = { ...viewport };
+		cardSelectionViewport = {
+			...viewport,
+			width: windowWidth,
+			height: windowHeight
+		};
 		setCardAnchorPlacement(point);
 		selectedCard = {
 			pointId,
@@ -459,12 +451,6 @@
 
 		const stage = event.detail.target.getStage();
 		if (!stage) return;
-
-		if (stage.scaleX() < MIN_INTERACTION_SCALE) {
-			zoomToMinimumInteractionScale(stage);
-			hideCard();
-			return;
-		}
 
 		const point = getHoveredPoint(stage);
 		if (point) {

@@ -185,20 +185,13 @@ On pointer movement:
 4. Update the single hovered point.
 5. Update the cursor and highlight overlay.
 
-The interaction radius is defined in CSS pixels rather than world units so it remains usable at every zoom level. The current effective hit area is `16px`.
+The interaction radius is defined in CSS pixels rather than world units so it remains usable at every zoom level. The
+current effective hit area is `16px`.
 
-### Minimum interactive zoom
+### Selection at low zoom
 
-Introduce a configurable minimum interaction scale.
-
-When the user attempts to select while the current scale is below the interaction threshold:
-
-1. Keep the pointer's world position fixed.
-2. Zoom the stage to the minimum interactive scale around that position.
-3. Re-run nearest-point selection.
-4. Allow the next click to select the nearest point.
-
-The implementation uses `MIN_INTERACTION_SCALE = 0.8` and a `16px` CSS hit radius. The first click below the interaction threshold zooms around the pointer without selecting a point; the next click performs the selection. This avoids selecting an ambiguous nearby point at the minimum stage scale.
+Selection uses the same nearest-point lookup at every stage scale. The `16px` CSS hit radius is converted to world
+units for each query, so a low-zoom click does not trigger a separate zoom or confirmation step.
 
 ### Phase 2 implementation notes
 
@@ -216,7 +209,9 @@ The implementation uses `MIN_INTERACTION_SCALE = 0.8` and a `16px` CSS hit radiu
 - No per-point pointer listener is required.
 - Pointer movement does not cause broad scene redraws.
 
-The Phase 2 Playwright validation covers stage-level selection, non-listening point nodes, low-zoom two-step selection, cached rendering, adaptive culling, forced culling, resizing, search overlays, and hover performance. The focused spatial-index suite is available as `pnpm test:plot-index` from `frontend/`.
+The Phase 2 Playwright validation covers stage-level selection, non-listening point nodes, low-zoom selection, cached
+rendering, adaptive culling, forced culling, resizing, search overlays, and hover performance. The focused spatial-index
+suite is available as `pnpm test:plot-index` from `frontend/`.
 
 ## Phase 3: Recolor search points instead of duplicating them
 
@@ -263,11 +258,12 @@ do not split it into additional components unless a later change makes that nece
 1. Store the selected point ID and its world coordinates.
 2. Convert the point to screen coordinates using the current pan and zoom transform.
 3. On selection, position the card relative to that screen coordinate.
-4. When the view changes, update the card from the point-relative offset rather than clamping it again.
-5. Keep a small offset from the point, matching the current visual placement.
-6. Use viewport-aware placement on selection to choose the best side when the preferred position would leave the viewport.
-7. Allow the card to leave the viewport during later panning or zooming; it must remain attached to its cross.
-7. Make the card responsive to stage zoom. Preserve its current dimensions and scale it with the stage between a
+4. Prefer the right side, then the left side, while keeping the card inside the initial viewport whenever possible.
+5. Open downward from the top-left or top-right corner when the cross is high enough in the viewport.
+6. Open upward from the bottom-left or bottom-right corner when the cross is too close to the bottom edge.
+7. Preserve the selected horizontal side after pan and zoom. A bottom-anchored card may switch once to its top
+   anchor when the viewport allows it, then remains attached even when it leaves the viewport.
+8. Make the card responsive to stage zoom. Preserve its current dimensions and scale it with the stage between a
    minimum scale of `0.6` and a maximum scale of `1.7`. Apply a maximum width only as an edge-case safeguard for
    unusually large content.
 
@@ -300,8 +296,11 @@ Motion should feel snappy, natural, and responsive. Remove or reduce it if it ma
 - `Card.svelte` is a single structured HTML component. Its data loading, visual states, and event behavior remain
   together.
 - The card is positioned from the selected point's world coordinates and the current stage transform.
-- Initial placement prefers the right side of the point, then tries the left, bottom, and top sides before clamping
-  to the viewport. Later pan and zoom updates preserve the chosen point-relative offset, even outside the viewport.
+- Initial placement selects a right or left side and a top or bottom corner so the card opens inside the viewport when
+  possible. If the viewport is too narrow, the selected side is retained and the card overflows instead of being
+  clamped to a viewport edge.
+- A bottom-anchored card can switch once to its top-left or top-right anchor after pan, zoom, or resize provides room
+  below the cross. Once switched, the top anchor remains fixed to the cross and may move outside the viewport.
 - The card preserves its current `325px` base width and scales with the stage between `0.6` and `1.7`.
 - Dataset entries are fetched immediately, but `Loading...` appears only after `500ms` if the request is still pending.
 - Active requests are aborted when the selection or dataset changes. Successful entries are cached by dataset and
@@ -316,7 +315,9 @@ Motion should feel snappy, natural, and responsive. Remove or reduce it if it ma
 
 - The card follows the selected point during pan and zoom.
 - The card shrinks and grows between the defined scale range.
-- Initial placement keeps the card inside the viewport when practical; later pan and zoom may carry it off-screen while it remains attached.
+- Initial placement opens into the viewport using the appropriate side and top/bottom corner.
+- Bottom-anchored cards can transition once to a top anchor when the viewport changes; top-anchored cards remain fixed
+  to their selected corner and may leave the viewport while staying attached.
 - Text can be selected with the pointer.
 - Repeated selection does not create stale or racing requests.
 
@@ -459,7 +460,7 @@ The migration is complete when:
 - The visual output matches the current implementation at the recorded reference states.
 - Search-result points are highlighted without duplicate point glyphs.
 - The nearest point under the pointer can be selected reliably.
-- The minimum interactive zoom behavior is implemented and documented.
+- Low-zoom selection uses the normal nearest-point interaction without a click-triggered zoom.
 - Panning and wheel zooming feel responsive on representative laptops.
 - The dataset-entry card remains attached while panning and zooming.
 - Dataset-entry text is selectable.

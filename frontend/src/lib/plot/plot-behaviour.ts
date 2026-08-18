@@ -25,7 +25,6 @@ const RENDER_MODE_SWITCH_DELAY = 180;
 const SCALE_BY = 1.15;
 const MAX_SCALE = 5;
 const MIN_SCALE = 0.2;
-const MIN_INTERACTION_SCALE = 0.8;
 
 function getCullingMode(
 	stageScale: number,
@@ -96,7 +95,6 @@ export {
 	CULLING_ENTER_SCALE,
 	CULLING_EXIT_SCALE,
 	MAX_SCALE,
-	MIN_INTERACTION_SCALE,
 	MIN_SCALE,
 	RENDER_MODE_SWITCH_DELAY,
 	SCALE_BY,
